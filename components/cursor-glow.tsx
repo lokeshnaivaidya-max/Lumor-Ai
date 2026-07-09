@@ -6,17 +6,20 @@ import { motion, useMotionValue, useSpring } from "motion/react"
 export function CursorGlow() {
   const x = useMotionValue(-500)
   const y = useMotionValue(-500)
-  const sx = useSpring(x, { stiffness: 120, damping: 20, mass: 0.4 })
-  const sy = useSpring(y, { stiffness: 120, damping: 20, mass: 0.4 })
+  // large soft halo
+  const gx = useSpring(x, { stiffness: 120, damping: 20, mass: 0.4 })
+  const gy = useSpring(y, { stiffness: 120, damping: 20, mass: 0.4 })
+  // precise ring, snappier
+  const rx = useSpring(x, { stiffness: 500, damping: 32, mass: 0.3 })
+  const ry = useSpring(y, { stiffness: 500, damping: 32, mass: 0.3 })
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    // Only enable on fine pointers (desktop)
     if (!window.matchMedia("(pointer: fine)").matches) return
     setEnabled(true)
     const move = (e: MouseEvent) => {
-      x.set(e.clientX - 250)
-      y.set(e.clientY - 250)
+      x.set(e.clientX)
+      y.set(e.clientY)
     }
     window.addEventListener("mousemove", move)
     return () => window.removeEventListener("mousemove", move)
@@ -25,16 +28,23 @@ export function CursorGlow() {
   if (!enabled) return null
 
   return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed z-30 h-[500px] w-[500px] rounded-full"
-      style={{
-        x: sx,
-        y: sy,
-        background:
-          "radial-gradient(circle, oklch(0.68 0.17 245 / 0.1), transparent 60%)",
-        mixBlendMode: "screen",
-      }}
-    />
+    <>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed left-0 top-0 z-30 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          x: gx,
+          y: gy,
+          background:
+            "radial-gradient(circle, oklch(0.68 0.17 250 / 0.1), oklch(0.62 0.18 300 / 0.05) 40%, transparent 62%)",
+          mixBlendMode: "screen",
+        }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed left-0 top-0 z-30 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25"
+        style={{ x: rx, y: ry, mixBlendMode: "screen" }}
+      />
+    </>
   )
 }

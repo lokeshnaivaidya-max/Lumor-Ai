@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import Markdown from "react-markdown"
+import { motion } from "motion/react"
 import { Sparkles, Loader2, Square } from "lucide-react"
 
 const HORIZONS = [
@@ -55,10 +56,15 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-accent/25 bg-gradient-to-b from-accent/[0.06] to-transparent p-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent">
+    <div className="edge-light grain relative overflow-hidden rounded-[1.75rem] glass-panel p-5 sm:p-6">
+      {/* aurora wash */}
+      <div
+        className="animate-pulse-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
+        style={{ background: "oklch(0.62 0.16 168 / 0.4)" }}
+      />
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-accent/25 text-accent">
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
@@ -68,7 +74,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full border border-border bg-card/60 p-0.5">
+          <div className="flex rounded-full border border-border bg-black/30 p-0.5">
             {HORIZONS.map((h) => (
               <button
                 key={h.id}
@@ -84,24 +90,26 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
           {loading ? (
             <button
               onClick={stop}
-              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-foreground"
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-white/5"
             >
               <Square className="h-3 w-3" /> Stop
             </button>
           ) : (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
               onClick={run}
-              className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground transition-transform hover:scale-[1.03]"
+              className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground"
             >
               <Sparkles className="h-3.5 w-3.5" /> Analyze
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
 
       {(text || loading || error) && (
-        <div className="mt-5 border-t border-border/60 pt-5">
-          {error && <p className="text-sm text-[var(--neg)]">{error}</p>}
+        <div className="relative mt-5 border-t border-border/60 pt-5">
+          {error && <p className="text-sm text-neg">{error}</p>}
           {loading && !text && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin text-accent" />
@@ -118,8 +126,9 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
       )}
 
       {!text && !loading && !error && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          Generate an institutional-grade breakdown of {symbol} — trend regime, key levels, and bull/bear scenarios.
+        <p className="relative mt-4 text-sm text-muted-foreground">
+          Generate an institutional-grade breakdown of {symbol} — trend regime,
+          key levels, and bull/bear scenarios.
         </p>
       )}
     </div>
