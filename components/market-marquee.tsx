@@ -19,16 +19,16 @@ export function MarketMarquee({ quotes }: { quotes: Quote[] }) {
   const items = [...quotes, ...quotes]
 
   return (
-    <div className="relative w-full overflow-hidden border-y border-border/60 bg-white/[0.015] py-4">
+    <div className="group relative w-full overflow-hidden border-y border-border/60 bg-white/[0.015] py-4">
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32"
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-40"
         style={{ background: "linear-gradient(90deg, var(--background), transparent)" }}
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32"
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-40"
         style={{ background: "linear-gradient(270deg, var(--background), transparent)" }}
       />
-      <div className="animate-marquee flex w-max items-center gap-8 whitespace-nowrap will-change-transform">
+      <div className="animate-marquee flex w-max items-center gap-8 whitespace-nowrap will-change-transform [animation-play-state:running] group-hover:[animation-play-state:paused]">
         {items.map((q, i) => {
           const up = q.changePercent >= 0
           return (
@@ -44,7 +44,7 @@ export function MarketMarquee({ quotes }: { quotes: Quote[] }) {
               </span>
               <span
                 className={`flex items-center gap-0.5 text-xs tabular-nums ${
-                  up ? "text-accent" : "text-red-400"
+                  up ? "text-pos" : "text-neg"
                 }`}
               >
                 {up ? (
