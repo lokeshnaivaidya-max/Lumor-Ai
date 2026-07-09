@@ -4,7 +4,7 @@ import { useRef } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
 import { MagneticButton } from "./magnetic-button"
 import { HeroOrb } from "./hero-orb"
-import { IconArrowUpRight, IconSpark, IconTrendUp } from "./lumora-icons"
+import { IconArrowUpRight, IconSpark } from "./lumora-icons"
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -66,7 +66,7 @@ export function Hero() {
             </span>
             <span className="my-1.5 block">
               <Word delay={0.24}>
-                <span className="wordmark text-metallic text-[0.82em]">
+                <span className="font-serif text-metallic text-[0.62em] tracking-[0.14em]">
                   ILLUMINATED
                 </span>
               </Word>
@@ -135,64 +135,6 @@ export function Hero() {
           className="relative z-0 lg:col-span-6"
         >
           <HeroOrb />
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease, delay: 1.1 }}
-            className="animate-float absolute -left-4 top-8 hidden w-52 facet-panel p-4 sm:block"
-          >
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <IconTrendUp className="h-4 w-4 text-accent" />
-              AI Recommendation
-            </div>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="font-mono text-2xl font-semibold tracking-tight">NVDA</span>
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">
-                Buy · 87%
-              </span>
-            </div>
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <motion.div
-                className="h-full rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, oklch(0.7 0.1 245), oklch(0.88 0.05 88))",
-                }}
-                initial={{ width: 0 }}
-                animate={{ width: "87%" }}
-                transition={{ duration: 1.4, delay: 1.4, ease }}
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease, delay: 1.3 }}
-            className="animate-float absolute -right-4 bottom-6 hidden w-48 facet-panel facet-br p-4 md:block"
-            style={{ animationDelay: "-3.5s" }}
-          >
-            <div className="text-xs text-muted-foreground">Confidence signal</div>
-            <div className="mt-2 flex items-end gap-1">
-              {[38, 52, 46, 68, 60, 82, 74, 91].map((h, i) => (
-                <motion.div
-                  key={i}
-                  className="flex-1 rounded-sm"
-                  initial={{ height: 4 }}
-                  animate={{ height: h * 0.36 }}
-                  transition={{ duration: 0.9, delay: 1.5 + i * 0.05, ease }}
-                  style={{
-                    background:
-                      "linear-gradient(to top, oklch(0.7 0.1 245 / 0.4), oklch(0.8 0.11 168))",
-                  }}
-                />
-              ))}
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              Momentum <span className="text-foreground">Strong</span>
-            </div>
-          </motion.div>
         </motion.div>
       </div>
 

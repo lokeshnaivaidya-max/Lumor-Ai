@@ -3,58 +3,59 @@
 import { useRef } from "react"
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "motion/react"
 import {
-  Activity,
-  Brain,
-  Globe2,
-  LineChart,
-  Newspaper,
-  ShieldCheck,
-} from "lucide-react"
+  IconPrism,
+  IconGlobe,
+  IconChart,
+  IconNews,
+  IconPulse,
+  IconShield,
+} from "./lumora-icons"
 import { Reveal } from "./reveal"
+import { StarDivider } from "./brand"
 
 const cards = [
   {
-    icon: Brain,
+    icon: IconPrism,
     title: "AI research desk",
     body: "Bull case, bear case, technicals, fundamentals, and a price target — authored on demand for any ticker.",
     className: "md:col-span-3 md:row-span-2",
     feature: true,
-    hue: 250,
+    hue: 245,
   },
   {
-    icon: Globe2,
+    icon: IconGlobe,
     title: "60+ exchanges",
     body: "NYSE, Nasdaq, LSE, TSE, HKEX, NSE and more. Auto-detected currency, timezone and session.",
     className: "md:col-span-3",
-    hue: 168,
+    hue: 205,
   },
   {
-    icon: LineChart,
+    icon: IconChart,
     title: "Deep technicals",
     body: "RSI, MACD, EMA, VWAP, ATR, ADX, Bollinger, Ichimoku, Fibonacci — computed live.",
     className: "md:col-span-2",
-    hue: 300,
-  },
-  {
-    icon: Newspaper,
-    title: "News, summarized",
-    body: "Real headlines distilled with sentiment scoring.",
-    className: "md:col-span-2",
-    hue: 250,
-  },
-  {
-    icon: Activity,
-    title: "Market status",
-    body: "Open, pre-market, after-hours, or holiday — with a live countdown.",
-    className: "md:col-span-2",
     hue: 168,
   },
   {
-    icon: ShieldCheck,
+    icon: IconNews,
+    title: "News, summarized",
+    body: "Real headlines distilled with sentiment scoring.",
+    className: "md:col-span-2",
+    hue: 245,
+  },
+  {
+    icon: IconPulse,
+    title: "Market status",
+    body: "Open, pre-market, after-hours, or holiday — with a live countdown.",
+    className: "md:col-span-2",
+    hue: 205,
+  },
+  {
+    icon: IconShield,
     title: "Risk lens",
     body: "Volatility, drawdown and exposure signals surfaced before you act.",
     className: "md:col-span-6",
-    hue: 87,
+    hue: 88,
   },
 ]
 
@@ -86,7 +87,7 @@ function TiltCard({ card, index }: { card: (typeof cards)[number]; index: number
   }
 
   const Icon = card.icon
-  const glow = useMotionTemplate`radial-gradient(340px circle at ${glowX}% ${glowY}%, oklch(0.7 0.16 ${card.hue} / 0.16), transparent 60%)`
+  const glow = useMotionTemplate`radial-gradient(340px circle at ${glowX}% ${glowY}%, oklch(0.8 0.1 ${card.hue} / 0.14), transparent 60%)`
 
   return (
     <Reveal delay={index * 0.06} className={card.className}>
@@ -95,7 +96,7 @@ function TiltCard({ card, index }: { card: (typeof cards)[number]; index: number
         onMouseMove={onMove}
         onMouseLeave={reset}
         style={{ rotateX: srx, rotateY: sry, transformStyle: "preserve-3d" }}
-        className="group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] glass p-6 transition-colors duration-500 hover:border-white/15"
+        className="group relative flex h-full flex-col overflow-hidden facet-panel p-6 transition-colors duration-500 hover:border-white/15"
       >
         {/* cursor-follow glow */}
         <motion.div
@@ -103,10 +104,10 @@ function TiltCard({ card, index }: { card: (typeof cards)[number]; index: number
           style={{ background: glow }}
         />
         <div
-          className="relative flex h-11 w-11 items-center justify-center rounded-xl glass"
+          className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]"
           style={{ transform: "translateZ(30px)" }}
         >
-          <Icon className="h-5 w-5" style={{ color: `oklch(0.82 0.14 ${card.hue})` }} />
+          <Icon className="h-5 w-5" style={{ color: `oklch(0.84 0.1 ${card.hue})` }} />
         </div>
         <h3 className="relative mt-5 text-lg font-medium tracking-tight" style={{ transform: "translateZ(20px)" }}>
           {card.title}
@@ -117,7 +118,7 @@ function TiltCard({ card, index }: { card: (typeof cards)[number]; index: number
 
         {card.feature && (
           <div className="relative mt-auto pt-6" style={{ transform: "translateZ(15px)" }}>
-            <div className="rounded-2xl border border-white/5 bg-black/40 p-4 font-mono text-xs">
+            <div className="rounded-2xl border border-white/8 bg-[oklch(0.16_0.014_258)] p-4 font-mono text-xs">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
@@ -146,12 +147,13 @@ export function Features() {
     <section id="intelligence" className="relative px-6 py-28 sm:py-36" style={{ perspective: 1200 }}>
       <div className="mx-auto max-w-6xl">
         <Reveal>
-          <p className="font-mono text-xs tracking-[0.3em] text-accent uppercase">
+          <div className="flex items-center gap-3 font-mono text-xs tracking-[0.3em] text-accent uppercase">
+            <StarDivider className="w-10" />
             The intelligence layer
-          </p>
-          <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          </div>
+          <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             Everything a desk of analysts does,{" "}
-            <span className="font-serif italic font-normal text-gradient-aurora">
+            <span className="font-serif italic font-normal text-metallic">
               in one breath.
             </span>
           </h2>
