@@ -49,9 +49,14 @@ Technical snapshot (computed from 1y daily closes):
 Trader horizon requested: ${horizon}
 `.trim()
 
+  let capturedError = ""
   const result = streamText({
     model: "anthropic/claude-sonnet-4.5",
     temperature: 0.4,
+    onError: ({ error }) => {
+      capturedError = error instanceof Error ? error.message : String(error)
+      console.log("[v0] analyze onError:", capturedError)
+    },
     system: `You are Lumora, an elite market intelligence analyst. You produce sharp, structured, institutional-grade technical analysis grounded ONLY in the data provided.
 
 Rules:
@@ -64,5 +69,37 @@ Rules:
     prompt: `Analyze the following instrument for a ${horizon} trader.\n\n${context}`,
   })
 
-  return result.toTextStreamResponse()
+  // Stream manually so we can surface provider/billing errors to the client
+  // instead of silently emitting an empty stream.
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let streamed = false
+      try {
+        for await (const delta of result.textStream) {
+          streamed = true
+          controller.enqueue(encoder.encode(delta))
+        }
+      } catch (err) {
+        capturedError = capturedError || (err instanceof Error ? err.message : String(err))
+      } finally {
+        if (!streamed && capturedError) {
+          const friendly = /credit card|billing|payment|quota|insufficient|forbidden|403/i.test(
+            capturedError,
+          )
+            ? "**AI analysis is temporarily unavailable.**\n\nThe AI Gateway needs billing enabled on the Vercel account before it can generate analysis. The live market data and technicals above are fully functional."
+            : "**AI analysis is temporarily unavailable.**\n\nThe model provider returned an error. The live market data and technicals above are fully functional — please try again shortly."
+          controller.enqueue(encoder.encode(friendly))
+        }
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  })
 }
