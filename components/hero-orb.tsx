@@ -27,14 +27,14 @@ const H = 380
 const CX = W * 0.5
 const CY = H * 0.44
 const NODES = [
-  { s: "AAPL", ang: -160, rad: 300, r: 5, hue: 250 },
+  { s: "AAPL", ang: -160, rad: 300, r: 5, hue: 245 },
   { s: "NVDA", ang: -120, rad: 240, r: 6, hue: 168 },
-  { s: "TSLA", ang: -70, rad: 300, r: 5, hue: 300 },
-  { s: "MSFT", ang: -25, rad: 235, r: 5, hue: 250 },
-  { s: "BTC", ang: 20, rad: 300, r: 6, hue: 87 },
+  { s: "TSLA", ang: -70, rad: 300, r: 5, hue: 205 },
+  { s: "MSFT", ang: -25, rad: 235, r: 5, hue: 245 },
+  { s: "BTC", ang: 20, rad: 300, r: 6, hue: 88 },
   { s: "META", ang: 62, rad: 240, r: 4, hue: 168 },
-  { s: "AMZN", ang: 110, rad: 290, r: 5, hue: 250 },
-  { s: "GOOG", ang: 155, rad: 245, r: 4, hue: 300 },
+  { s: "AMZN", ang: 110, rad: 290, r: 5, hue: 225 },
+  { s: "GOOG", ang: 155, rad: 245, r: 4, hue: 205 },
 ].map((n) => ({
   ...n,
   x: CX + Math.cos((n.ang * Math.PI) / 180) * n.rad,
@@ -99,18 +99,18 @@ export function HeroOrb() {
           <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" preserveAspectRatio="none">
             <defs>
               <radialGradient id="core" cx="50%" cy="50%" r="50%">
-                <stop offset="0" stopColor="oklch(0.85 0.15 250)" />
-                <stop offset="0.5" stopColor="oklch(0.7 0.18 260)" stopOpacity="0.6" />
-                <stop offset="1" stopColor="oklch(0.6 0.2 280)" stopOpacity="0" />
+                <stop offset="0" stopColor="oklch(0.9 0.06 228)" />
+                <stop offset="0.5" stopColor="oklch(0.7 0.1 245)" stopOpacity="0.55" />
+                <stop offset="1" stopColor="oklch(0.62 0.08 250)" stopOpacity="0" />
               </radialGradient>
               <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="oklch(0.68 0.17 250)" stopOpacity="0.32" />
-                <stop offset="1" stopColor="oklch(0.68 0.17 250)" stopOpacity="0" />
+                <stop offset="0" stopColor="oklch(0.72 0.1 240)" stopOpacity="0.3" />
+                <stop offset="1" stopColor="oklch(0.72 0.1 240)" stopOpacity="0" />
               </linearGradient>
               <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="oklch(0.72 0.16 250)" />
-                <stop offset="0.5" stopColor="oklch(0.7 0.19 285)" />
-                <stop offset="1" stopColor="oklch(0.82 0.14 168)" />
+                <stop offset="0" stopColor="oklch(0.76 0.09 245)" />
+                <stop offset="0.5" stopColor="oklch(0.85 0.08 215)" />
+                <stop offset="1" stopColor="oklch(0.82 0.11 168)" />
               </linearGradient>
             </defs>
 

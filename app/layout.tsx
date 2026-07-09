@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
+import { Geist, Geist_Mono, Cinzel } from "next/font/google"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
   display: "swap",
 })
 
-const instrument = Instrument_Serif({
+// Cinzel — an inscriptional serif that mirrors the LUMORA wordmark.
+const cinzel = Cinzel({
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-instrument",
+  weight: ["400", "500", "600"],
+  variable: "--font-cinzel",
   display: "swap",
 })
 
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0f",
+  themeColor: "#1a2030",
   width: "device-width",
   initialScale: 1,
 }
@@ -55,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrument.variable} bg-background`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} bg-background`}
     >
       <body className="antialiased">{children}</body>
     </html>

@@ -2,7 +2,7 @@
 
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-serif: var(--font-cinzel), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);
@@ -22,6 +22,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
+  --color-steel: var(--steel);
+  --color-ice: var(--ice);
+  --color-cyan: var(--cyan);
+  --color-champagne: var(--champagne);
+
   --color-blue: var(--blue);
   --color-purple: var(--purple);
   --color-emerald: var(--emerald);
@@ -35,54 +40,60 @@
   --radius-xl: calc(var(--radius) + 6px);
   --radius-2xl: calc(var(--radius) + 14px);
 
-  --animate-aurora: aurora 22s ease-in-out infinite;
-  --animate-aurora-slow: aurora 34s ease-in-out infinite;
-  --animate-float: float 8s ease-in-out infinite;
-  --animate-float-slow: float 12s ease-in-out infinite;
-  --animate-marquee: marquee 48s linear infinite;
+  --animate-aurora: aurora 26s ease-in-out infinite;
+  --animate-aurora-slow: aurora 40s ease-in-out infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 13s ease-in-out infinite;
+  --animate-marquee: marquee 52s linear infinite;
   --animate-shimmer: shimmer 3s linear infinite;
-  --animate-pulse-glow: pulse-glow 5s ease-in-out infinite;
-  --animate-spin-slow: spin-slow 28s linear infinite;
-  --animate-breathe: breathe 7s ease-in-out infinite;
-  --animate-sheen: sheen 6s ease-in-out infinite;
+  --animate-sweep: sweep 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 6s ease-in-out infinite;
+  --animate-spin-slow: spin-slow 30s linear infinite;
+  --animate-breathe: breathe 8s ease-in-out infinite;
 }
 
 :root {
   --radius: 1rem;
 
-  /* Deep navy-ink base — inherited from the Lumora logo */
-  --background: oklch(0.128 0.014 262);
-  --foreground: oklch(0.96 0.006 250);
+  /* Lifted graphite-navy base — premium, not black. Inherited from the Lumora logo. */
+  --background: oklch(0.185 0.015 256);
+  --foreground: oklch(0.97 0.005 245);
 
-  --card: oklch(0.168 0.016 262);
-  --card-foreground: oklch(0.96 0.006 250);
+  --card: oklch(0.235 0.016 256);
+  --card-foreground: oklch(0.97 0.005 245);
 
-  --popover: oklch(0.175 0.018 262);
-  --popover-foreground: oklch(0.96 0.006 250);
+  --popover: oklch(0.245 0.017 256);
+  --popover-foreground: oklch(0.97 0.005 245);
 
-  --muted: oklch(0.215 0.016 262);
-  --muted-foreground: oklch(0.7 0.016 258);
+  --muted: oklch(0.285 0.015 256);
+  --muted-foreground: oklch(0.72 0.014 250);
 
-  --border: oklch(0.32 0.018 262 / 0.5);
-  --input: oklch(0.27 0.016 262);
-  --ring: oklch(0.66 0.11 250);
+  --border: oklch(0.42 0.02 250 / 0.42);
+  --input: oklch(0.3 0.016 256);
+  --ring: oklch(0.7 0.1 240);
 
-  /* Refined steel-blue primary (restrained, luxurious) */
-  --primary: oklch(0.7 0.12 250);
-  --primary-foreground: oklch(0.13 0.014 262);
+  /* Steel-blue primary — restrained, metallic */
+  --primary: oklch(0.68 0.1 245);
+  --primary-foreground: oklch(0.15 0.014 258);
 
-  /* Platinum-champagne accent for luxury highlights */
-  --accent: oklch(0.87 0.06 90);
-  --accent-foreground: oklch(0.14 0.014 262);
+  /* Champagne accent — the single luxury highlight */
+  --accent: oklch(0.87 0.05 88);
+  --accent-foreground: oklch(0.16 0.014 258);
 
-  --blue: oklch(0.7 0.13 250);
-  --purple: oklch(0.66 0.1 268);
-  --emerald: oklch(0.8 0.13 168);
-  --gold: oklch(0.87 0.08 88);
+  /* Brand family — the logo's metallic spectrum */
+  --steel: oklch(0.72 0.055 250);
+  --ice: oklch(0.88 0.055 225);
+  --cyan: oklch(0.82 0.095 205);
+  --champagne: oklch(0.88 0.05 88);
+
+  --blue: oklch(0.7 0.11 245);
+  --purple: oklch(0.66 0.06 285);
+  --emerald: oklch(0.8 0.1 168);
+  --gold: oklch(0.87 0.06 88);
 
   /* Market direction */
-  --pos: oklch(0.8 0.13 168);
-  --neg: oklch(0.68 0.19 22);
+  --pos: oklch(0.8 0.11 168);
+  --neg: oklch(0.68 0.17 22);
 }
 
 @layer base {
@@ -94,16 +105,27 @@
     -webkit-font-smoothing: antialiased;
   }
   body {
+    /* Depth: top-lit graphite falling to a deeper navy floor */
     background-color: var(--background);
+    background-image: radial-gradient(
+        120% 80% at 50% -10%,
+        oklch(0.26 0.022 252 / 0.9),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(0.2 0.016 256),
+        oklch(0.155 0.014 260) 100%
+      );
+    background-attachment: fixed;
     color: var(--foreground);
     font-family: var(--font-sans);
     overflow-x: hidden;
   }
   ::selection {
-    background: oklch(0.68 0.17 250 / 0.32);
+    background: oklch(0.7 0.12 240 / 0.32);
     color: oklch(0.99 0 0);
   }
-  /* Refined scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -112,51 +134,97 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.4 0.02 270 / 0.5);
+    background: oklch(0.46 0.02 255 / 0.5);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.55 0.05 260 / 0.6);
+    background: oklch(0.62 0.05 250 / 0.6);
     background-clip: padding-box;
   }
 }
 
 @layer utilities {
+  /* ---- Glass surfaces (lifted, premium) ---- */
   .glass {
     background: linear-gradient(
-      145deg,
-      oklch(0.99 0 0 / 0.06),
-      oklch(0.99 0 0 / 0.015)
+      150deg,
+      oklch(0.99 0 0 / 0.07),
+      oklch(0.99 0 0 / 0.02)
     );
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid oklch(0.99 0 0 / 0.08);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid oklch(0.99 0 0 / 0.09);
   }
   .glass-strong {
     background: linear-gradient(
-      145deg,
-      oklch(0.99 0 0 / 0.1),
-      oklch(0.99 0 0 / 0.025)
+      150deg,
+      oklch(0.99 0 0 / 0.11),
+      oklch(0.99 0 0 / 0.03)
     );
-    backdrop-filter: blur(44px) saturate(165%);
-    -webkit-backdrop-filter: blur(44px) saturate(165%);
-    border: 1px solid oklch(0.99 0 0 / 0.12);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    border: 1px solid oklch(0.99 0 0 / 0.13);
   }
   .glass-panel {
     background:
       radial-gradient(
-        120% 120% at 0% 0%,
-        oklch(0.99 0 0 / 0.09),
+        130% 130% at 0% 0%,
+        oklch(0.99 0 0 / 0.1),
         transparent 55%
       ),
-      linear-gradient(160deg, oklch(0.99 0 0 / 0.05), oklch(0.99 0 0 / 0.01));
-    backdrop-filter: blur(36px) saturate(150%);
-    -webkit-backdrop-filter: blur(36px) saturate(150%);
-    border: 1px solid oklch(0.99 0 0 / 0.09);
+      linear-gradient(160deg, oklch(0.99 0 0 / 0.055), oklch(0.99 0 0 / 0.015));
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    border: 1px solid oklch(0.99 0 0 / 0.1);
   }
-  /* Gradient hairline border for premium panels */
+
+  /* ---- Faceted panel — the logo's folded, chamfered geometry ----
+     A single cut corner + a hairline that follows the cut (inset shadow
+     is clipped to the same shape). This is the core brand container. */
+  .facet {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 22px) 0,
+      100% 22px,
+      100% 100%,
+      0 100%
+    );
+  }
+  .facet-br {
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - 22px),
+      calc(100% - 22px) 100%,
+      0 100%
+    );
+  }
+  .facet-panel {
+    position: relative;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 26px) 0,
+      100% 26px,
+      100% 100%,
+      0 100%
+    );
+    background:
+      radial-gradient(
+        130% 120% at 100% 0%,
+        oklch(0.82 0.08 235 / 0.08),
+        transparent 45%
+      ),
+      linear-gradient(160deg, oklch(0.99 0 0 / 0.06), oklch(0.99 0 0 / 0.015));
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow:
+      inset 0 0 0 1px oklch(0.99 0 0 / 0.08),
+      inset 0 1px 0 0 oklch(0.99 0 0 / 0.12);
+  }
+
+  /* ---- Metallic edge light: a diagonal fold-line highlight ---- */
   .edge-light {
     position: relative;
   }
@@ -167,11 +235,11 @@
     border-radius: inherit;
     padding: 1px;
     background: linear-gradient(
-      140deg,
-      oklch(0.85 0.12 250 / 0.5),
-      transparent 30%,
-      transparent 70%,
-      oklch(0.85 0.13 168 / 0.4)
+      145deg,
+      oklch(0.9 0.06 235 / 0.55),
+      transparent 28%,
+      transparent 72%,
+      oklch(0.86 0.05 88 / 0.4)
     );
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
@@ -180,12 +248,55 @@
     mask-composite: exclude;
     pointer-events: none;
   }
+
+  /* ---- Light sweep — the metallic reflection travelling across a surface ---- */
+  .sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 32%,
+      oklch(0.95 0.02 230 / 0.16) 46%,
+      oklch(1 0 0 / 0.32) 50%,
+      oklch(0.95 0.02 230 / 0.16) 54%,
+      transparent 68%
+    );
+    background-size: 280% 100%;
+    background-position: 150% 0;
+    pointer-events: none;
+  }
+  .sweep-auto::after {
+    animation: sweep 6s ease-in-out infinite;
+  }
+  .group:hover .sweep-hover::after,
+  .sweep-hover:hover::after {
+    animation: sweep 1.1s ease-out;
+  }
+
+  /* ---- Text treatments ---- */
+  .text-metallic {
+    background: linear-gradient(
+      150deg,
+      oklch(0.95 0.02 230),
+      oklch(0.74 0.06 250) 42%,
+      oklch(0.97 0.015 228) 66%,
+      oklch(0.66 0.05 258)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
   .text-gradient {
     background: linear-gradient(
       120deg,
       oklch(0.98 0.005 250),
-      oklch(0.78 0.13 250) 52%,
-      oklch(0.74 0.14 205)
+      oklch(0.8 0.1 245) 52%,
+      oklch(0.82 0.09 210)
     );
     -webkit-background-clip: text;
     background-clip: text;
@@ -194,40 +305,59 @@
   .text-gradient-aurora {
     background: linear-gradient(
       120deg,
-      oklch(0.9 0.04 250),
-      oklch(0.74 0.12 245) 42%,
-      oklch(0.9 0.06 90) 88%
+      oklch(0.93 0.03 235),
+      oklch(0.76 0.09 240) 44%,
+      oklch(0.9 0.05 90) 90%
     );
     background-size: 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: hue-drift 12s ease-in-out infinite;
+    animation: hue-drift 14s ease-in-out infinite;
   }
   .text-gradient-gold {
-    background: linear-gradient(120deg, oklch(0.92 0.08 92), oklch(0.8 0.13 72));
+    background: linear-gradient(120deg, oklch(0.93 0.06 92), oklch(0.82 0.09 72));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  .wordmark {
+    font-family: var(--font-serif);
+    letter-spacing: 0.34em;
+    text-indent: 0.34em;
+    font-weight: 500;
+  }
+
+  /* ---- Glows ---- */
   .glow-blue {
     box-shadow:
-      0 0 0 1px oklch(0.68 0.17 250 / 0.2),
-      0 20px 60px -20px oklch(0.55 0.2 255 / 0.45);
+      0 0 0 1px oklch(0.7 0.12 245 / 0.2),
+      0 24px 60px -22px oklch(0.55 0.14 250 / 0.5);
   }
   .glow-emerald {
     box-shadow:
-      0 0 0 1px oklch(0.8 0.14 168 / 0.2),
-      0 20px 60px -20px oklch(0.7 0.16 168 / 0.4);
+      0 0 0 1px oklch(0.8 0.11 168 / 0.2),
+      0 24px 60px -22px oklch(0.7 0.12 168 / 0.4);
   }
   .grain::after {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
     mix-blend-mode: overlay;
     border-radius: inherit;
+  }
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.7 0.05 240 / 0.5) 22%,
+      oklch(0.82 0.05 230 / 0.7) 50%,
+      oklch(0.7 0.05 240 / 0.5) 78%,
+      transparent
+    );
   }
 }
 
@@ -235,7 +365,7 @@
 .lumora-prose {
   font-size: 0.9rem;
   line-height: 1.7;
-  color: oklch(0.85 0.01 265);
+  color: oklch(0.86 0.01 250);
 }
 .lumora-prose h1,
 .lumora-prose h2,
@@ -263,7 +393,7 @@
   font-weight: 600;
 }
 .lumora-prose a {
-  color: oklch(0.78 0.13 250);
+  color: oklch(0.82 0.1 230);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -276,7 +406,7 @@
   margin: 0.35em 0;
 }
 .lumora-prose li::marker {
-  color: oklch(0.7 0.13 250);
+  color: oklch(0.82 0.1 225);
 }
 .lumora-prose code {
   font-family: var(--font-mono);
@@ -286,7 +416,7 @@
   border-radius: 6px;
 }
 .lumora-prose blockquote {
-  border-left: 2px solid oklch(0.7 0.13 250 / 0.5);
+  border-left: 2px solid oklch(0.72 0.09 240 / 0.5);
   padding-left: 1em;
   margin: 1em 0;
   color: var(--muted-foreground);
@@ -316,12 +446,12 @@
     opacity: 0.5;
   }
   33% {
-    transform: translate3d(5%, -4%, 0) rotate(9deg) scale(1.12);
-    opacity: 0.75;
+    transform: translate3d(4%, -3%, 0) rotate(7deg) scale(1.1);
+    opacity: 0.72;
   }
   66% {
-    transform: translate3d(-4%, 5%, 0) rotate(-7deg) scale(1.06);
-    opacity: 0.58;
+    transform: translate3d(-3%, 4%, 0) rotate(-6deg) scale(1.05);
+    opacity: 0.56;
   }
 }
 
@@ -331,7 +461,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-16px);
+    transform: translateY(-14px);
   }
 }
 
@@ -353,23 +483,23 @@
   }
 }
 
-@keyframes sheen {
-  0%,
-  100% {
-    background-position: -150% 0;
+@keyframes sweep {
+  0% {
+    background-position: 150% 0;
   }
-  50% {
-    background-position: 250% 0;
+  55%,
+  100% {
+    background-position: -120% 0;
   }
 }
 
 @keyframes pulse-glow {
   0%,
   100% {
-    opacity: 0.35;
+    opacity: 0.32;
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.72;
   }
 }
 
@@ -386,7 +516,7 @@
     opacity: 0.85;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.04);
     opacity: 1;
   }
 }
