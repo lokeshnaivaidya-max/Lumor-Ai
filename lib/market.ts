@@ -30,28 +30,37 @@ export type Quote = {
 
 export type Candle = { t: number; c: number }
 
-const YF = "https://query1.finance.yahoo.com"
+const YF_HOSTS = [
+  "https://query1.finance.yahoo.com",
+  "https://query2.finance.yahoo.com",
+]
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
 
-async function fetchWithRetry(
-  url: string,
-  retries = 2,
-  revalidate = 20,
-): Promise<Response> {
+// path should start with "/" — we rotate the host across attempts to dodge
+// per-host rate limits (Yahoo returns 429 aggressively on shared IPs).
+async function fetchJson(
+  path: string,
+  revalidate = 30,
+  retries = 3,
+): Promise<any> {
   let lastErr: unknown
   for (let i = 0; i <= retries; i++) {
+    const host = YF_HOSTS[i % YF_HOSTS.length]
     try {
-      const res = await fetch(url, {
+      const res = await fetch(`${host}${path}`, {
         headers: { "User-Agent": UA, Accept: "application/json" },
         next: { revalidate },
       })
-      if (res.ok) return res
+      if (res.ok) return await res.json()
       lastErr = new Error(`HTTP ${res.status}`)
+      // backoff harder on rate limit
+      const wait = res.status === 429 ? 500 * (i + 1) : 200 * (i + 1)
+      await new Promise((r) => setTimeout(r, wait))
     } catch (err) {
       lastErr = err
+      await new Promise((r) => setTimeout(r, 250 * (i + 1)))
     }
-    await new Promise((r) => setTimeout(r, 200 * (i + 1)))
   }
   throw lastErr
 }
@@ -85,11 +94,10 @@ function deriveState(meta: Meta): { state: MarketState; nextEventAt?: number } {
 
 async function fetchMeta(symbol: string): Promise<Quote | null> {
   try {
-    const url = `${YF}/v8/finance/chart/${encodeURIComponent(
+    const path = `/v8/finance/chart/${encodeURIComponent(
       symbol,
     )}?range=1d&interval=1d`
-    const res = await fetchWithRetry(url)
-    const json = await res.json()
+    const json = await fetchJson(path, 20)
     const meta: Meta | undefined = json?.chart?.result?.[0]?.meta
     if (!meta) return null
     const price = Number(meta.regularMarketPrice ?? 0)
@@ -135,11 +143,10 @@ export async function getChart(
   interval = "1d",
 ): Promise<Candle[]> {
   try {
-    const url = `${YF}/v8/finance/chart/${encodeURIComponent(
+    const path = `/v8/finance/chart/${encodeURIComponent(
       symbol,
     )}?range=${range}&interval=${interval}`
-    const res = await fetchWithRetry(url)
-    const json = await res.json()
+    const json = await fetchJson(path, 60)
     const result = json?.chart?.result?.[0]
     if (!result) return []
     const ts: number[] = result.timestamp ?? []
@@ -165,11 +172,10 @@ export type SearchResult = {
 export async function searchSymbols(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return []
   try {
-    const url = `${YF}/v1/finance/search?q=${encodeURIComponent(
+    const path = `/v1/finance/search?q=${encodeURIComponent(
       query,
     )}&quotesCount=12&newsCount=0`
-    const res = await fetchWithRetry(url, 2, 60)
-    const json = await res.json()
+    const json = await fetchJson(path, 300)
     const quotes = json?.quotes ?? []
     return quotes
       .filter(
