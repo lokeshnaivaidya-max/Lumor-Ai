@@ -34,8 +34,13 @@ const YF_HOSTS = [
   "https://query1.finance.yahoo.com",
   "https://query2.finance.yahoo.com",
 ]
-const UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+// Yahoo aggressively 429s verbose desktop-Chrome UA strings on shared/cloud IPs.
+// Simple, minimal agents consistently pass. We rotate across attempts.
+const UAS = [
+  "Mozilla/5.0",
+  "Mozilla/5.0 (compatible; Lumora/1.0)",
+  "curl/8.4.0",
+]
 
 // path should start with "/" — we rotate the host across attempts to dodge
 // per-host rate limits (Yahoo returns 429 aggressively on shared IPs).
@@ -47,9 +52,10 @@ async function fetchJson(
   let lastErr: unknown
   for (let i = 0; i <= retries; i++) {
     const host = YF_HOSTS[i % YF_HOSTS.length]
+    const ua = UAS[i % UAS.length]
     try {
       const res = await fetch(`${host}${path}`, {
-        headers: { "User-Agent": UA, Accept: "application/json" },
+        headers: { "User-Agent": ua, Accept: "application/json" },
         next: { revalidate },
       })
       if (res.ok) return await res.json()
