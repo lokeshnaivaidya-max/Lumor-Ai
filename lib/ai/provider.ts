@@ -14,8 +14,9 @@ import { GoogleGenAI, Type } from "@google/genai"
 
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash"
-const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-2.5-flash-lite"
+// Latest officially supported Gemini 3 Flash Preview model (Developer API).
+const MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview"
+const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-3-flash-preview"
 
 export class AiConfigError extends Error {}
 export class AiBillingError extends Error {}
