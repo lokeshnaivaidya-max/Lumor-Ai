@@ -3,6 +3,32 @@
 import { useEffect, useRef } from "react"
 
 /**
+ * Precomputed radial-glow sprites keyed by hue. Drawing a cached sprite with
+ * `drawImage` is dramatically cheaper than setting `ctx.shadowBlur` per particle
+ * every frame (shadowBlur is one of the most expensive 2D-canvas operations),
+ * while producing a visually identical soft glow.
+ */
+const spriteCache = new Map<number, HTMLCanvasElement>()
+function glowSprite(hue: number): HTMLCanvasElement {
+  const key = Math.round(hue)
+  const cached = spriteCache.get(key)
+  if (cached) return cached
+  const size = 64
+  const c = document.createElement("canvas")
+  c.width = size
+  c.height = size
+  const g = c.getContext("2d")!
+  const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  grad.addColorStop(0, `oklch(0.86 0.16 ${key} / 0.95)`)
+  grad.addColorStop(0.35, `oklch(0.8 0.16 ${key} / 0.4)`)
+  grad.addColorStop(1, `oklch(0.8 0.16 ${key} / 0)`)
+  g.fillStyle = grad
+  g.fillRect(0, 0, size, size)
+  spriteCache.set(key, c)
+  return c
+}
+
+/**
  * Cinematic ambient background.
  * - Layered aurora blobs (CSS) for volumetric lighting.
  * - A canvas that renders two symmetric "light wings" made of flowing
@@ -90,12 +116,10 @@ export function AmbientBackground() {
           const fade = Math.pow(seg, 0.6) // brighter toward tips
           const a = (0.05 + tw * 0.28) * (0.35 + fade * 0.65)
           const r = 1.1 + tw * 1.6 + fade * 0.8
-          ctx.beginPath()
-          ctx.arc(x, y, r, 0, Math.PI * 2)
-          ctx.fillStyle = `oklch(0.82 0.16 ${f.hue} / ${a.toFixed(3)})`
-          ctx.shadowBlur = 14
-          ctx.shadowColor = `oklch(0.78 0.17 ${f.hue} / 0.55)`
-          ctx.fill()
+          const sprite = glowSprite(f.hue)
+          const d = (r + 13) * 2
+          ctx.globalAlpha = Math.min(1, a * 1.15)
+          ctx.drawImage(sprite, x - d / 2, y - d / 2, d, d)
         }
       }
     }
@@ -139,16 +163,14 @@ export function AmbientBackground() {
         if (p.y < 0) p.y = height
         if (p.y > height) p.y = 0
 
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `oklch(0.83 0.15 ${p.hue} / ${p.a})`
-        ctx.shadowBlur = 8
-        ctx.shadowColor = `oklch(0.78 0.16 ${p.hue} / 0.6)`
-        ctx.fill()
+        const sprite = glowSprite(p.hue)
+        const d = (p.r + 9) * 2
+        ctx.globalAlpha = p.a
+        ctx.drawImage(sprite, p.x - d / 2, p.y - d / 2, d, d)
       }
 
+      ctx.globalAlpha = 1
       ctx.globalCompositeOperation = "source-over"
-      ctx.shadowBlur = 0
       raf = requestAnimationFrame(render)
     }
 
@@ -159,6 +181,7 @@ export function AmbientBackground() {
       ctx.globalCompositeOperation = "lighter"
       drawWing(width / 2, height * 0.42, 1, width * 0.4, height * 0.45)
       drawWing(width / 2, height * 0.42, -1, width * 0.4, height * 0.45)
+      ctx.globalAlpha = 1
       ctx.globalCompositeOperation = "source-over"
     }
 
@@ -167,12 +190,20 @@ export function AmbientBackground() {
       mouse.ty = e.clientY
     }
     const onResize = () => setSize()
-    window.addEventListener("mousemove", onMove)
+    // Pause the animation loop entirely when the tab is hidden — no wasted
+    // GPU/CPU cycles in the background, and it resumes seamlessly on return.
+    const onVisibility = () => {
+      cancelAnimationFrame(raf)
+      if (!reduce && !document.hidden) raf = requestAnimationFrame(render)
+    }
+    window.addEventListener("mousemove", onMove, { passive: true })
     window.addEventListener("resize", onResize)
+    document.addEventListener("visibilitychange", onVisibility)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener("mousemove", onMove)
       window.removeEventListener("resize", onResize)
+      document.removeEventListener("visibilitychange", onVisibility)
     }
   }, [])
 

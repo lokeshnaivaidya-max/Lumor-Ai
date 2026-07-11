@@ -31,6 +31,26 @@ function getClient(): GoogleGenAI {
   return client
 }
 
+/* --------------------------- Lightweight TTL cache -------------------------- */
+// In-memory cache to avoid re-running expensive model calls for the same input
+// within a short window (per warm server instance).
+
+type CacheEntry<T> = { value: T; at: number }
+const cache = new Map<string, CacheEntry<unknown>>()
+
+async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key) as CacheEntry<T> | undefined
+  if (hit && Date.now() - hit.at < ttlMs) return hit.value
+  const value = await fn()
+  cache.set(key, { value, at: Date.now() })
+  if (cache.size > 500) {
+    // Evict the oldest entries to keep the map bounded.
+    const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 100)
+    for (const [k] of oldest) cache.delete(k)
+  }
+  return value
+}
+
 function classify(err: unknown): Error {
   const msg = err instanceof Error ? err.message : String(err)
   if (/quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(msg)) {
@@ -76,6 +96,17 @@ export type NewsSentiment = {
   overall: "positive" | "negative" | "neutral"
   summary: string
   items: NewsSentimentItem[]
+}
+
+export type InvestmentResearch = {
+  investmentThesis: string
+  catalysts: string[]
+  riskFactors: string[]
+  shortTermView: string
+  swingView: string
+  longTermView: string
+  confidenceScore: number
+  disclaimer: string
 }
 
 /* -------------------------------- Schemas -------------------------------- */
@@ -153,6 +184,21 @@ const newsSchema = {
   required: ["overall", "summary", "items"],
 }
 
+const researchSchema = {
+  type: Type.OBJECT,
+  properties: {
+    investmentThesis: { type: Type.STRING, description: "The core investment thesis in 3-5 sentences, grounded in the supplied fundamentals, technicals, and news. Explain WHY." },
+    catalysts: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3-5 concrete potential catalysts (earnings, macro, sector, technical breakouts) drawn from the data/headlines." },
+    riskFactors: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3-5 specific downside risks tied to data or headlines." },
+    shortTermView: { type: Type.STRING, description: "Days-horizon outlook with trigger levels and reasoning." },
+    swingView: { type: Type.STRING, description: "Weeks-horizon outlook with trigger levels and reasoning." },
+    longTermView: { type: Type.STRING, description: "Months+ horizon outlook with reasoning." },
+    confidenceScore: { type: Type.NUMBER, description: "Integer 0-100 confidence in the thesis." },
+  },
+  required: ["investmentThesis", "catalysts", "riskFactors", "shortTermView", "swingView", "longTermView", "confidenceScore"],
+  propertyOrdering: ["investmentThesis", "catalysts", "riskFactors", "shortTermView", "swingView", "longTermView", "confidenceScore"],
+}
+
 const GROUNDING = `You must analyze ONLY the real data provided in the prompt (Yahoo Finance quotes, computed technical indicators, and real news headlines). NEVER invent, estimate, or hallucinate prices, financial figures, or news events. If a value is marked "n/a", state that the data is unavailable rather than guessing. Every conclusion must reference specific data points from the prompt.`
 
 /* ------------------------------- Functions ------------------------------- */
@@ -202,16 +248,42 @@ export async function generateNewsSentiment(input: { name: string; headlines: st
 /** Concise market-wide brief from a set of real index/instrument quotes. */
 export async function generateMarketSummary(input: { region: string; movers: string }): Promise<string> {
   const system = `You are Lumora's markets desk. Write a single tight paragraph (max 3 sentences) summarizing the current market tone for the ${input.region} region. ${GROUNDING} Do not use markdown headers or bullet points.`
+  return cached(`summary:${input.region}:${input.movers}`, 60_000, async () => {
+    try {
+      const res = await getClient().models.generateContent({
+        model: MODEL_FAST,
+        contents: `Current snapshot of key instruments (symbol: price, % change):\n${input.movers}\n\nSummarize the market tone in plain prose.`,
+        config: {
+          systemInstruction: system,
+          temperature: 0.4,
+        },
+      })
+      return (res.text ?? "").trim()
+    } catch (err) {
+      throw classify(err)
+    }
+  })
+}
+
+/** Long-form investment research (thesis, catalysts, risks, multi-horizon) grounded in real data. */
+export async function generateInvestmentResearch(input: {
+  name: string
+  context: string
+}): Promise<InvestmentResearch> {
+  const system = `You are Lumora, a senior equity/asset research analyst writing a concise institutional research note. Always explain WHY. ${GROUNDING}`
   try {
     const res = await getClient().models.generateContent({
-      model: MODEL_FAST,
-      contents: `Current snapshot of key instruments (symbol: price, % change):\n${input.movers}\n\nSummarize the market tone in plain prose.`,
+      model: MODEL,
+      contents: `Produce an investment research note for the following instrument. Ground every statement in these figures and headlines.\n\n${input.context}`,
       config: {
         systemInstruction: system,
+        responseMimeType: "application/json",
+        responseSchema: researchSchema,
         temperature: 0.4,
       },
     })
-    return (res.text ?? "").trim()
+    const parsed = JSON.parse((res.text ?? "").trim()) as Omit<InvestmentResearch, "disclaimer">
+    return { ...parsed, disclaimer: DISCLAIMER }
   } catch (err) {
     throw classify(err)
   }
