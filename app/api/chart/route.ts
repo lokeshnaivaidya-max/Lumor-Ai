@@ -10,6 +10,7 @@ const RANGE_INTERVAL: Record<string, string> = {
   "6mo": "1d",
   "1y": "1d",
   "5y": "1wk",
+  max: "1mo",
 }
 
 export async function GET(req: Request) {

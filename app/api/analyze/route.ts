@@ -1,105 +1,113 @@
-import { streamText } from "ai"
+import { NextResponse } from "next/server"
 import { getQuote, getChart, displayName } from "@/lib/market"
 import { computeIndicators } from "@/lib/indicators"
+import { getNews } from "@/lib/news"
+import { generateAnalysis, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 
 export const runtime = "nodejs"
-export const maxDuration = 30
+export const maxDuration = 60
+
+function fmt(n: number | null | undefined, d = 2) {
+  return n == null ? "n/a" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
+}
+
+function bigNum(n?: number) {
+  if (n == null) return "n/a"
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  return n.toLocaleString()
+}
 
 export async function POST(req: Request) {
-  const { symbol, horizon = "swing" } = await req.json()
-  if (!symbol) {
-    return new Response("Missing symbol", { status: 400 })
+  let body: { symbol?: string; horizon?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
   }
+  const symbol = body.symbol?.trim()
+  const horizon = body.horizon ?? "swing"
+  if (!symbol) return NextResponse.json({ error: "Missing symbol" }, { status: 400 })
 
-  const [quote, candles] = await Promise.all([
-    getQuote(symbol),
+  const [quote, candles, news] = await Promise.all([
+    getQuote(symbol, { withFundamentals: true }),
     getChart(symbol, "1y", "1d"),
+    getNews(symbol, 8),
   ])
 
   if (!quote) {
-    return new Response("Unable to load market data for this symbol.", { status: 404 })
+    return NextResponse.json({ error: "Unable to load market data for this symbol." }, { status: 404 })
   }
 
-  const closes = candles.map((c) => c.c)
-  const ind = computeIndicators(closes)
+  const ind = computeIndicators(candles)
+  const name = displayName(quote.symbol, quote.name)
 
-  const name = displayName(symbol, quote.name)
-  const fib = ind.fib
+  const fibStr = ind.fib
     ? Object.entries(ind.fib)
         .map(([k, v]) => `${k}: ${v.toFixed(2)}`)
         .join(", ")
     : "n/a"
 
-  const context = `
-Instrument: ${name} (${quote.symbol})
-Exchange: ${quote.exchange} | Currency: ${quote.currency} | Market: ${quote.marketState}
-Last price: ${quote.price.toFixed(2)} (${quote.changePercent >= 0 ? "+" : ""}${quote.changePercent.toFixed(2)}% today)
-Previous close: ${quote.previousClose.toFixed(2)}
-52-week range: ${quote.fiftyTwoWeekLow?.toFixed(2) ?? "?"} – ${quote.fiftyTwoWeekHigh?.toFixed(2) ?? "?"}
+  const newsStr = news.length
+    ? news
+        .slice(0, 8)
+        .map((n, i) => `${i + 1}. "${n.title}" — ${n.publisher} (${new Date(n.publishedAt).toISOString().slice(0, 10)})`)
+        .join("\n")
+    : "No recent headlines available."
 
-Technical snapshot (computed from 1y daily closes):
-- Trend regime: ${ind.trend}
-- RSI(14): ${ind.rsi?.toFixed(1) ?? "n/a"}
-- MACD: ${ind.macd ? `${ind.macd.macd.toFixed(2)} (signal ${ind.macd.signal.toFixed(2)}, hist ${ind.macd.histogram.toFixed(2)})` : "n/a"}
-- EMA20/50/200: ${ind.ema20?.toFixed(2) ?? "?"} / ${ind.ema50?.toFixed(2) ?? "?"} / ${ind.ema200?.toFixed(2) ?? "?"}
-- Bollinger(20,2): ${ind.bollinger ? `${ind.bollinger.lower.toFixed(2)} – ${ind.bollinger.upper.toFixed(2)}` : "n/a"}
-- ATR(14): ${ind.atr?.toFixed(2) ?? "n/a"}
-- Support / Resistance (60d): ${ind.support?.toFixed(2) ?? "?"} / ${ind.resistance?.toFixed(2) ?? "?"}
-- Fibonacci: ${fib}
+  const context = `
+INSTRUMENT
+Name: ${name} (${quote.symbol})
+Type: ${quote.assetType ?? "n/a"} | Exchange: ${quote.exchange} | Currency: ${quote.currency}
+Market status: ${quote.marketState}
+Sector: ${quote.sector ?? "n/a"} | Industry: ${quote.industry ?? "n/a"}
+
+PRICE
+Last: ${fmt(quote.price)} (${quote.changePercent >= 0 ? "+" : ""}${quote.changePercent.toFixed(2)}% today)
+Previous close: ${fmt(quote.previousClose)} | Open: ${fmt(quote.open)}
+Day range: ${fmt(quote.dayLow)} – ${fmt(quote.dayHigh)}
+52-week range: ${fmt(quote.fiftyTwoWeekLow)} – ${fmt(quote.fiftyTwoWeekHigh)}
+Volume: ${bigNum(quote.volume)} (avg ${bigNum(quote.avgVolume)})
+
+FUNDAMENTALS
+Market cap: ${bigNum(quote.marketCap)}
+Trailing P/E: ${fmt(quote.trailingPE)} | Forward P/E: ${fmt(quote.forwardPE)}
+EPS (TTM): ${fmt(quote.eps)} | Dividend yield: ${quote.dividendYield != null ? quote.dividendYield.toFixed(2) + "%" : "n/a"}
+Beta: ${fmt(quote.beta)}
+
+TECHNICALS (computed from 1y daily candles)
+Trend regime: ${ind.trend} (strength: ${ind.trendStrength}, ADX ${fmt(ind.adx, 1)})
+Momentum: ${ind.momentum}
+RSI(14): ${fmt(ind.rsi, 1)} | Stoch RSI %K: ${ind.stochRsi ? fmt(ind.stochRsi.k, 1) : "n/a"}
+MACD: ${ind.macd ? `${fmt(ind.macd.macd)} (signal ${fmt(ind.macd.signal)}, hist ${fmt(ind.macd.histogram)})` : "n/a"}
+EMA 20/50/200: ${fmt(ind.ema20)} / ${fmt(ind.ema50)} / ${fmt(ind.ema200)}
+SMA 50: ${fmt(ind.sma50)} | VWAP: ${fmt(ind.vwap)}
+Bollinger(20,2): ${ind.bollinger ? `${fmt(ind.bollinger.lower)} – ${fmt(ind.bollinger.upper)}` : "n/a"}
+ATR(14): ${fmt(ind.atr)}
+Support / Resistance (60d): ${fmt(ind.support)} / ${fmt(ind.resistance)}
+Fibonacci: ${fibStr}
+
+RECENT HEADLINES
+${newsStr}
+
 Trader horizon requested: ${horizon}
 `.trim()
 
-  let capturedError = ""
-  const result = streamText({
-    model: "anthropic/claude-sonnet-4.5",
-    temperature: 0.4,
-    onError: ({ error }) => {
-      capturedError = error instanceof Error ? error.message : String(error)
-      console.log("[v0] analyze onError:", capturedError)
-    },
-    system: `You are Lumora, an elite market intelligence analyst. You produce sharp, structured, institutional-grade technical analysis grounded ONLY in the data provided.
-
-Rules:
-- Use clean markdown with these exact section headers: "## Snapshot", "## Technical Read", "## Key Levels", "## Scenarios", "## Risk". 
-- Be specific and quantitative — cite the actual numbers from the data.
-- Under Scenarios, give a Bullish and a Bearish case with concrete trigger levels.
-- Keep it tight and high-signal; no filler, no hedging boilerplate.
-- End with a one-line "Bias:" verdict (Bullish / Bearish / Neutral) with a confidence percentage.
-- Always append this exact disclaimer as the final line in italics: *For research and educational purposes only. Not financial advice.*`,
-    prompt: `Analyze the following instrument for a ${horizon} trader.\n\n${context}`,
-  })
-
-  // Stream manually so we can surface provider/billing errors to the client
-  // instead of silently emitting an empty stream.
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      let streamed = false
-      try {
-        for await (const delta of result.textStream) {
-          streamed = true
-          controller.enqueue(encoder.encode(delta))
-        }
-      } catch (err) {
-        capturedError = capturedError || (err instanceof Error ? err.message : String(err))
-      } finally {
-        if (!streamed && capturedError) {
-          const friendly = /credit card|billing|payment|quota|insufficient|forbidden|403/i.test(
-            capturedError,
-          )
-            ? "**AI analysis is temporarily unavailable.**\n\nThe AI Gateway needs billing enabled on the Vercel account before it can generate analysis. The live market data and technicals above are fully functional."
-            : "**AI analysis is temporarily unavailable.**\n\nThe model provider returned an error. The live market data and technicals above are fully functional — please try again shortly."
-          controller.enqueue(encoder.encode(friendly))
-        }
-        controller.close()
-      }
-    },
-  })
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
-  })
+  try {
+    const analysis = await generateAnalysis({ name, horizon, context })
+    return NextResponse.json(
+      { analysis, meta: { symbol: quote.symbol, name, horizon } },
+      { headers: { "Cache-Control": "no-store" } },
+    )
+  } catch (err) {
+    const message =
+      err instanceof AiBillingError
+        ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
+        : err instanceof AiConfigError
+          ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it. Live market data and technicals remain fully functional."
+          : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
+    console.log("[v0] analyze error:", err instanceof Error ? err.message : String(err))
+    return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
+  }
 }
