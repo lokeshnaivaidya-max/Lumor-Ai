@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
-import { generateText } from "ai"
 import { getNews } from "@/lib/news"
 import { displayName } from "@/lib/market"
-import { AI_MODEL_FAST } from "@/lib/ai"
+import { chatComplete } from "@/lib/ai"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -25,13 +24,17 @@ export async function GET(req: Request) {
 
   const raw = await getNews(symbol, 10)
   if (raw.length === 0) {
-    return NextResponse.json({ items: [], overall: "neutral", summary: "No recent headlines found for this instrument." })
+    return NextResponse.json({
+      items: [],
+      overall: "neutral",
+      summary: "No recent headlines found for this instrument.",
+    })
   }
 
   const name = displayName(symbol)
   const headlines = raw.map((n, i) => `${i}. "${n.title}" — ${n.publisher}`).join("\n")
 
-  let analyzed: AnalyzedNews[] = raw.map((n) => ({
+  const analyzed: AnalyzedNews[] = raw.map((n) => ({
     title: n.title,
     publisher: n.publisher,
     link: n.link,
@@ -43,13 +46,20 @@ export async function GET(req: Request) {
   let summary = ""
 
   try {
-    const { text } = await generateText({
-      model: AI_MODEL_FAST,
-      temperature: 0.2,
-      system: `You are a financial news sentiment analyst. Classify each headline's likely impact on ${name} as "positive", "negative", or "neutral" FROM AN INVESTOR'S PERSPECTIVE. Base it only on the headline text. Respond with STRICT JSON only, no markdown fences.`,
-      prompt: `Headlines:\n${headlines}\n\nReturn JSON of this exact shape:
+    const text = await chatComplete(
+      [
+        {
+          role: "system",
+          content: `You are a financial news sentiment analyst. Classify each headline's likely impact on ${name} as "positive", "negative", or "neutral" FROM AN INVESTOR'S PERSPECTIVE. Base it only on the headline text. Respond with STRICT JSON only, no markdown fences.`,
+        },
+        {
+          role: "user",
+          content: `Headlines:\n${headlines}\n\nReturn JSON of this exact shape:
 {"overall":"positive|negative|neutral","summary":"one sentence overall read","items":[{"index":0,"sentiment":"positive|negative|neutral","reason":"max 12 words why"}]}`,
-    })
+        },
+      ],
+      { fast: true, temperature: 0.2, maxTokens: 800 },
+    )
 
     const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim()
     const parsed = JSON.parse(cleaned) as {

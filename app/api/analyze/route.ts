@@ -1,8 +1,7 @@
-import { streamText } from "ai"
 import { getQuote, getChart, displayName } from "@/lib/market"
 import { computeIndicators } from "@/lib/indicators"
 import { getNews } from "@/lib/news"
-import { AI_MODEL, DISCLAIMER } from "@/lib/ai"
+import { chatStream, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -94,15 +93,7 @@ ${newsStr}
 Trader horizon requested: ${horizon}
 `.trim()
 
-  let capturedError = ""
-  const result = streamText({
-    model: AI_MODEL,
-    temperature: 0.35,
-    onError: ({ error }) => {
-      capturedError = error instanceof Error ? error.message : String(error)
-      console.log("[v0] analyze onError:", capturedError)
-    },
-    system: `You are Lumora, an elite buy-side market intelligence analyst. You produce sharp, structured, institutional-grade analysis grounded STRICTLY in the data provided in the prompt.
+  const system = `You are Lumora, an elite buy-side market intelligence analyst. You produce sharp, structured, institutional-grade analysis grounded STRICTLY in the data provided in the prompt.
 
 ABSOLUTE RULES:
 - Never invent numbers, prices, news, or events. Use ONLY the figures given. If a figure is "n/a", say the data is unavailable — do not estimate it.
@@ -150,34 +141,31 @@ A concise paragraph tying it together.
 ## Verdict
 A single line: **Bias:** Bullish / Bearish / Neutral | **Confidence:** N% | **Risk level:** Low / Medium / High | **Risk-Reward:** e.g. 1:2.5
 
-End with this exact disclaimer as the final italic line: ${DISCLAIMER}`,
-    prompt: `Analyze the following instrument for a ${horizon} trader.\n\n${context}`,
-  })
+End with this exact disclaimer as the final italic line: ${DISCLAIMER}`
 
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      let streamed = false
-      try {
-        for await (const delta of result.textStream) {
-          streamed = true
-          controller.enqueue(encoder.encode(delta))
-        }
-      } catch (err) {
-        capturedError = capturedError || (err instanceof Error ? err.message : String(err))
-      } finally {
-        if (!streamed && capturedError) {
-          const friendly = /credit card|billing|payment|quota|insufficient|forbidden|403/i.test(capturedError)
-            ? "**AI analysis is temporarily unavailable.**\n\nThe AI provider needs billing enabled before it can generate analysis. The live market data and technicals above are fully functional."
-            : "**AI analysis is temporarily unavailable.**\n\nThe model provider returned an error. The live market data and technicals above are fully functional — please try again shortly."
-          controller.enqueue(encoder.encode(friendly))
-        }
-        controller.close()
-      }
-    },
-  })
+  let upstream: ReadableStream<Uint8Array>
+  try {
+    upstream = await chatStream(
+      [
+        { role: "system", content: system },
+        { role: "user", content: `Analyze the following instrument for a ${horizon} trader.\n\n${context}` },
+      ],
+      { temperature: 0.35 },
+    )
+  } catch (err) {
+    const friendly =
+      err instanceof AiBillingError
+        ? "**AI analysis is temporarily unavailable.**\n\nThe AI provider needs billing enabled before it can generate analysis. The live market data and technicals above are fully functional."
+        : err instanceof AiConfigError
+          ? "**AI analysis is not configured.**\n\nAdd an `OPENAI_API_KEY` in Project Settings to enable AI analysis. The live market data and technicals above are fully functional."
+          : "**AI analysis is temporarily unavailable.**\n\nThe model provider returned an error. The live market data and technicals above are fully functional — please try again shortly."
+    return new Response(friendly, {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    })
+  }
 
-  return new Response(stream, {
+  return new Response(upstream, {
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
   })
 }
