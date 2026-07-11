@@ -1,7 +1,11 @@
 // TEMPORARY diagnostic endpoint — GET /api/test-gemini
-// Sends "Reply with only OK" through the exact same Gemini provider that Lumora
-// uses (same @google/genai client + same GEMINI_API_KEY), and returns either the
-// raw model response or the FULL raw error JSON from Google, unmodified.
+//
+// Implements the OFFICIAL 2026 Google AI Studio auth-key (AQ.) flow:
+// the Interactions API via `ai.interactions.create({ model, input })`.
+// See https://ai.google.dev/gemini-api/docs/api-key (Interactions API tab).
+//
+// For comparison it also probes the legacy `generateContent` path.
+// Both return raw, unmodified output/error JSON from Google.
 //
 // Safe to delete once the Gemini auth issue is resolved.
 
@@ -29,13 +33,11 @@ function serializeError(err: unknown) {
   }
 
   const anyErr = err as Record<string, unknown>
-  // The @google/genai ApiError often carries the raw HTTP body/status here.
   if (anyErr.name) out.name = anyErr.name
   if (anyErr.message) out.message = anyErr.message
   if (anyErr.status) out.status = anyErr.status
   if (anyErr.code) out.code = anyErr.code
 
-  // Try to parse an embedded JSON error body out of the message, if present.
   const msg = typeof anyErr.message === "string" ? anyErr.message : ""
   const jsonMatch = msg.match(/\{[\s\S]*\}/)
   if (jsonMatch) {
@@ -55,8 +57,9 @@ export async function GET() {
   const meta = {
     model: MODEL,
     sdk: "@google/genai@2.11.0",
-    endpoint: `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-    auth: "x-goog-api-key (Developer API)",
+    auth: "x-goog-api-key (Gemini Developer API / auth key)",
+    primaryFlow: "interactions.create (official 2026 AQ-key path)",
+    primaryEndpoint: "https://generativelanguage.googleapis.com/v1beta/interactions",
     apiKeyPresent: Boolean(apiKey),
     apiKeyPrefix: apiKey ? apiKey.slice(0, 4) : null,
     apiKeyLength: apiKey ? apiKey.length : 0,
@@ -66,28 +69,37 @@ export async function GET() {
     return NextResponse.json({ ok: false, meta, error: "GEMINI_API_KEY is not configured." }, { status: 500 })
   }
 
+  const client = new GoogleGenAI({ apiKey })
+
+  // --- Primary: official Interactions API path for AQ auth keys ---
+  let interactions: Record<string, unknown>
   try {
-    // Exact same client construction as lib/ai/provider.ts.
-    const client = new GoogleGenAI({ apiKey })
+    const it = (await client.interactions.create({
+      model: MODEL,
+      input: "Reply with only OK",
+    })) as Record<string, unknown>
+
+    interactions = {
+      ok: true,
+      output_text: (it.output_text as string) ?? null,
+      raw: it,
+    }
+  } catch (err) {
+    interactions = { ok: false, error: serializeError(err) }
+  }
+
+  // --- Comparison: legacy generateContent path ---
+  let generateContent: Record<string, unknown>
+  try {
     const res = await client.models.generateContent({
       model: MODEL,
       contents: "Reply with only OK",
     })
-
-    return NextResponse.json({
-      ok: true,
-      meta,
-      text: (res.text ?? "").trim(),
-      raw: res,
-    })
+    generateContent = { ok: true, text: (res.text ?? "").trim(), raw: res }
   } catch (err) {
-    return NextResponse.json(
-      {
-        ok: false,
-        meta,
-        error: serializeError(err),
-      },
-      { status: 502 },
-    )
+    generateContent = { ok: false, error: serializeError(err) }
   }
+
+  const ok = interactions.ok === true
+  return NextResponse.json({ ok, meta, interactions, generateContent }, { status: ok ? 200 : 502 })
 }
