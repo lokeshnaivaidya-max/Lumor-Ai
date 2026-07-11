@@ -1,20 +1,22 @@
 "use client"
 
+import { memo } from "react"
 import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 import type { Quote } from "@/lib/market"
 
-function niceName(q: Quote) {
-  const map: Record<string, string> = {
-    "^GSPC": "S&P 500",
-    "^IXIC": "Nasdaq",
-    "^DJI": "Dow Jones",
-    "BTC-USD": "Bitcoin",
-    "ETH-USD": "Ethereum",
-  }
-  return map[q.symbol] ?? q.symbol
+const NAME_MAP: Record<string, string> = {
+  "^GSPC": "S&P 500",
+  "^IXIC": "Nasdaq",
+  "^DJI": "Dow Jones",
+  "BTC-USD": "Bitcoin",
+  "ETH-USD": "Ethereum",
 }
 
-export function MarketMarquee({ quotes }: { quotes: Quote[] }) {
+function niceName(q: Quote) {
+  return NAME_MAP[q.symbol] ?? q.symbol
+}
+
+export const MarketMarquee = memo(function MarketMarquee({ quotes }: { quotes: Quote[] }) {
   if (!quotes.length) return null
   const items = [...quotes, ...quotes]
 
@@ -61,4 +63,4 @@ export function MarketMarquee({ quotes }: { quotes: Quote[] }) {
       </div>
     </div>
   )
-}
+})

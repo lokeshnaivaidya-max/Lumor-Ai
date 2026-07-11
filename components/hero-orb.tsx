@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef } from "react"
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react"
+import { motion, useInView, useMotionValue, useSpring, useTransform } from "motion/react"
 
 // Deterministic smooth path so SSR and client match.
 function buildPath(points: number[], w: number, h: number, pad = 0) {
@@ -43,6 +43,10 @@ const NODES = [
 
 export function HeroOrb() {
   const ref = useRef<HTMLDivElement>(null)
+  const viewRef = useRef<HTMLDivElement>(null)
+  // Only run the perpetual node/pulse/core animations while the orb is on
+  // screen. When scrolled away they collapse to a static frame, freeing the GPU.
+  const inView = useInView(viewRef, { margin: "0px 0px -15% 0px" })
   const rx = useMotionValue(0)
   const ry = useMotionValue(0)
   const srx = useSpring(rx, { stiffness: 120, damping: 18 })
@@ -65,7 +69,7 @@ export function HeroOrb() {
   const path = buildPath(series, W, H, 8)
 
   return (
-    <div style={{ perspective: 1600 }}>
+    <div ref={viewRef} style={{ perspective: 1600 }}>
       <motion.div
         ref={ref}
         onMouseMove={onMove}
@@ -131,7 +135,7 @@ export function HeroOrb() {
                 strokeWidth="1"
                 strokeOpacity="0.25"
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: [0.12, 0.4, 0.12] }}
+                animate={{ pathLength: 1, opacity: inView ? [0.12, 0.4, 0.12] : 0.2 }}
                 transition={{
                   pathLength: { duration: 1.2, delay: 0.9 + i * 0.08 },
                   opacity: { duration: 3.5, repeat: Infinity, delay: i * 0.35, ease: "easeInOut" },
@@ -146,7 +150,7 @@ export function HeroOrb() {
                 r="2.4"
                 fill={`oklch(0.85 0.16 ${n.hue})`}
                 initial={{ cx: CX, cy: CY, opacity: 0 }}
-                animate={{ cx: [CX, n.x], cy: [CY, n.y], opacity: [0, 1, 0] }}
+                animate={inView ? { cx: [CX, n.x], cy: [CY, n.y], opacity: [0, 1, 0] } : { opacity: 0 }}
                 transition={{ duration: 2.4, repeat: Infinity, delay: 1.2 + i * 0.3, ease: "easeInOut" }}
               />
             ))}
@@ -170,7 +174,7 @@ export function HeroOrb() {
               cy={CY}
               r="46"
               fill="url(#core)"
-              animate={{ scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }}
+              animate={inView ? { scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] } : { scale: 1, opacity: 0.8 }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               style={{ transformOrigin: `${CX}px ${CY}px` }}
             />
