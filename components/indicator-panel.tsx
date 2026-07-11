@@ -1,9 +1,10 @@
 "use client"
 
+import { memo } from "react"
 import { motion } from "motion/react"
 import type { Indicators } from "@/lib/indicators"
 
-function fmt(n: number | null, d = 2) {
+function fmt(n: number | null | undefined, d = 2) {
   return n == null ? "—" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
@@ -23,7 +24,7 @@ function Panel({ title, children, delay = 0 }: { title: string; children: React.
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
       className="edge-light rounded-[1.5rem] glass-panel p-5"
     >
       <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
@@ -32,21 +33,22 @@ function Panel({ title, children, delay = 0 }: { title: string; children: React.
   )
 }
 
-export function IndicatorPanel({ ind, currency }: { ind: Indicators; currency: string }) {
-  void currency
+function IndicatorPanelBase({ ind }: { ind: Indicators; currency?: string }) {
   const rsiTone = ind.rsi == null ? "muted" : ind.rsi > 70 ? "neg" : ind.rsi < 30 ? "pos" : undefined
   const macdTone = ind.macd ? (ind.macd.histogram >= 0 ? "pos" : "neg") : "muted"
   const rsiPct = ind.rsi == null ? 0 : Math.max(0, Math.min(100, ind.rsi))
+  const stochTone = ind.stochRsi == null ? "muted" : ind.stochRsi.k > 80 ? "neg" : ind.stochRsi.k < 20 ? "pos" : undefined
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Panel title="Momentum" delay={0}>
-        {/* RSI gauge */}
         <div className="mb-4">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">RSI (14)</span>
-            <span className={`font-mono text-sm tabular-nums ${rsiTone === "neg" ? "text-neg" : rsiTone === "pos" ? "text-pos" : "text-foreground"}`}>
-              {fmt(ind.rsi)}
+            <span
+              className={`font-mono text-sm tabular-nums ${rsiTone === "neg" ? "text-neg" : rsiTone === "pos" ? "text-pos" : "text-foreground"}`}
+            >
+              {fmt(ind.rsi, 1)}
             </span>
           </div>
           <div className="relative h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -57,7 +59,7 @@ export function IndicatorPanel({ ind, currency }: { ind: Indicators; currency: s
               initial={{ width: 0 }}
               whileInView={{ width: `${rsiPct}%` }}
               viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 background:
                   rsiTone === "neg"
@@ -69,14 +71,14 @@ export function IndicatorPanel({ ind, currency }: { ind: Indicators; currency: s
             />
           </div>
         </div>
+        <Stat label="Stoch RSI %K" value={ind.stochRsi ? fmt(ind.stochRsi.k, 1) : "—"} tone={stochTone} />
         <Stat label="MACD" value={ind.macd ? fmt(ind.macd.macd) : "—"} tone={macdTone} />
         <Stat label="Signal" value={ind.macd ? fmt(ind.macd.signal) : "—"} />
         <Stat label="Histogram" value={ind.macd ? fmt(ind.macd.histogram) : "—"} tone={macdTone} />
-        <Stat label="ATR (14)" value={fmt(ind.atr)} />
       </Panel>
 
       <Panel title="Trend" delay={0.06}>
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               ind.trend === "bullish"
@@ -88,28 +90,40 @@ export function IndicatorPanel({ ind, currency }: { ind: Indicators; currency: s
           >
             {ind.trend.toUpperCase()}
           </span>
+          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+            {ind.trendStrength} strength
+          </span>
+          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+            {ind.momentum}
+          </span>
         </div>
+        <Stat label="ADX (14)" value={fmt(ind.adx, 1)} />
         <Stat label="EMA 20" value={fmt(ind.ema20)} />
         <Stat label="EMA 50" value={fmt(ind.ema50)} />
         <Stat label="EMA 200" value={fmt(ind.ema200)} />
+      </Panel>
+
+      <Panel title="Volatility & Value" delay={0.12}>
+        <Stat label="Bollinger Upper" value={ind.bollinger ? fmt(ind.bollinger.upper) : "—"} />
+        <Stat label="Bollinger Middle" value={ind.bollinger ? fmt(ind.bollinger.middle) : "—"} />
+        <Stat label="Bollinger Lower" value={ind.bollinger ? fmt(ind.bollinger.lower) : "—"} />
+        <Stat label="ATR (14)" value={fmt(ind.atr)} />
+        <Stat label="VWAP" value={fmt(ind.vwap)} />
+      </Panel>
+
+      <Panel title="Key Levels" delay={0.18}>
+        <Stat label="Support (60d)" value={fmt(ind.support)} tone="pos" />
+        <Stat label="Resistance (60d)" value={fmt(ind.resistance)} tone="neg" />
         <Stat label="SMA 50" value={fmt(ind.sma50)} />
-      </Panel>
-
-      <Panel title="Bollinger Bands" delay={0.12}>
-        <Stat label="Upper" value={ind.bollinger ? fmt(ind.bollinger.upper) : "—"} />
-        <Stat label="Middle" value={ind.bollinger ? fmt(ind.bollinger.middle) : "—"} />
-        <Stat label="Lower" value={ind.bollinger ? fmt(ind.bollinger.lower) : "—"} />
-        <Stat label="Support" value={fmt(ind.support)} tone="pos" />
-        <Stat label="Resistance" value={fmt(ind.resistance)} tone="neg" />
-      </Panel>
-
-      <Panel title="Fibonacci Retracement" delay={0.18}>
         {ind.fib ? (
-          Object.entries(ind.fib).map(([k, v]) => <Stat key={k} label={k} value={fmt(v)} />)
-        ) : (
-          <p className="py-2 text-xs text-muted-foreground">Insufficient data</p>
-        )}
+          <>
+            <Stat label="Fib 0.382" value={fmt(ind.fib["0.382"])} />
+            <Stat label="Fib 0.618" value={fmt(ind.fib["0.618"])} />
+          </>
+        ) : null}
       </Panel>
     </div>
   )
 }
+
+export const IndicatorPanel = memo(IndicatorPanelBase)

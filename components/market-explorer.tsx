@@ -1,18 +1,26 @@
 "use client"
 
 import useSWR from "swr"
-import { useMemo, useState } from "react"
+import dynamic from "next/dynamic"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { SymbolSearch } from "@/components/symbol-search"
-import { PriceChart, type Candle } from "@/components/price-chart"
-import { IndicatorPanel } from "@/components/indicator-panel"
-import { AiAnalysis } from "@/components/ai-analysis"
 import { computeIndicators } from "@/lib/indicators"
-import type { Quote } from "@/lib/market"
-import { TrendingUp, TrendingDown, Clock } from "lucide-react"
+import { REGION_CONFIG, type Quote, type Region, type Candle } from "@/lib/market"
+import { TrendingUp, TrendingDown, Clock, Globe } from "lucide-react"
+
+// Heavy, below-the-fold pieces are code-split so first paint stays light.
+const PriceChart = dynamic(() => import("@/components/price-chart").then((m) => m.PriceChart), {
+  ssr: false,
+  loading: () => <ChartSkeleton />,
+})
+const IndicatorPanel = dynamic(() => import("@/components/indicator-panel").then((m) => m.IndicatorPanel), { ssr: false })
+const AiAnalysis = dynamic(() => import("@/components/ai-analysis").then((m) => m.AiAnalysis), { ssr: false })
+const NewsPanel = dynamic(() => import("@/components/news-panel").then((m) => m.NewsPanel), { ssr: false })
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 const RANGES = ["1d", "5d", "1mo", "6mo", "1y", "5y"] as const
+const REGIONS: Region[] = ["US", "IN", "GB", "JP", "GLOBAL"]
 
 const STATE_LABEL: Record<string, string> = {
   REGULAR: "Open",
@@ -23,85 +31,109 @@ const STATE_LABEL: Record<string, string> = {
 
 function money(n: number | undefined, ccy: string) {
   if (n == null) return "—"
-  return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${ccy}`
+  return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${ccy ? " " + ccy : ""}`
+}
+
+function bigNum(n?: number) {
+  if (n == null) return "—"
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
+  return n.toLocaleString()
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="flex h-80 items-center justify-center rounded-[1.75rem] border border-border bg-card/40 text-sm text-muted-foreground">
+      <Clock className="mr-2 h-4 w-4 animate-spin" />
+      Loading chart…
+    </div>
+  )
 }
 
 export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const [symbol, setSymbol] = useState(initialSymbol)
   const [range, setRange] = useState<(typeof RANGES)[number]>("6mo")
+  const [region, setRegion] = useState<Region>("US")
 
-  // The API responds with { quotes: Quote[] }, so we read the first entry.
-  const { data: quoteData } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${symbol}`, fetcher, {
+  // Auto-detect the visitor's region once, then let them switch manually.
+  useEffect(() => {
+    let active = true
+    fetch("/api/region")
+      .then((r) => r.json())
+      .then((d) => {
+        if (active && d?.region) setRegion(d.region as Region)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const { data: quoteData } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${encodeURIComponent(symbol)}`, fetcher, {
     refreshInterval: 15000,
+    keepPreviousData: true,
   })
   const { data: chartData, isLoading: chartLoading } = useSWR<{ candles: Candle[] }>(
-    `/api/chart?symbol=${symbol}&range=${range}`,
+    `/api/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`,
     fetcher,
+    { keepPreviousData: true },
   )
 
   const quote = quoteData?.quotes?.[0] ?? null
-  const candles = chartData?.candles ?? []
+  const candles = useMemo(() => chartData?.candles ?? [], [chartData])
   const positive = (quote?.changePercent ?? 0) >= 0
+  const ccy = quote?.currency ?? ""
 
-  const indicators = useMemo(() => computeIndicators(candles.map((c) => c.c)), [candles])
+  const indicators = useMemo(() => computeIndicators(candles), [candles])
+
+  const handleSelect = useCallback((s: string) => setSymbol(s), [])
+  const handleRegion = useCallback((r: Region) => setRegion(r), [])
+
+  const watchlist = REGION_CONFIG[region].watchlist
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-32">
-      <div className="flex flex-col items-start gap-6 pb-8 pt-4">
-        <SymbolSearch onSelect={setSymbol} />
-      </div>
+      <div className="flex flex-col items-start gap-4 pb-6 pt-4">
+        <SymbolSearch onSelect={handleSelect} />
 
-      {/* Quote header */}
-      <div className="glass-panel relative overflow-hidden rounded-[28px] p-6 sm:p-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{
-            background: positive
-              ? "radial-gradient(circle, oklch(0.72 0.15 155 / 0.14), transparent 70%)"
-              : "radial-gradient(circle, oklch(0.62 0.2 20 / 0.14), transparent 70%)",
-          }}
-        />
-        <div className="relative flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-mono text-3xl tracking-tight text-foreground">{quote?.symbol ?? symbol}</h1>
-              <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                {quote?.exchange || "—"}
-              </span>
-              <span
-                className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] ${
-                  quote?.marketState === "REGULAR" ? "bg-pos/10 text-pos" : "bg-muted/40 text-muted-foreground"
+        {/* Region + quick watchlist */}
+        <div className="flex w-full flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-black/20 p-0.5">
+            <Globe className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
+            {REGIONS.map((r) => (
+              <button
+                key={r}
+                onClick={() => handleRegion(r)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  region === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse bg-pos" : "bg-muted-foreground"}`}
-                />
-                {STATE_LABEL[quote?.marketState ?? "CLOSED"]}
-              </span>
-            </div>
-            <p className="mt-2 max-w-md truncate text-sm text-muted-foreground">{quote?.name ?? "Loading…"}</p>
+                {r}
+              </button>
+            ))}
           </div>
-
-          <div className="text-right">
-            <div className="font-mono text-4xl tracking-tight text-foreground sm:text-5xl">
-              {quote ? quote.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
-            </div>
-            {quote && (
-              <div
-                className={`mt-1.5 flex items-center justify-end gap-1.5 font-mono text-sm ${
-                  positive ? "text-pos" : "text-neg"
+          <div className="flex flex-wrap gap-1.5">
+            {watchlist.slice(0, 7).map((w) => (
+              <button
+                key={w}
+                onClick={() => handleSelect(w)}
+                className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                  symbol === w
+                    ? "border-accent/50 bg-accent/10 text-accent"
+                    : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                 }`}
               >
-                {positive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {positive ? "+" : ""}
-                {quote.change.toFixed(2)} ({positive ? "+" : ""}
-                {quote.changePercent.toFixed(2)}%)
-              </div>
-            )}
+                {w}
+              </button>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Quote header */}
+      <QuoteHeader quote={quote} symbol={symbol} positive={positive} />
 
       {/* Range selector */}
       <div className="mt-5 flex items-center gap-1.5">
@@ -122,50 +154,146 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
       {/* Chart */}
       <div className="mt-4 min-h-80">
-        {chartLoading && !candles.length ? (
-          <div className="flex h-80 items-center justify-center rounded-2xl border border-border bg-card/40 text-sm text-muted-foreground">
-            <Clock className="mr-2 h-4 w-4 animate-spin" />
-            Loading chart…
-          </div>
-        ) : (
-          <PriceChart candles={candles} positive={positive} />
-        )}
+        {chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} />}
       </div>
 
-      {/* Stats strip */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MiniStat label="Prev Close" value={money(quote?.previousClose, quote?.currency ?? "")} />
-        <MiniStat label="Day High" value={money(quote?.dayHigh, quote?.currency ?? "")} />
-        <MiniStat label="Day Low" value={money(quote?.dayLow, quote?.currency ?? "")} />
-        <MiniStat
-          label="52W Range"
-          value={
-            quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null
-              ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}`
-              : "—"
-          }
-        />
-      </div>
+      {/* Fundamentals + stats */}
+      <StatsGrid quote={quote} ccy={ccy} />
 
       {/* AI analysis */}
       <div className="mt-6">
         <AiAnalysis symbol={symbol} />
       </div>
 
+      {/* News + sentiment */}
+      <div className="mt-6">
+        <NewsPanel symbol={symbol} />
+      </div>
+
       {/* Indicators */}
       <h2 className="mb-4 mt-12 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
         Technical Indicators
       </h2>
-      <IndicatorPanel ind={indicators} currency={quote?.currency ?? ""} />
+      <IndicatorPanel ind={indicators} />
     </div>
   )
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+const QuoteHeader = memo(function QuoteHeader({
+  quote,
+  symbol,
+  positive,
+}: {
+  quote: Quote | null
+  symbol: string
+  positive: boolean
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-card/40 px-4 py-3.5 transition-colors hover:border-foreground/20">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-sm text-foreground">{value}</div>
+    <div className="glass-panel relative overflow-hidden rounded-[28px] p-6 sm:p-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl"
+        style={{
+          background: positive
+            ? "radial-gradient(circle, oklch(0.72 0.15 155 / 0.14), transparent 70%)"
+            : "radial-gradient(circle, oklch(0.62 0.2 20 / 0.14), transparent 70%)",
+        }}
+      />
+      <div className="relative flex flex-wrap items-end justify-between gap-6">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            {quote?.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={quote.logoUrl || "/placeholder.svg"}
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 rounded-lg bg-white/5 object-contain"
+                onError={(e) => {
+                  ;(e.currentTarget as HTMLImageElement).style.display = "none"
+                }}
+              />
+            )}
+            <h1 className="font-mono text-3xl tracking-tight text-foreground">{quote?.symbol ?? symbol}</h1>
+            <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
+              {quote?.exchange || "—"}
+            </span>
+            {quote?.assetType && (
+              <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                {quote.assetType}
+              </span>
+            )}
+            <span
+              className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] ${
+                quote?.marketState === "REGULAR" ? "bg-pos/10 text-pos" : "bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse bg-pos" : "bg-muted-foreground"}`}
+              />
+              {STATE_LABEL[quote?.marketState ?? "CLOSED"]}
+            </span>
+          </div>
+          <p className="mt-2 max-w-md truncate text-sm text-muted-foreground">{quote?.name ?? "Loading…"}</p>
+          {(quote?.sector || quote?.industry) && (
+            <p className="mt-1 max-w-md truncate text-xs text-muted-foreground/70">
+              {[quote?.sector, quote?.industry].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
+
+        <div className="text-right">
+          <div className="font-mono text-4xl tracking-tight text-foreground sm:text-5xl">
+            {quote ? quote.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
+          </div>
+          {quote && (
+            <div className={`mt-1.5 flex items-center justify-end gap-1.5 font-mono text-sm ${positive ? "text-pos" : "text-neg"}`}>
+              {positive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              {positive ? "+" : ""}
+              {quote.change.toFixed(2)} ({positive ? "+" : ""}
+              {quote.changePercent.toFixed(2)}%)
+            </div>
+          )}
+          {quote?.currency && <div className="mt-1 text-[11px] text-muted-foreground">{quote.currency}</div>}
+        </div>
+      </div>
     </div>
   )
-}
+})
+
+const StatsGrid = memo(function StatsGrid({ quote, ccy }: { quote: Quote | null; ccy: string }) {
+  const stats: { label: string; value: string }[] = [
+    { label: "Prev Close", value: money(quote?.previousClose, ccy) },
+    { label: "Open", value: money(quote?.open, ccy) },
+    { label: "Day High", value: money(quote?.dayHigh, ccy) },
+    { label: "Day Low", value: money(quote?.dayLow, ccy) },
+    {
+      label: "52W Range",
+      value:
+        quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null
+          ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}`
+          : "—",
+    },
+    { label: "Volume", value: bigNum(quote?.volume) },
+    { label: "Market Cap", value: bigNum(quote?.marketCap) },
+    { label: "P/E (TTM)", value: quote?.trailingPE != null ? quote.trailingPE.toFixed(2) : "—" },
+    { label: "EPS", value: quote?.eps != null ? quote.eps.toFixed(2) : "—" },
+    { label: "Div Yield", value: quote?.dividendYield != null ? `${quote.dividendYield.toFixed(2)}%` : "—" },
+    { label: "Beta", value: quote?.beta != null ? quote.beta.toFixed(2) : "—" },
+    {
+      label: "Updated",
+      value: quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "—",
+    },
+  ]
+  return (
+    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {stats.map((s) => (
+        <div key={s.label} className="rounded-2xl border border-border bg-card/40 px-4 py-3.5 transition-colors hover:border-foreground/20">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
+          <div className="mt-1 font-mono text-sm text-foreground">{s.value}</div>
+        </div>
+      ))}
+    </div>
+  )
+})
