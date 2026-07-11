@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
-import { generateAnalysis, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateInvestmentResearch, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 
 export async function POST(req: Request) {
-  const limit = rateLimit(`analyze:${clientIp(req)}`, 15, 60_000)
+  const limit = rateLimit(`research:${clientIp(req)}`, 10, 60_000)
   if (!limit.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
@@ -15,36 +15,35 @@ export async function POST(req: Request) {
     )
   }
 
-  let body: { symbol?: string; horizon?: string }
+  let body: { symbol?: string }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
   }
   const symbol = body.symbol?.trim()
-  const horizon = body.horizon?.trim() || "swing"
   if (!symbol) return NextResponse.json({ error: "Missing symbol" }, { status: 400 })
   if (symbol.length > 24) return NextResponse.json({ error: "Invalid symbol" }, { status: 400 })
 
-  const built = await buildInstrumentContext(symbol, { horizon })
+  const built = await buildInstrumentContext(symbol, { newsCount: 8 })
   if (!built) {
     return NextResponse.json({ error: "Unable to load market data for this symbol." }, { status: 404 })
   }
 
   try {
-    const analysis = await generateAnalysis({ name: built.name, horizon, context: built.context })
+    const research = await generateInvestmentResearch({ name: built.name, context: built.context })
     return NextResponse.json(
-      { analysis, meta: { symbol: built.quote.symbol, name: built.name, horizon } },
+      { research, meta: { symbol: built.quote.symbol, name: built.name } },
       { headers: { "Cache-Control": "no-store" } },
     )
   } catch (err) {
     const message =
       err instanceof AiBillingError
-        ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
+        ? "Research is temporarily unavailable — the Gemini API quota has been exhausted."
         : err instanceof AiConfigError
-          ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it. Live market data and technicals remain fully functional."
-          : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
-    console.log("[v0] analyze error:", err instanceof Error ? err.message : String(err))
+          ? "Research is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
+          : "Research is temporarily unavailable — the model provider returned an error."
+    console.log("[v0] research error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
   }
 }
