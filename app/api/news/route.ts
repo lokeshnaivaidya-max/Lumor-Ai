@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getNews } from "@/lib/news"
 import { displayName } from "@/lib/market"
-import { chatComplete } from "@/lib/ai"
+import { generateNewsSentiment } from "@/lib/ai/provider"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -31,9 +31,6 @@ export async function GET(req: Request) {
     })
   }
 
-  const name = displayName(symbol)
-  const headlines = raw.map((n, i) => `${i}. "${n.title}" — ${n.publisher}`).join("\n")
-
   const analyzed: AnalyzedNews[] = raw.map((n) => ({
     title: n.title,
     publisher: n.publisher,
@@ -46,30 +43,13 @@ export async function GET(req: Request) {
   let summary = ""
 
   try {
-    const text = await chatComplete(
-      [
-        {
-          role: "system",
-          content: `You are a financial news sentiment analyst. Classify each headline's likely impact on ${name} as "positive", "negative", or "neutral" FROM AN INVESTOR'S PERSPECTIVE. Base it only on the headline text. Respond with STRICT JSON only, no markdown fences.`,
-        },
-        {
-          role: "user",
-          content: `Headlines:\n${headlines}\n\nReturn JSON of this exact shape:
-{"overall":"positive|negative|neutral","summary":"one sentence overall read","items":[{"index":0,"sentiment":"positive|negative|neutral","reason":"max 12 words why"}]}`,
-        },
-      ],
-      { fast: true, temperature: 0.2, maxTokens: 800 },
-    )
-
-    const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim()
-    const parsed = JSON.parse(cleaned) as {
-      overall?: Sentiment
-      summary?: string
-      items?: { index: number; sentiment: Sentiment; reason: string }[]
-    }
-    if (parsed.overall) overall = parsed.overall
-    if (parsed.summary) summary = parsed.summary
-    for (const item of parsed.items ?? []) {
+    const result = await generateNewsSentiment({
+      name: displayName(symbol),
+      headlines: raw.map((n) => n.title),
+    })
+    overall = result.overall ?? "neutral"
+    summary = result.summary ?? ""
+    for (const item of result.items ?? []) {
       if (analyzed[item.index]) {
         analyzed[item.index].sentiment = item.sentiment ?? "neutral"
         analyzed[item.index].reason = item.reason ?? ""
@@ -77,7 +57,7 @@ export async function GET(req: Request) {
     }
   } catch (err) {
     console.log("[v0] news sentiment error:", err instanceof Error ? err.message : String(err))
-    // Graceful degradation: return headlines with neutral sentiment.
+    // Graceful degradation: return real headlines with neutral sentiment.
   }
 
   return NextResponse.json({ items: analyzed, overall, summary })

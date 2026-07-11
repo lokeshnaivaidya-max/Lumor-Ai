@@ -1,7 +1,8 @@
+import { NextResponse } from "next/server"
 import { getQuote, getChart, displayName } from "@/lib/market"
 import { computeIndicators } from "@/lib/indicators"
 import { getNews } from "@/lib/news"
-import { chatStream, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai"
+import { generateAnalysis, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -23,11 +24,11 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return new Response("Invalid request body.", { status: 400 })
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
   }
   const symbol = body.symbol?.trim()
   const horizon = body.horizon ?? "swing"
-  if (!symbol) return new Response("Missing symbol", { status: 400 })
+  if (!symbol) return NextResponse.json({ error: "Missing symbol" }, { status: 400 })
 
   const [quote, candles, news] = await Promise.all([
     getQuote(symbol, { withFundamentals: true }),
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   ])
 
   if (!quote) {
-    return new Response("Unable to load market data for this symbol.", { status: 404 })
+    return NextResponse.json({ error: "Unable to load market data for this symbol." }, { status: 404 })
   }
 
   const ind = computeIndicators(candles)
@@ -93,79 +94,20 @@ ${newsStr}
 Trader horizon requested: ${horizon}
 `.trim()
 
-  const system = `You are Lumora, an elite buy-side market intelligence analyst. You produce sharp, structured, institutional-grade analysis grounded STRICTLY in the data provided in the prompt.
-
-ABSOLUTE RULES:
-- Never invent numbers, prices, news, or events. Use ONLY the figures given. If a figure is "n/a", say the data is unavailable — do not estimate it.
-- Always explain WHY. Every conclusion must reference specific data points (an RSI level, an EMA cross, a P/E, a headline). Never output a bare Buy/Sell.
-- Be quantitative and cite the actual numbers.
-- Use clean GitHub-flavored markdown.
-
-Produce EXACTLY these sections with these headers, in this order:
-
-## Executive Summary
-2-3 sentences. What is this instrument doing and the single most important takeaway.
-
-## Bull Case
-3-4 bullet points with concrete supporting data.
-
-## Bear Case
-3-4 bullet points with concrete supporting data.
-
-## Technical Analysis
-Trend, momentum (RSI, MACD, Stoch RSI, ADX), moving-average structure, VWAP relationship. Reference the numbers.
-
-## Fundamental Analysis
-Valuation (P/E, EPS), market cap context, dividend, sector/industry. If it's an index/commodity/FX/crypto with no fundamentals, say so and focus on macro positioning.
-
-## Key Levels
-- **Support:** value + reasoning
-- **Resistance:** value + reasoning
-- **Trend strength:** interpret the ADX
-
-## Scenarios
-- **Short-term (days):** view + trigger levels
-- **Swing (weeks):** view + trigger levels
-- **Long-term (months+):** view + reasoning
-
-## Catalysts & Risks
-- **Positive catalysts:** tie to the headlines where relevant
-- **Negative factors / risks:** be specific
-
-## Market Sentiment
-One line: Positive / Negative / Neutral — with a one-sentence justification from headlines + technicals.
-
-## Investment Thesis
-A concise paragraph tying it together.
-
-## Verdict
-A single line: **Bias:** Bullish / Bearish / Neutral | **Confidence:** N% | **Risk level:** Low / Medium / High | **Risk-Reward:** e.g. 1:2.5
-
-End with this exact disclaimer as the final italic line: ${DISCLAIMER}`
-
-  let upstream: ReadableStream<Uint8Array>
   try {
-    upstream = await chatStream(
-      [
-        { role: "system", content: system },
-        { role: "user", content: `Analyze the following instrument for a ${horizon} trader.\n\n${context}` },
-      ],
-      { temperature: 0.35 },
+    const analysis = await generateAnalysis({ name, horizon, context })
+    return NextResponse.json(
+      { analysis, meta: { symbol: quote.symbol, name, horizon } },
+      { headers: { "Cache-Control": "no-store" } },
     )
   } catch (err) {
-    const friendly =
+    const message =
       err instanceof AiBillingError
-        ? "**AI analysis is temporarily unavailable.**\n\nThe AI provider needs billing enabled before it can generate analysis. The live market data and technicals above are fully functional."
+        ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
         : err instanceof AiConfigError
-          ? "**AI analysis is not configured.**\n\nAdd an `OPENAI_API_KEY` in Project Settings to enable AI analysis. The live market data and technicals above are fully functional."
-          : "**AI analysis is temporarily unavailable.**\n\nThe model provider returned an error. The live market data and technicals above are fully functional — please try again shortly."
-    return new Response(friendly, {
-      status: 200,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-    })
+          ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it. Live market data and technicals remain fully functional."
+          : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
+    console.log("[v0] analyze error:", err instanceof Error ? err.message : String(err))
+    return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
   }
-
-  return new Response(upstream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-  })
 }
