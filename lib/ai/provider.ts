@@ -137,22 +137,48 @@ function parseJsonResponse<T>(text: string | undefined, operation: string): T {
 export type Bias = "Bullish" | "Bearish" | "Neutral"
 export type SentimentLabel = "Positive" | "Negative" | "Neutral"
 export type RiskLevel = "Low" | "Medium" | "High"
+export type Recommendation = "Strong Buy" | "Buy" | "Hold" | "Wait" | "Sell" | "Strong Sell"
 
 export type Analysis = {
-  executiveSummary: string
-  bullCase: string[]
-  bearCase: string[]
-  technicalAnalysis: string
-  fundamentalAnalysis: string
-  riskAnalysis: string
-  support: string
-  resistance: string
-  swingView: string
-  longTermView: string
-  sentiment: SentimentLabel
-  bias: Bias
-  riskLevel: RiskLevel
+  // 1. Final recommendation
+  recommendation: Recommendation
+  recommendationReason: string
+  // 2. Confidence
   confidenceScore: number
+  confidenceNote: string
+  // 3. Quick summary
+  quickSummary: string[]
+  // 4. If you buy today
+  entry: string
+  target: string
+  stopLoss: string
+  holdingPeriod: string
+  riskReward: string
+  // New features
+  probabilityOfProfit: number
+  probabilityOfLoss: number
+  bestTimeframe: string
+  suitableFor: string[]
+  // 5 / 6
+  whyBuy: string[]
+  whatCouldGoWrong: string[]
+  // 7. Price levels
+  support: string
+  supportNote: string
+  resistance: string
+  resistanceNote: string
+  // 8. Risk level
+  riskLevel: RiskLevel
+  riskNote: string
+  // 9. Market mood
+  marketMood: Bias
+  marketMoodNote: string
+  // 10. Beginner explanation
+  beginnerExplanation: string
+  // 11. Pro investor view
+  proInvestorView: string
+  // 12. AI verdict
+  aiVerdict: string
   disclaimer: string
 }
 
@@ -184,52 +210,109 @@ export type InvestmentResearch = {
 const analysisSchema = {
   type: Type.OBJECT,
   properties: {
-    executiveSummary: { type: Type.STRING, description: "2-3 sentence high-level takeaway grounded in the data." },
-    bullCase: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3-4 bullish points, each citing a concrete data point." },
-    bearCase: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3-4 bearish points, each citing a concrete data point." },
-    technicalAnalysis: { type: Type.STRING, description: "Trend, momentum (RSI/MACD/StochRSI/ADX), moving-average structure, VWAP. Cite the numbers." },
-    fundamentalAnalysis: { type: Type.STRING, description: "Valuation (P/E, EPS), market cap, dividend, sector. If none apply, say so and focus on macro." },
-    riskAnalysis: { type: Type.STRING, description: "Specific downside risks and negative factors, tied to data/headlines." },
-    support: { type: Type.STRING, description: "Support level value + brief reasoning." },
-    resistance: { type: Type.STRING, description: "Resistance level value + brief reasoning." },
-    swingView: { type: Type.STRING, description: "Weeks-horizon view with trigger levels." },
-    longTermView: { type: Type.STRING, description: "Months+ horizon view with reasoning." },
-    sentiment: { type: Type.STRING, enum: ["Positive", "Negative", "Neutral"] },
-    bias: { type: Type.STRING, enum: ["Bullish", "Bearish", "Neutral"] },
+    recommendation: {
+      type: Type.STRING,
+      enum: ["Strong Buy", "Buy", "Hold", "Wait", "Sell", "Strong Sell"],
+      description: "The final call, grounded strictly in the supplied data.",
+    },
+    recommendationReason: { type: Type.STRING, description: "ONE simple sentence explaining the recommendation in plain everyday English." },
+    confidenceScore: { type: Type.NUMBER, description: "Integer 0-100 confidence in the recommendation." },
+    confidenceNote: { type: Type.STRING, description: "One simple sentence explaining what this confidence means. Remind that no prediction is guaranteed." },
+    quickSummary: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "Max 3 very short, simple bullet points. No jargon.",
+    },
+    entry: { type: Type.STRING, description: "Suggested entry price with currency symbol, drawn from the data. If not derivable, 'Data not available.'" },
+    target: { type: Type.STRING, description: "Target price with currency symbol, based on resistance/levels in the data." },
+    stopLoss: { type: Type.STRING, description: "Stop loss price with currency symbol, based on support/ATR in the data." },
+    holdingPeriod: { type: Type.STRING, description: "Expected holding time in plain words, e.g. '2-6 weeks'." },
+    riskReward: { type: Type.STRING, description: "Risk to reward ratio, e.g. '1 : 2.7'." },
+    probabilityOfProfit: { type: Type.NUMBER, description: "Integer 0-100 estimated probability the trade is profitable, based on the data. probabilityOfProfit + probabilityOfLoss must equal 100." },
+    probabilityOfLoss: { type: Type.NUMBER, description: "Integer 0-100 estimated probability of loss. Must equal 100 minus probabilityOfProfit." },
+    bestTimeframe: { type: Type.STRING, description: "The single best timeframe for this idea in plain words, e.g. 'Swing (a few weeks)'." },
+    suitableFor: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING, enum: ["Intraday", "Swing", "Long Term", "Dividend Investors", "Beginners", "Experienced Traders"] },
+      description: "Who this idea suits best. Pick only the ones that genuinely fit the data.",
+    },
+    whyBuy: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Max 4 simple reasons to buy, each in plain English tied to the data." },
+    whatCouldGoWrong: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Max 4 simple risks in plain English tied to the data/headlines." },
+    support: { type: Type.STRING, description: "Support price level with currency symbol." },
+    supportNote: { type: Type.STRING, description: "One simple sentence: this is the area where buyers usually start buying." },
+    resistance: { type: Type.STRING, description: "Resistance price level with currency symbol." },
+    resistanceNote: { type: Type.STRING, description: "One simple sentence: this is the area where selling pressure may appear." },
     riskLevel: { type: Type.STRING, enum: ["Low", "Medium", "High"] },
-    confidenceScore: { type: Type.NUMBER, description: "Integer 0-100 confidence in the stated bias." },
+    riskNote: { type: Type.STRING, description: "One simple sentence explaining the risk level." },
+    marketMood: { type: Type.STRING, enum: ["Bullish", "Bearish", "Neutral"] },
+    marketMoodNote: { type: Type.STRING, description: "One simple sentence explaining the mood. Avoid the words bullish/bearish in the explanation." },
+    beginnerExplanation: {
+      type: Type.STRING,
+      description: "Max 120 words. Explain like talking to a family member who never studied finance. Very short sentences. No technical words. Warm, honest, like a trusted elder brother.",
+    },
+    proInvestorView: {
+      type: Type.STRING,
+      description: "Technical section for advanced users. Cover trend, momentum, RSI, MACD, ADX, volume, moving averages, and institutional view, citing the numbers.",
+    },
+    aiVerdict: { type: Type.STRING, description: "ONE honest, simple sentence — what you would do if it were your own money." },
   },
   required: [
-    "executiveSummary",
-    "bullCase",
-    "bearCase",
-    "technicalAnalysis",
-    "fundamentalAnalysis",
-    "riskAnalysis",
-    "support",
-    "resistance",
-    "swingView",
-    "longTermView",
-    "sentiment",
-    "bias",
-    "riskLevel",
+    "recommendation",
+    "recommendationReason",
     "confidenceScore",
+    "confidenceNote",
+    "quickSummary",
+    "entry",
+    "target",
+    "stopLoss",
+    "holdingPeriod",
+    "riskReward",
+    "probabilityOfProfit",
+    "probabilityOfLoss",
+    "bestTimeframe",
+    "suitableFor",
+    "whyBuy",
+    "whatCouldGoWrong",
+    "support",
+    "supportNote",
+    "resistance",
+    "resistanceNote",
+    "riskLevel",
+    "riskNote",
+    "marketMood",
+    "marketMoodNote",
+    "beginnerExplanation",
+    "proInvestorView",
+    "aiVerdict",
   ],
   propertyOrdering: [
-    "executiveSummary",
-    "bullCase",
-    "bearCase",
-    "technicalAnalysis",
-    "fundamentalAnalysis",
-    "riskAnalysis",
-    "support",
-    "resistance",
-    "swingView",
-    "longTermView",
-    "sentiment",
-    "bias",
-    "riskLevel",
+    "recommendation",
+    "recommendationReason",
     "confidenceScore",
+    "confidenceNote",
+    "quickSummary",
+    "entry",
+    "target",
+    "stopLoss",
+    "holdingPeriod",
+    "riskReward",
+    "probabilityOfProfit",
+    "probabilityOfLoss",
+    "bestTimeframe",
+    "suitableFor",
+    "whyBuy",
+    "whatCouldGoWrong",
+    "support",
+    "supportNote",
+    "resistance",
+    "resistanceNote",
+    "riskLevel",
+    "riskNote",
+    "marketMood",
+    "marketMoodNote",
+    "beginnerExplanation",
+    "proInvestorView",
+    "aiVerdict",
   ],
 }
 
@@ -275,7 +358,19 @@ const GROUNDING = `You must analyze ONLY the real data provided in the prompt (Y
 
 /** Deep, structured instrument analysis grounded strictly in the supplied data. */
 export async function generateAnalysis(input: { name: string; horizon: string; context: string }): Promise<Analysis> {
-  const system = `You are Lumora, an elite buy-side market intelligence analyst producing institutional-grade, quantitative analysis. ${GROUNDING}`
+  const system = `You are Lumora, a trusted, warm market guide who explains stocks like a caring elder brother talking to a family member who has NEVER studied finance and has never heard words like RSI, MACD, EMA, P/E, Fibonacci, momentum, support, resistance, or volatility.
+
+STYLE RULES (apply to every field EXCEPT "proInvestorView"):
+- Use very simple, everyday English. Short sentences.
+- Never assume the reader knows any financial word. If a concept is needed, explain its meaning in plain words instead of naming it.
+- Instead of "RSI is overbought" say something like "Many people have already bought this recently, so the price may pause or dip a little before rising again."
+- Instead of "MACD crossover / momentum improving" say "More buyers are entering than before, which is usually a good sign."
+- Instead of "support is X" say "If the price falls near X, buyers often step in, so it usually stops falling around there."
+- Instead of "resistance is X" say "Near X many people tend to sell, so it can be hard for the price to climb higher."
+- Be honest and calm. Never hype. Sound human, never like a report or a chatbot.
+- "proInvestorView" is the ONLY field where you may use full technical terms and numbers for advanced users.
+
+GROUNDING: ${GROUNDING}`
   try {
     const res = await getClient().models.generateContent({
       model: MODEL,
