@@ -54,7 +54,7 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 600, // 10 minutes
       async sendVerificationOTP({ email, otp, type }) {
-        const emailType = type === "forget-password" || type === "sign-in" ? "reset" : "verification"
+        const emailType = type === "forget-password" ? "reset" : "verification"
         await sendOtpEmail({ email, otp, type: emailType })
       },
     }),

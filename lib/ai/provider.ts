@@ -590,6 +590,30 @@ export async function generateMarketSummary(input: { region: string; movers: str
   })
 }
 
+/** Simple text generation for lightweight AI tasks (trade planner, etc.). */
+export async function generateText(input: {
+  model?: string
+  system: string
+  prompt: string
+  temperature?: number
+}): Promise<{ text: string }> {
+  try {
+    const res = await getClient().models.generateContent({
+      model: input.model || MODEL_FAST,
+      contents: input.prompt,
+      config: {
+        systemInstruction: input.system,
+        temperature: input.temperature ?? 0.4,
+      },
+    })
+    const text = res.text?.trim()
+    if (!text) throw new Error("Empty AI response")
+    return { text }
+  } catch (err) {
+    throw classify(err)
+  }
+}
+
 /** Long-form investment research (thesis, catalysts, risks, multi-horizon) grounded in real data. */
 export async function generateInvestmentResearch(input: {
   name: string

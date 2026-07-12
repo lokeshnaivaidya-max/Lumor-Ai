@@ -147,5 +147,5 @@ export function HeroGlobe() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize) }
   }, [])
 
-  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
 }

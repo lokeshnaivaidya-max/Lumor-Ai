@@ -11,7 +11,7 @@ function fmt(n: number | null | undefined, d = 2) {
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" | "muted" }) {
   const color = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-foreground"
   return (
-    <div className="flex items-center justify-between border-b border-border/50 py-2.5 last:border-0">
+    <div className="flex items-center justify-between border-b border-white/10 py-2.5 last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className={`font-mono text-sm tabular-nums ${color}`}>{value}</span>
     </div>
@@ -25,10 +25,11 @@ function Panel({ title, children, delay = 0 }: { title: string; children: React.
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="edge-light glass-card p-5"
+      className="group relative overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl p-5 transition-all duration-300 hover:border-white/30 hover:bg-white/20"
     >
-      <h3 className="mb-3 font-heading text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
-      {children}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[28px]" />
+      <h3 className="relative mb-3 font-heading text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
+      <div className="relative">{children}</div>
     </motion.div>
   )
 }
@@ -63,10 +64,10 @@ function IndicatorPanelBase({ ind }: { ind: Indicators; currency?: string }) {
               style={{
                 background:
                   rsiTone === "neg"
-                    ? "oklch(0.68 0.19 22)"
+                    ? "oklch(0.58 0.18 22)"
                     : rsiTone === "pos"
-                      ? "oklch(0.8 0.14 168)"
-                      : "linear-gradient(90deg, oklch(0.68 0.17 250), oklch(0.8 0.14 168))",
+                      ? "oklch(0.62 0.16 168)"
+                      : "linear-gradient(90deg, oklch(0.55 0.18 255), oklch(0.62 0.16 168))",
               }}
             />
           </div>
@@ -90,10 +91,10 @@ function IndicatorPanelBase({ ind }: { ind: Indicators; currency?: string }) {
           >
             {ind.trend.toUpperCase()}
           </span>
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-muted-foreground">
             {ind.trendStrength} strength
           </span>
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-muted-foreground">
             {ind.momentum}
           </span>
         </div>

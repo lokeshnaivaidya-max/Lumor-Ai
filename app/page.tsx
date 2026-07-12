@@ -20,7 +20,7 @@ export default async function HomePage() {
       <AmbientBackground />
       <CursorGlow />
       <Navbar />
-      <main className="relative">
+      <main className="relative z-10">
         <Hero />
         <MarketMarquee quotes={quotes} />
         <Features />

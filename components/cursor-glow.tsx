@@ -24,10 +24,10 @@ export function CursorGlow() {
 
   return (
     <>
-      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-30 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-20 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{ x: gx, y: gy, background: "radial-gradient(circle, oklch(0.65 0.2 255 / 0.1), oklch(0.6 0.18 275 / 0.05) 40%, transparent 60%)", willChange: "transform" }}
       />
-      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-30 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
+      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-20 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{ x: rx, y: ry, willChange: "transform", background: "oklch(0.99 0 0 / 0.04)", border: "1px solid oklch(0.99 0 0 / 0.2)", boxShadow: "0 0 20px oklch(0.65 0.2 255 / 0.15), inset 0 0 20px oklch(0.99 0 0 / 0.05)" }}
       />
     </>

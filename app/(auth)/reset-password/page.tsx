@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import { Suspense, useCallback, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
@@ -15,7 +15,6 @@ function ResetPasswordInner() {
   const emailFromUrl = searchParams.get("email") || ""
 
   const [email, setEmail] = useState(emailFromUrl)
-  const [step, setStep] = useState<"otp" | "password">("otp")
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [focusedIdx, setFocusedIdx] = useState(0)
   const [password, setPassword] = useState("")
@@ -27,34 +26,19 @@ function ResetPasswordInner() {
   const [success, setSuccess] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
   const [sendingOtp, setSendingOtp] = useState(false)
+  const [needsEmail, setNeedsEmail] = useState(!emailFromUrl)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return
-    const timer = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0 }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [resendCooldown])
-
-  useEffect(() => {
-    if (emailFromUrl) handleSendOtp(emailFromUrl)
-  }, [emailFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSendOtp = useCallback(async (targetEmail: string) => {
     if (!targetEmail) return
     setSendingOtp(true)
     setError(null)
     try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, type: "forget-password" }),
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
+        email: targetEmail,
+        type: "forget-password",
       })
-      if (!res.ok) throw new Error("Failed to send reset code")
+      if (error) throw new Error(error.message || "Failed to send reset code")
       setResendCooldown(RESEND_COOLDOWN)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send code")
@@ -74,7 +58,9 @@ function ResetPasswordInner() {
       const newOtp = [...otp]
       digits.forEach((d, i) => { if (i < 6) newOtp[i] = d })
       setOtp(newOtp)
-      inputRefs.current[Math.min(digits.length, 5)]?.focus()
+      const nextIdx = Math.min(digits.length, 5)
+      inputRefs.current[nextIdx]?.focus()
+      setFocusedIdx(nextIdx)
       return
     }
     const newOtp = [...otp]
@@ -93,59 +79,28 @@ function ResetPasswordInner() {
     }
   }
 
-  const handleVerifyOtp = async () => {
+  const handleSubmit = async () => {
     const code = otp.join("")
     if (code.length !== 6) return
+    if (password !== confirmPassword) { setError("Passwords do not match"); return }
+    if (password.length < 8) { setError("Password must be at least 8 characters"); return }
     setLoading(true)
     setError(null)
 
     try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: code, type: "forget-password" }),
+      const { error } = await authClient.emailOtp.resetPassword({
+        email,
+        otp: code,
+        password,
       })
-      const json = await res.json()
-      if (!res.ok) {
-        if (json.status === "expired") throw new Error("Code expired. Request a new one.")
-        throw new Error(json.error || "Invalid code")
+      if (error) {
+        if (error.message?.toLowerCase().includes("expired")) throw new Error("Code expired. Request a new one.")
+        throw new Error(error.message || "Invalid code")
       }
-      setStep("password")
+      setSuccess(true)
+      setTimeout(() => { router.push("/dashboard"); router.refresh() }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Reset password via the emailOTP flow
-      const { error } = await authClient.resetPassword({
-        newPassword: password,
-      })
-      if (error) throw new Error(error.message || "Could not reset password")
-
-      setSuccess(true)
-      setTimeout(() => {
-        router.push("/dashboard")
-        router.refresh()
-      }, 1500)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset password")
     } finally {
       setLoading(false)
     }
@@ -190,11 +145,58 @@ function ResetPasswordInner() {
             <span className="font-heading text-lg font-semibold tracking-tight text-foreground">✦ Lumora</span>
           </div>
 
-          {step === "otp" ? (
+          {needsEmail ? (
             <>
-              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Enter reset code</h1>
+              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Reset your password</h1>
+              <p className="mt-2 text-sm text-muted-foreground text-center">Enter your email to receive a reset code.</p>
+
+              <div className="mt-6">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Email</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="premium-input"
+                  />
+                </label>
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 flex items-center gap-2 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
+                >
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </motion.p>
+              )}
+
+              <motion.button
+                onClick={() => {
+                  if (!email) { setError("Please enter your email"); return }
+                  setNeedsEmail(false)
+                  handleSendOtp(email)
+                }}
+                disabled={sendingOtp || !email}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="premium-btn premium-btn-primary mt-6 w-full py-3 text-sm"
+              >
+                {sendingOtp ? (
+                  <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sending…</span>
+                ) : (
+                  "Send reset code"
+                )}
+              </motion.button>
+            </>
+          ) : (
+            <>
+              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Reset your password</h1>
               <p className="mt-2 text-sm text-muted-foreground text-center">
-                Enter the 6-digit code sent to <strong className="text-foreground">{email || "your email"}</strong>
+                Enter the code sent to <strong className="text-foreground">{email}</strong> and set a new password.
               </p>
 
               <div className="mt-8 flex justify-center gap-2 sm:gap-3">
@@ -222,6 +224,55 @@ function ResetPasswordInner() {
                 ))}
               </div>
 
+              <div className="mt-6 flex flex-col gap-4">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">New password</span>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      className="premium-input pr-11"
+                      autoComplete="new-password"
+                    />
+                    <button type="button" onClick={() => setShowPassword((s) => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Confirm password</span>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? "text" : "password"}
+                      required
+                      minLength={8}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat password"
+                      className="premium-input pr-11"
+                      autoComplete="new-password"
+                    />
+                    <button type="button" onClick={() => setShowConfirm((s) => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={showConfirm ? "Hide password" : "Show password"}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </label>
+              </div>
+
+              {password && confirmPassword && password !== confirmPassword && (
+                <p className="mt-2 text-xs text-neg">Passwords do not match</p>
+              )}
+
               <AnimatePresence>
                 {error && (
                   <motion.div
@@ -237,8 +288,8 @@ function ResetPasswordInner() {
               </AnimatePresence>
 
               <motion.button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.some((d) => !d)}
+                onClick={handleSubmit}
+                disabled={loading || otp.some((d) => !d) || !password || !confirmPassword || password !== confirmPassword}
                 whileHover={{ scale: loading ? 1 : 1.01 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
                 className="premium-btn premium-btn-primary mt-6 w-full py-3 text-sm"
@@ -246,10 +297,10 @@ function ResetPasswordInner() {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying…
+                    Resetting…
                   </span>
                 ) : (
-                  "Verify code"
+                  "Reset password"
                 )}
               </motion.button>
 
@@ -263,84 +314,13 @@ function ResetPasswordInner() {
                   {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : sendingOtp ? "Sending…" : "Resend code"}
                 </button>
               </div>
-            </>
-          ) : (
-            <>
-              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Set new password</h1>
-              <p className="mt-2 text-sm text-muted-foreground text-center">Create a new password for your Lumora account.</p>
 
-              <form onSubmit={handleResetPassword} className="mt-8">
-                <div className="flex flex-col gap-4">
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">New password</span>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        minLength={8}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="At least 8 characters"
-                        className="premium-input pr-11"
-                        autoComplete="new-password"
-                      />
-                      <button type="button" onClick={() => setShowPassword((s) => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Confirm password</span>
-                    <div className="relative">
-                      <input
-                        type={showConfirm ? "text" : "password"}
-                        required
-                        minLength={8}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Repeat password"
-                        className="premium-input pr-11"
-                        autoComplete="new-password"
-                      />
-                      <button type="button" onClick={() => setShowConfirm((s) => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
-                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </label>
-                </div>
-
-                <AnimatePresence>
-                  {error && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="mt-4 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-
-                <motion.button
-                  type="submit"
-                  disabled={loading || !password || !confirmPassword}
-                  whileHover={{ scale: loading ? 1 : 1.01 }}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  className="premium-btn premium-btn-primary mt-6 w-full py-3 text-sm"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Resetting…
-                    </span>
-                  ) : (
-                    "Reset password"
-                  )}
-                </motion.button>
-              </form>
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                Wrong email?{" "}
+                <button onClick={() => setNeedsEmail(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                  Change email address
+                </button>
+              </p>
             </>
           )}
         </div>

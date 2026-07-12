@@ -33,6 +33,8 @@ import {
   GitBranch,
   PieChart,
   ChevronDown,
+  Brain,
+  Zap,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -99,17 +101,16 @@ type Analysis = {
   disclaimer: string
 }
 
-/* ---- recommendation styling ---- */
 function recTone(rec: Recommendation): { text: string; bg: string; border: string; ring: string } {
   switch (rec) {
     case "Strong Buy":
     case "Buy":
-      return { text: "text-pos", bg: "bg-pos/12", border: "border-pos/40", ring: "oklch(0.8 0.13 168)" }
+      return { text: "text-pos", bg: "bg-pos/12", border: "border-pos/40", ring: "oklch(0.62 0.16 168)" }
     case "Sell":
     case "Strong Sell":
-      return { text: "text-neg", bg: "bg-neg/12", border: "border-neg/40", ring: "oklch(0.68 0.19 22)" }
+      return { text: "text-neg", bg: "bg-neg/12", border: "border-neg/40", ring: "oklch(0.58 0.18 22)" }
     default:
-      return { text: "text-gold", bg: "bg-gold/12", border: "border-gold/40", ring: "oklch(0.87 0.08 88)" }
+      return { text: "text-gold", bg: "bg-gold/12", border: "border-gold/40", ring: "oklch(0.75 0.12 75)" }
   }
 }
 
@@ -170,9 +171,12 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
 
   if (!session?.user) {
     return (
-      <div className="edge-light glass-card relative overflow-hidden p-6 sm:p-8 text-center">
-        <div className="mx-auto max-w-sm">
-          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground/40" />
+      <div className="relative overflow-hidden p-6 sm:p-8 text-center">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.02] to-violet/[0.02]" />
+        <div className="relative mx-auto max-w-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br from-blue/10 to-violet/10 border border-white/20">
+            <Brain className="h-8 w-8 text-blue" />
+          </div>
           <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">Sign in to analyze</h3>
           <p className="mt-2 text-sm text-muted-foreground">
             Lumora AI analysis is available for authenticated users. Sign in to get AI-powered insights.
@@ -197,15 +201,15 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="edge-light glass-card relative overflow-hidden p-5 sm:p-6">
+    <div className="relative overflow-hidden p-5 sm:p-6">
       <div
         className="animate-pulse-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
-        style={{ background: "oklch(0.62 0.16 168 / 0.4)" }}
+        style={{ background: "oklch(0.55 0.18 255 / 0.15)" }}
       />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-accent/25 text-accent">
-            <Sparkles className="h-4 w-4" />
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue/20 to-violet/20 border border-white/20 text-blue">
+            <Brain className="h-4 w-4" />
           </span>
           <div>
             <h3 className="font-heading text-sm font-medium text-foreground">Lumora AI Analysis</h3>
@@ -214,13 +218,13 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full border border-border bg-bg/60 p-0.5">
+          <div className="flex rounded-full border border-white/20 bg-white/10 backdrop-blur-sm p-0.5">
             {HORIZONS.map((h) => (
               <button
                 key={h.id}
                 onClick={() => setHorizon(h.id)}
                 className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                  horizon === h.id ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                  horizon === h.id ? "bg-blue text-white" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {h.label}
@@ -234,21 +238,28 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             disabled={loading}
             className="premium-btn premium-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
           >
-            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
             {loading ? "Analyzing…" : "Analyze"}
           </motion.button>
         </div>
       </div>
 
       {error && (
-        <div className="relative mt-5 border-t border-border/60 pt-5">
+        <div className="relative mt-5 border-t border-white/10 pt-5">
           <p className="text-sm text-neg">{error}</p>
         </div>
       )}
 
       {loading && !data && (
-        <div className="relative mt-5 flex items-center gap-2 border-t border-border/60 pt-5 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-accent" />
+        <div className="relative mt-5 flex items-center gap-2 border-t border-white/10 pt-5 text-sm text-muted-foreground">
+          <div className="flex h-6 w-6 items-center justify-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Brain className="h-4 w-4 text-blue" />
+            </motion.div>
+          </div>
           Reading the tape…
         </div>
       )}
@@ -273,29 +284,26 @@ function Report({ data }: { data: Analysis }) {
   const risk = riskTone(data.riskLevel)
 
   return (
-    <div className="relative mt-5 space-y-6 border-t border-border/60 pt-6">
+    <div className="relative mt-5 space-y-6 border-t border-white/10 pt-6">
 
-      {/* ═══ COCKPIT GAUGE + RECOMMENDATION ═══ */}
       <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
 
-        {/* Animated confidence gauge */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
-          className="glass-card edge-light relative flex flex-col items-center justify-center gap-2 p-6"
+          className="relative flex flex-col items-center justify-center gap-3 rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl p-6"
         >
           <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Confidence</span>
           <ConfidenceMeter value={conf} color={rec.ring} size="lg" />
           <p className="text-center text-xs leading-relaxed text-muted-foreground">{data.confidenceNote}</p>
         </motion.div>
 
-        {/* Hero recommendation card */}
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 100, damping: 16, delay: 0.2 }}
-          className={`relative overflow-hidden rounded-2xl border-2 ${rec.border} ${rec.bg} p-5 shadow-card`}
+          className={`relative overflow-hidden rounded-[32px] border-2 ${rec.border} ${rec.bg} p-5`}
         >
           <div
             className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full blur-[60px]"
@@ -314,7 +322,6 @@ function Report({ data }: { data: Analysis }) {
         </motion.div>
       </div>
 
-      {/* ═══ COCKPIT METRICS ROW ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -329,7 +336,6 @@ function Report({ data }: { data: Analysis }) {
         <CockpitMetric icon={<CalendarClock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
       </motion.div>
 
-      {/* quick summary chips */}
       {data.quickSummary?.length > 0 && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -338,21 +344,20 @@ function Report({ data }: { data: Analysis }) {
           className="flex flex-wrap gap-2"
         >
           {data.quickSummary.slice(0, 3).map((s, i) => (
-            <span key={i} className="glass-card inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs leading-relaxed text-foreground/80">
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-accent" />
+            <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-relaxed text-foreground/80 backdrop-blur-sm">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-blue" />
               {s}
             </span>
           ))}
         </motion.div>
       )}
 
-      {/* ═══ SCENARIO PROBABILITY ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <Section title="Probability" icon={<Gauge className="h-3.5 w-3.5 text-accent" />}>
+        <Section title="Probability" icon={<Gauge className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-2">
             <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
             <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
@@ -363,13 +368,12 @@ function Report({ data }: { data: Analysis }) {
         </Section>
       </motion.div>
 
-      {/* ═══ SCENARIO CARDS ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.45 }}
       >
-        <Section title="Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-accent" />}>
+        <Section title="Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-3">
             <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
             <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
@@ -378,7 +382,6 @@ function Report({ data }: { data: Analysis }) {
         </Section>
       </motion.div>
 
-      {/* ═══ BULL/BEAR EXPANDABLE CASES ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -389,7 +392,6 @@ function Report({ data }: { data: Analysis }) {
         <ExpandableCase title="Bear Case" tone="neg" points={data.whatCouldGoWrong} />
       </motion.div>
 
-      {/* ═══ INTERACTIVE SUPPORT / RESISTANCE TIMELINE ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -414,15 +416,13 @@ function Report({ data }: { data: Analysis }) {
         />
       </motion.div>
 
-      {/* ═══ RISK + MOOD PANEL ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6 }}
         className="grid gap-4 sm:grid-cols-2"
       >
-        {/* Visualized risk */}
-        <div className="glass-card edge-light p-5">
+        <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-5">
           <div className="mb-3 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
               <ShieldAlert className="h-3.5 w-3.5" /> Risk Level
@@ -436,7 +436,7 @@ function Report({ data }: { data: Analysis }) {
               {data.riskLevel}
             </motion.span>
           </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/40">
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/10">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${risk.pct}%` }}
@@ -447,8 +447,7 @@ function Report({ data }: { data: Analysis }) {
           <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.riskNote}</p>
         </div>
 
-        {/* Market mood */}
-        <div className="glass-card edge-light p-5">
+        <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Market Mood</span>
             <motion.span
@@ -464,27 +463,25 @@ function Report({ data }: { data: Analysis }) {
         </div>
       </motion.div>
 
-      {/* ═══ BEGINNER EXPLANATION ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.65 }}
-        className="rounded-2xl border border-accent/30 bg-accent/[0.06] p-5"
+        className="rounded-[28px] border border-blue/30 bg-blue/[0.06] p-5 backdrop-blur-sm"
       >
-        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
+        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-blue">
           <Heart className="h-3.5 w-3.5" /> Explained Like I&apos;m Your Family
         </h4>
         <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
       </motion.div>
 
-      {/* ═══ OWN MONEY VIEW ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="flex items-start gap-3 rounded-2xl border border-gold/30 bg-gold/[0.07] p-5"
+        className="flex items-start gap-3 rounded-[28px] border border-gold/30 bg-gold/[0.07] p-5 backdrop-blur-sm"
       >
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gold/20 text-gold">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold/20 text-gold">
           <UserCheck className="h-4 w-4" />
         </span>
         <div>
@@ -495,13 +492,12 @@ function Report({ data }: { data: Analysis }) {
         </div>
       </motion.div>
 
-      {/* ═══ PRO INVESTOR VIEW (collapsible) ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.75 }}
       >
-        <details className="group glass-card p-4">
+        <details className="group rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
           <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <LineChart className="h-3.5 w-3.5" /> Pro Investor View
@@ -514,18 +510,17 @@ function Report({ data }: { data: Analysis }) {
         </details>
       </motion.div>
 
-      {/* ═══ FINAL ADVICE ═══ */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4"
+        className="flex items-start gap-3 rounded-[28px] border border-blue/30 bg-blue/10 p-4 backdrop-blur-sm"
       >
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/20 text-primary">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue/20 text-blue">
           <Flag className="h-4 w-4" />
         </span>
         <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary">Final Advice</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-blue">Final Advice</div>
           <p className="mt-1 text-sm font-medium leading-relaxed text-foreground/90">{data.aiVerdict}</p>
         </div>
       </motion.div>
@@ -545,7 +540,8 @@ function ConfidenceMeter({ value, color, size = "sm" }: { value: number; color: 
       initial={{ rotate: -90, scale: 0 }}
       animate={{ rotate: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.15 }}
-      className={`relative h-[${sz}px] w-[${sz}px] shrink-0`}
+      className="relative shrink-0"
+      style={{ width: sz, height: sz }}
     >
       <svg viewBox={`0 0 ${sz} ${sz}`} className="h-full w-full -rotate-90">
         <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke="oklch(0.9 0 0 / 0.08)" strokeWidth={strokeW} />
@@ -591,7 +587,7 @@ function ProbBar({
   const bar = tone === "pos" ? "bg-pos" : "bg-neg"
   const text = tone === "pos" ? "text-pos" : "text-neg"
   return (
-    <div className="glass-card p-4">
+    <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {icon}
@@ -599,7 +595,7 @@ function ProbBar({
         </span>
         <span className={`text-sm font-semibold ${text}`}>{value}%</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted/40">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
         <div className={`h-full rounded-full ${bar}`} style={{ width: `${value}%`, transition: "width 0.8s ease" }} />
       </div>
     </div>
@@ -609,9 +605,9 @@ function ProbBar({
 function CockpitMetric({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: "blue" | "emerald" | "rose" | "violet" | "gold" | "cyan" }) {
   const dotMap = { blue: "bg-blue", emerald: "bg-emerald", rose: "bg-rose", violet: "bg-violet", gold: "bg-gold", cyan: "bg-cyan" }
   return (
-    <motion.div whileHover={{ y: -2 }} className="glass-card edge-light flex flex-col items-center justify-center gap-1 rounded-xl p-3 text-center">
-      <span className="text-muted-foreground">{icon}</span>
-      <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
+    <motion.div whileHover={{ y: -3 }} className="flex flex-col items-center justify-center gap-1 rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-3 text-center transition-all duration-300 hover:border-white/30">
+      <span className="text-muted-foreground/70">{icon}</span>
+      <span className="font-mono text-sm font-semibold text-foreground tabular-nums">{value}</span>
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
         <span className={`inline-block h-1 w-1 rounded-full ${dotMap[accent]}`} />
         {label}
@@ -626,7 +622,7 @@ function ExpandableCase({ title, tone, points }: { title: string; tone: "pos" | 
   const dot = tone === "pos" ? "bg-pos" : "bg-neg"
   const icon = tone === "pos" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
   return (
-    <motion.div layout className={`rounded-2xl border ${color} p-4 cursor-pointer`} onClick={() => setOpen(!open)}>
+    <motion.div layout className={`rounded-[28px] border ${color} p-4 cursor-pointer backdrop-blur-sm`} onClick={() => setOpen(!open)}>
       <div className="flex items-center justify-between">
         <h4 className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${tone === "pos" ? "text-pos" : "text-neg"}`}>
           {icon}{title}
@@ -668,19 +664,18 @@ function ExpandableCase({ title, tone, points }: { title: string; tone: "pos" | 
 
 function TimelineLevel({ icon, label, value, note, accent, side }: { icon: React.ReactNode; label: string; value: string; note: string; accent: "emerald" | "rose"; side: "top" | "bottom" }) {
   const barColor = accent === "emerald" ? "bg-emerald/30" : "bg-rose/30"
-  const textColor = accent === "emerald" ? "text-emerald" : "text-rose"
   return (
-    <motion.div whileHover={{ scale: 1.01 }} className="glass-card edge-light relative overflow-hidden p-4">
+    <motion.div whileHover={{ scale: 1.01 }} className="relative overflow-hidden rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
       <div className={`absolute left-0 right-0 h-1 ${side === "top" ? "top-0" : "bottom-0"} ${barColor}`} />
       <div className="flex items-center justify-between">
-        <span className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wide ${textColor}`}>
+        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
           {icon}{label}
         </span>
         <motion.span
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
-          className="font-mono text-sm font-semibold text-foreground"
+          className="font-mono text-sm font-semibold text-foreground tabular-nums"
         >
           {value}
         </motion.span>
@@ -702,6 +697,22 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
   )
 }
 
+function ScenarioCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
+  const box =
+    tone === "pos"
+      ? "border-emerald/30 bg-emerald/[0.06]"
+      : tone === "neg"
+        ? "border-rose/30 bg-rose/[0.06]"
+        : "border-gold/30 bg-gold/[0.06]"
+  const text = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
+  return (
+    <div className={`rounded-[28px] border ${box} p-4 backdrop-blur-sm`}>
+      <div className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${text}`}>{label}</div>
+      <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
+    </div>
+  )
+}
+
 function ListCard({
   title,
   tone,
@@ -716,7 +727,7 @@ function ListCard({
   const color = tone === "pos" ? "text-pos" : "text-neg"
   const dot = tone === "pos" ? "bg-pos" : "bg-neg"
   return (
-    <div className="glass-card p-4">
+    <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
       <h4 className={`mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${color}`}>
         {icon}
         {title}
@@ -729,49 +740,6 @@ function ListCard({
           </li>
         ))}
       </ul>
-    </div>
-  )
-}
-
-const HOLDING_OPTIONS = ["Intraday", "1 Week", "1 Month", "3 Months", "Long Term"] as const
-
-function ScenarioCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
-  const box =
-    tone === "pos"
-      ? "border-pos/30 bg-pos/[0.06]"
-      : tone === "neg"
-        ? "border-neg/30 bg-neg/[0.06]"
-        : "border-gold/30 bg-gold/[0.06]"
-  const text = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
-  return (
-    <div className={`rounded-2xl border ${box} p-4`}>
-      <div className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${text}`}>{label}</div>
-      <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
-    </div>
-  )
-}
-
-function LevelCard({
-  icon,
-  label,
-  value,
-  note,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  note: string
-}) {
-  return (
-    <div className="glass-card p-4">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-          {icon}
-          {label}
-        </span>
-        <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
-      </div>
-      <p className="text-sm leading-relaxed text-foreground/75">{note}</p>
     </div>
   )
 }

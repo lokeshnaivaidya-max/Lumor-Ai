@@ -79,6 +79,7 @@ export function AccountMenu() {
   return (
     <div ref={ref} className="relative">
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
         className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-colors hover:border-foreground/30"
         aria-label="Account menu"

@@ -31,20 +31,48 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    // Client-side validation
+    if (isSignUp && name.trim().length < 2) {
+      setError("Name must be at least 2 characters")
+      setLoading(false)
+      return
+    }
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Please enter a valid email address")
+      setLoading(false)
+      return
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters")
+      setLoading(false)
+      return
+    }
+
     try {
       if (isSignUp) {
-        const { error } = await authClient.signUp.email({ email, password, name })
-        if (error) throw new Error(error.message || "Could not create account")
-        // Redirect to verify-email page
+        const result = await authClient.signUp.email({ email, password, name })
+
+        if (result.error) {
+          const isDuplicate = result.error.status === 409
+          throw new Error(isDuplicate ? "An account with this email already exists" : result.error.message || "Could not create account. Please try again.")
+        }
+
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
       } else {
-        const { error } = await authClient.signIn.email({ email, password })
-        if (error) throw new Error(error.message || "Invalid email or password")
+        const result = await authClient.signIn.email({ email, password })
+
+        if (result.error) {
+          throw new Error(result.error.message || "Invalid email or password")
+        }
+
         router.push("/dashboard")
         router.refresh()
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      const message = err instanceof Error ? err.message : "Something went wrong"
+      console.error("[AUTH] Error:", message, err)
+      setError(message)
       setLoading(false)
     }
   }

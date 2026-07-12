@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, RefreshCw } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
 
 const RESEND_COOLDOWN = 60 // seconds
 const MAX_ATTEMPTS = 5
@@ -23,8 +24,33 @@ function VerifyEmailInner() {
   const [attempts, setAttempts] = useState(0)
   const [resendCooldown, setResendCooldown] = useState(0)
   const [sendingOtp, setSendingOtp] = useState(false)
-  const [editingEmail, setEditingEmail] = useState(false)
+  const [editingEmail, setEditingEmail] = useState(!emailFromUrl)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const handleSendOtp = useCallback(async (targetEmail: string) => {
+    if (!targetEmail) return
+    setSendingOtp(true)
+    setError(null)
+    try {
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
+        email: targetEmail,
+        type: "email-verification",
+      })
+      if (error) throw new Error(error.message || "Failed to send verification code")
+      setResendCooldown(RESEND_COOLDOWN)
+      setAttempts(0)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send code")
+    } finally {
+      setSendingOtp(false)
+    }
+  }, [])
+
+  // Auto-send OTP on mount if email is present
+  useEffect(() => {
+    if (!emailFromUrl) return
+    handleSendOtp(emailFromUrl)
+  }, [emailFromUrl, handleSendOtp])
 
   // Countdown timer for resend
   useEffect(() => {
@@ -40,37 +66,6 @@ function VerifyEmailInner() {
     }, 1000)
     return () => clearInterval(timer)
   }, [resendCooldown])
-
-  // Auto-send OTP on mount if email is present
-  useEffect(() => {
-    if (email && !emailFromUrl) return
-    if (emailFromUrl) {
-      handleSendOtp(emailFromUrl)
-    }
-  }, [emailFromUrl]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleSendOtp = useCallback(async (targetEmail: string) => {
-    if (!targetEmail) return
-    setSendingOtp(true)
-    setError(null)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, type: "email-verification" }),
-      })
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        throw new Error(json.error || "Failed to send verification code")
-      }
-      setResendCooldown(RESEND_COOLDOWN)
-      setAttempts(0)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send code")
-    } finally {
-      setSendingOtp(false)
-    }
-  }, [])
 
   const handleResend = () => {
     if (resendCooldown > 0 || sendingOtp) return
@@ -119,18 +114,16 @@ function VerifyEmailInner() {
     setError(null)
 
     try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: code, type: "email-verification" }),
+      const { error } = await authClient.emailOtp.verifyEmail({
+        email,
+        otp: code,
       })
-      const json = await res.json()
 
-      if (!res.ok) {
+      if (error) {
         const newAttempts = attempts + 1
         setAttempts(newAttempts)
 
-        if (json.status === "expired") {
+        if (error.message?.toLowerCase().includes("expired")) {
           setError("Code expired. Request a new one.")
         } else if (newAttempts >= MAX_ATTEMPTS) {
           setError("Too many attempts. Request a new code.")

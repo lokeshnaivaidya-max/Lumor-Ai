@@ -6,6 +6,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { LumoraMark } from "@/components/lumora-mark"
+import { authClient } from "@/lib/auth-client"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -20,17 +21,10 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      // Better Auth's forgot password sends OTP via emailOTP plugin
-      const res = await fetch("/api/auth/forget-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
+      const { error } = await authClient.emailOtp.requestPasswordReset({ email })
 
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        // Don't reveal if email exists — just say sent
-        throw new Error(json.error || "Could not send reset code")
+      if (error) {
+        throw new Error(error.message || "Could not send reset code")
       }
 
       setSent(true)
