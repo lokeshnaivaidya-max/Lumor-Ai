@@ -73,12 +73,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/markets"
-            className="hidden rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
-          >
-            Sign in
-          </Link>
+          <AccountMenu />
           <MagneticButton href="/markets" className="px-5 py-2.5">
             Launch Terminal
           </MagneticButton>
