@@ -9,7 +9,6 @@ import {
   TrendingDown,
   Minus,
   ShieldAlert,
-  ShieldCheck,
   Target,
   LogIn,
   Ban,
