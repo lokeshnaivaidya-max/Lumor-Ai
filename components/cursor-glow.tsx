@@ -6,21 +6,16 @@ import { motion, useMotionValue, useSpring } from "motion/react"
 export function CursorGlow() {
   const x = useMotionValue(-500)
   const y = useMotionValue(-500)
-  // large soft halo
-  const gx = useSpring(x, { stiffness: 120, damping: 20, mass: 0.4 })
-  const gy = useSpring(y, { stiffness: 120, damping: 20, mass: 0.4 })
-  // precise ring, snappier
-  const rx = useSpring(x, { stiffness: 500, damping: 32, mass: 0.3 })
-  const ry = useSpring(y, { stiffness: 500, damping: 32, mass: 0.3 })
+  const gx = useSpring(x, { stiffness: 100, damping: 18, mass: 0.5 })
+  const gy = useSpring(y, { stiffness: 100, damping: 18, mass: 0.5 })
+  const rx = useSpring(x, { stiffness: 450, damping: 28, mass: 0.25 })
+  const ry = useSpring(y, { stiffness: 450, damping: 28, mass: 0.25 })
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return
     setEnabled(true)
-    const move = (e: MouseEvent) => {
-      x.set(e.clientX)
-      y.set(e.clientY)
-    }
+    const move = (e: MouseEvent) => { x.set(e.clientX); y.set(e.clientY) }
     window.addEventListener("mousemove", move, { passive: true })
     return () => window.removeEventListener("mousemove", move)
   }, [x, y])
@@ -29,21 +24,11 @@ export function CursorGlow() {
 
   return (
     <>
-      <motion.div
-        aria-hidden
-        className="pointer-events-none fixed left-0 top-0 z-30 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          x: gx,
-          y: gy,
-          background:
-            "radial-gradient(circle, oklch(0.68 0.17 250 / 0.12), oklch(0.62 0.18 300 / 0.06) 40%, transparent 62%)",
-          willChange: "transform",
-        }}
+      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-30 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ x: gx, y: gy, background: "radial-gradient(circle, oklch(0.65 0.2 255 / 0.1), oklch(0.6 0.18 275 / 0.05) 40%, transparent 60%)", willChange: "transform" }}
       />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none fixed left-0 top-0 z-30 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25"
-        style={{ x: rx, y: ry, willChange: "transform" }}
+      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-30 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ x: rx, y: ry, willChange: "transform", background: "oklch(0.99 0 0 / 0.04)", border: "1px solid oklch(0.99 0 0 / 0.2)", boxShadow: "0 0 20px oklch(0.65 0.2 255 / 0.15), inset 0 0 20px oklch(0.99 0 0 / 0.05)" }}
       />
     </>
   )

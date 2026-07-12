@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "motion/react"
-import { Bell, TrendingUp, TrendingDown, Brain, Briefcase, ArrowRight, CheckCheck } from "lucide-react"
+import { Bell, TrendingUp, Brain, Briefcase, ArrowRight, CheckCheck } from "lucide-react"
 
 const MOCK_NOTIFICATIONS = [
   { type: "price" as const, title: "NVDA up 3.8%", description: "NVIDIA is trading at $892.50, up 3.8% today. Strong momentum.", time: "12m ago", read: false },
@@ -16,76 +16,46 @@ const MOCK_NOTIFICATIONS = [
 export function NotificationsClient() {
   const [filter, setFilter] = useState<"all" | "price" | "ai" | "portfolio">("all")
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS)
-
   const filtered = filter === "all" ? notifications : notifications.filter((n) => n.type === filter)
-
   const unreadCount = notifications.filter((n) => !n.read).length
+  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }
-
-  const iconMap = {
-    price: TrendingUp,
-    ai: Brain,
-    portfolio: Briefcase,
-  }
-
-  const colorMap = {
-    price: "text-blue",
-    ai: "text-purple",
-    portfolio: "text-emerald",
-  }
+  const iconMap = { price: TrendingUp, ai: Brain, portfolio: Briefcase }
+  const colorMap = { price: "text-blue", ai: "text-violet", portfolio: "text-emerald" }
 
   return (
     <div className="p-6 lg:p-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Notifications</h1>
           <p className="mt-1 text-sm text-muted-foreground">Stay informed about your portfolio and market moves.</p>
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-            <CheckCheck className="h-3.5 w-3.5" />
-            Mark all read
+          <button onClick={markAllRead} className="glass flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+            <CheckCheck className="h-3.5 w-3.5" />Mark all read
           </button>
         )}
       </motion.div>
 
-      {/* Filter tabs */}
       <div className="mb-6 flex gap-2">
         {(["all", "price", "ai", "portfolio"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`relative rounded-full px-4 py-2 text-sm capitalize transition-colors ${
-              filter === f ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"
-            }`}
+          <button key={f} onClick={() => setFilter(f)}
+            className={`relative rounded-full px-4 py-2 text-sm capitalize transition-colors ${filter === f ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             {f === "all" ? "All" : f === "price" ? "Price Alerts" : f === "ai" ? "AI Alerts" : "Portfolio"}
-            {f === "all" && unreadCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px]">{unreadCount}</span>
-            )}
+            {f === "all" && unreadCount > 0 && <span className="ml-1.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px]">{unreadCount}</span>}
           </button>
         ))}
       </div>
 
-      {/* Notification list */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
         {filtered.map((n, i) => {
           const Icon = iconMap[n.type]
           return (
-            <div
-              key={i}
-              className={`glass-panel edge-light relative rounded-2xl p-5 transition-all hover:bg-white/[0.03] ${
-                !n.read ? "border-primary/20" : ""
-              }`}
-            >
-              {!n.read && <span className="absolute right-4 top-4 h-2 w-2 rounded-full bg-primary" />}
+            <div key={i} className={`glass-card edge-light relative rounded-2xl p-5 transition-all hover:bg-white/[0.02] ${!n.read ? "border-primary/20" : ""}`}>
+              {!n.read && <span className="absolute right-4 top-4 h-2 w-2 rounded-full bg-primary animate-pulse-glow" />}
               <div className="flex gap-4">
-                <div className={`rounded-xl bg-white/5 p-2.5 ${colorMap[n.type]}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
+                <div className={`rounded-xl bg-white/5 p-2.5 ${colorMap[n.type]}`}><Icon className="h-4 w-4" /></div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <h3 className="text-sm font-medium">{n.title}</h3>

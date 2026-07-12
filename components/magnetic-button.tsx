@@ -1,87 +1,46 @@
 "use client"
 
 import { useRef, type ReactNode } from "react"
-import { motion, useMotionValue, useSpring } from "motion/react"
 import Link from "next/link"
+import { motion } from "motion/react"
 
 type Props = {
-  children: ReactNode
   href?: string
   onClick?: () => void
-  variant?: "primary" | "ghost"
+  children: ReactNode
   className?: string
+  variant?: "primary" | "ghost"
 }
 
-export function MagneticButton({
-  children,
-  href,
-  onClick,
-  variant = "primary",
-  className = "",
-}: Props) {
+export function MagneticButton({ href, onClick, children, className = "", variant = "primary" }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 200, damping: 15 })
-  const sy = useSpring(y, { stiffness: 200, damping: 15 })
 
-  const handleMove = (e: React.MouseEvent) => {
-    const el = ref.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const mx = e.clientX - (rect.left + rect.width / 2)
-    const my = e.clientY - (rect.top + rect.height / 2)
-    x.set(mx * 0.35)
-    y.set(my * 0.35)
-  }
-  const reset = () => {
-    x.set(0)
-    y.set(0)
+  const handleMouse = (e: React.MouseEvent) => {
+    if (!ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const x = e.clientX - rect.left - rect.width / 2
+    const y = e.clientY - rect.top - rect.height / 2
+    ref.current.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`
   }
 
-  const base =
-    "relative inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium tracking-tight transition-colors duration-300 will-change-transform"
-  const styles =
+  const handleLeave = () => {
+    if (ref.current) ref.current.style.transform = "translate(0, 0)"
+  }
+
+  const base = `inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 ${
     variant === "primary"
-      ? "bg-foreground text-background hover:bg-foreground/90"
-      : "glass text-foreground hover:border-primary/40"
+      ? "bg-gradient-to-r from-primary to-violet text-white shadow-lg shadow-primary/25 hover:shadow-primary/40"
+      : "glass text-foreground hover:bg-white/10"
+  } cursor-pointer`
 
-  const inner = (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={reset}
-      style={{ x: sx, y: sy }}
-      className="inline-block"
+  const content = (
+    <div ref={ref} onMouseMove={handleMouse} onMouseLeave={handleLeave}
+      className={`${base} ${className}`} style={{ transition: "transform 0.15s ease-out" }}
     >
-      <span className={`${base} ${styles} ${className}`}>
-        {variant === "primary" && (
-          <span
-            className="animate-shimmer pointer-events-none absolute inset-0 rounded-full opacity-40"
-            style={{
-              background:
-                "linear-gradient(110deg, transparent 30%, oklch(0.99 0 0 / 0.4) 50%, transparent 70%)",
-              backgroundSize: "200% 100%",
-            }}
-          />
-        )}
-        <span className="relative z-10 inline-flex items-center gap-2">
-          {children}
-        </span>
-      </span>
-    </motion.div>
+      {children}
+    </div>
   )
 
-  if (href) {
-    return (
-      <Link href={href} className="inline-block">
-        {inner}
-      </Link>
-    )
-  }
-  return (
-    <button onClick={onClick} className="inline-block">
-      {inner}
-    </button>
-  )
+  if (href) return <Link href={href}>{content}</Link>
+  return <button onClick={onClick} type="button">{content}</button>
 }

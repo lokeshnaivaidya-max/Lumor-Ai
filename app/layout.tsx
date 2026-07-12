@@ -1,24 +1,33 @@
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
+import { Sora, Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google"
 import "./globals.css"
 
-const geistSans = Geist({
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-heading",
   display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 })
 
-const geistMono = Geist_Mono({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-sans",
   display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+})
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "500"],
 })
 
 const instrument = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: "italic",
-  variable: "--font-instrument",
+  variable: "--font-serif",
   display: "swap",
 })
 
@@ -42,7 +51,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0f",
+  themeColor: "#070713",
   width: "device-width",
   initialScale: 1,
 }
@@ -55,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrument.variable} bg-background`}
+      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} bg-background`}
     >
       <body className="antialiased">{children}</body>
     </html>

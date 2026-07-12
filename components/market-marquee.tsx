@@ -1,66 +1,27 @@
 "use client"
 
-import { memo } from "react"
-import { ArrowDownRight, ArrowUpRight } from "lucide-react"
-import type { Quote } from "@/lib/market"
+import { type Quote } from "@/lib/market"
 
-const NAME_MAP: Record<string, string> = {
-  "^GSPC": "S&P 500",
-  "^IXIC": "Nasdaq",
-  "^DJI": "Dow Jones",
-  "BTC-USD": "Bitcoin",
-  "ETH-USD": "Ethereum",
-}
+export function MarketMarquee({ quotes }: { quotes: Quote[] }) {
+  if (quotes.length === 0) return null
 
-function niceName(q: Quote) {
-  return NAME_MAP[q.symbol] ?? q.symbol
-}
-
-export const MarketMarquee = memo(function MarketMarquee({ quotes }: { quotes: Quote[] }) {
-  if (!quotes.length) return null
   const items = [...quotes, ...quotes]
 
   return (
-    <div className="group relative w-full overflow-hidden border-y border-border/60 bg-white/[0.015] py-4">
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-40"
-        style={{ background: "linear-gradient(90deg, var(--background), transparent)" }}
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-40"
-        style={{ background: "linear-gradient(270deg, var(--background), transparent)" }}
-      />
-      <div className="animate-marquee flex w-max items-center gap-8 whitespace-nowrap will-change-transform [animation-play-state:running] group-hover:[animation-play-state:paused]">
-        {items.map((q, i) => {
-          const up = q.changePercent >= 0
-          return (
-            <div key={`${q.symbol}-${i}`} className="flex items-center gap-2.5">
-              <span className="font-mono text-sm text-muted-foreground">
-                {niceName(q)}
-              </span>
-              <span className="text-sm font-medium tabular-nums">
-                {q.price.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-              <span
-                className={`flex items-center gap-0.5 text-xs tabular-nums ${
-                  up ? "text-pos" : "text-neg"
-                }`}
-              >
-                {up ? (
-                  <ArrowUpRight className="h-3 w-3" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3" />
-                )}
-                {Math.abs(q.changePercent).toFixed(2)}%
-              </span>
-              <span className="text-border">·</span>
-            </div>
-          )
-        })}
+    <div className="relative overflow-hidden border-y border-border/30 py-3">
+      <div className="absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+      <div className="flex animate-marquee gap-10 hover:[animation-play-state:paused]">
+        {items.map((q, i) => (
+          <div key={`${q.symbol}-${i}`} className="flex shrink-0 items-center gap-3 text-sm">
+            <span className="font-heading font-semibold tracking-tight">{q.symbol}</span>
+            <span className="tabular-nums">${q.price.toFixed(2)}</span>
+            <span className={`tabular-nums ${q.changePercent >= 0 ? "text-emerald" : "text-neg"}`}>
+              {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
-})
+}
