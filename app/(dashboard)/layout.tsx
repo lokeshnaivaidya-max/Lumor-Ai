@@ -13,6 +13,8 @@ export default async function DashboardLayout({
 }) {
   const user = await getCurrentUser()
   if (!user) redirect("/sign-in")
+  // A session must only exist for verified users now, but guard anyway.
+  if (!user.emailVerified) redirect("/verify-email")
 
   return (
     <>

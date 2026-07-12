@@ -21,7 +21,7 @@ export default async function HomePage() {
       <CursorGlow />
       <Navbar />
       <main className="relative z-10">
-        <Hero />
+        <Hero quotes={quotes} />
         <MarketMarquee quotes={quotes} />
         <Features />
         <Coverage />

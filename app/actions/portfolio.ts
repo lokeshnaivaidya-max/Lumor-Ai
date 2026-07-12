@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { portfolioHolding } from "@/lib/db/schema"
+import { portfolioHolding, watchlistItem } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
@@ -112,5 +112,39 @@ export async function removeHolding(id: number) {
       ),
     )
   revalidatePath("/portfolio")
+  revalidatePath("/dashboard")
+}
+
+export async function addToWatchlist(input: { symbol: string; name?: string; assetType?: string }) {
+  const userId = await getUserId()
+  const symbol = input.symbol.trim().toUpperCase()
+  if (!symbol) throw new Error("Symbol is required")
+
+  const existing = await db
+    .select({ id: watchlistItem.id })
+    .from(watchlistItem)
+    .where(and(eq(watchlistItem.userId, userId), eq(watchlistItem.symbol, symbol)))
+    .limit(1)
+
+  if (existing.length === 0) {
+    await db.insert(watchlistItem).values({
+      userId,
+      symbol,
+      name: input.name ?? null,
+      assetType: input.assetType ?? null,
+    })
+  }
+
+  revalidatePath("/watchlist")
+  revalidatePath("/dashboard")
+}
+
+export async function removeFromWatchlist(symbol: string) {
+  const userId = await getUserId()
+  const s = symbol.trim().toUpperCase()
+  await db
+    .delete(watchlistItem)
+    .where(and(eq(watchlistItem.userId, userId), eq(watchlistItem.symbol, s)))
+  revalidatePath("/watchlist")
   revalidatePath("/dashboard")
 }

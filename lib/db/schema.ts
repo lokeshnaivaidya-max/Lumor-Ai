@@ -5,11 +5,16 @@ import {
   boolean,
   serial,
   numeric,
+  integer,
+  jsonb,
+  pgEnum,
 } from "drizzle-orm/pg-core"
 
 // ---------------------------------------------------------------------------
 // Better Auth tables (camelCase columns match Better Auth defaults — do not rename)
 // ---------------------------------------------------------------------------
+
+export const themeEnum = pgEnum("theme", ["light", "dark", "system"])
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -17,6 +22,12 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("emailVerified").notNull().default(false),
   image: text("image"),
+  // Profile & preferences (persisted, never hardcoded)
+  timezone: text("timezone"),
+  country: text("country"),
+  theme: themeEnum("theme").notNull().default("system"),
+  bio: text("bio"),
+  notificationPrefs: jsonb("notification_prefs"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })
@@ -83,5 +94,48 @@ export const watchlistItem = pgTable("watchlist_item", {
   symbol: text("symbol").notNull(),
   name: text("name"),
   assetType: text("assetType"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})
+
+export const notification = pgTable("notification", {
+  id: serial("id").primaryKey(),
+  userId: text("userId").notNull(),
+  type: text("type").notNull().default("general"),
+  title: text("title").notNull(),
+  body: text("body"),
+  symbol: text("symbol"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})
+
+export const savedAnalysis = pgTable("saved_analysis", {
+  id: serial("id").primaryKey(),
+  userId: text("userId").notNull(),
+  symbol: text("symbol").notNull(),
+  name: text("name"),
+  kind: text("kind").notNull().default("analysis"),
+  summary: text("summary"),
+  confidence: integer("confidence"),
+  direction: text("direction").notNull().default("neutral"),
+  data: jsonb("data"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})
+
+export const chatConversation = pgTable("chat_conversation", {
+  id: serial("id").primaryKey(),
+  userId: text("userId").notNull(),
+  title: text("title").notNull().default("New chat"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
+
+export const chatMessage = pgTable("chat_message", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id")
+    .notNull()
+    .references(() => chatConversation.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  tokens: integer("tokens").notNull().default(0),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })

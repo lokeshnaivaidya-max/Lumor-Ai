@@ -5,18 +5,26 @@ import Link from "next/link"
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "motion/react"
 import { LumoraMark } from "./lumora-mark"
 import { AccountMenu } from "./auth/account-menu"
-import { Menu, X, Moon, Sun } from "lucide-react"
+import { useSession } from "@/lib/auth-client"
 
-const links = [
+const GUEST_LINKS = [
+  { label: "Markets", href: "/markets" },
   { label: "Intelligence", href: "#intelligence" },
   { label: "Coverage", href: "#coverage" },
+]
+
+const AUTH_LINKS = [
+  { label: "Dashboard", href: "/dashboard" },
   { label: "Markets", href: "/markets" },
+  { label: "Portfolio", href: "/portfolio" },
+  { label: "Watchlist", href: "/watchlist" },
 ]
 
 export function Navbar() {
+  const { data: session } = useSession()
+  const authenticated = !!session?.user
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [dark, setDark] = useState(false)
 
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -25,16 +33,14 @@ export function Navbar() {
   const logoX = useTransform(springX, [-1, 1], [-10, 10])
   const logoY = useTransform(springY, [-1, 1], [-10, 10])
 
+  const links = authenticated ? AUTH_LINKS : GUEST_LINKS
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark)
-  }, [dark])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : ""
@@ -90,17 +96,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <button
-            onClick={() => setDark((d) => !d)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground"
-            aria-label="Toggle theme"
-          >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
           <AccountMenu />
-          <Link href="/sign-up" className="premium-btn premium-btn-primary px-5 py-2.5 text-xs">
-            Get Started
-          </Link>
         </div>
 
         <button
@@ -108,7 +104,11 @@ export function Navbar() {
           className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground md:hidden"
           aria-label="Menu"
         >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {mobileOpen ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+          )}
         </button>
 
         <AnimatePresence>
@@ -132,21 +132,8 @@ export function Navbar() {
                   </Link>
                 ))}
                 <div className="my-2 h-px bg-border/50" />
-                <div className="flex items-center gap-2 px-4 py-2">
-                  <button
-                    onClick={() => setDark((d) => !d)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5"
-                    aria-label="Toggle theme"
-                  >
-                    {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  </button>
+                <div className="px-4 py-2">
                   <AccountMenu />
-                  <Link
-                    href="/sign-up"
-                    className="premium-btn premium-btn-primary flex-1 px-4 py-2.5 text-center text-xs"
-                  >
-                    Get Started
-                  </Link>
                 </div>
               </div>
             </motion.div>

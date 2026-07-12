@@ -46,7 +46,14 @@ export const auth = betterAuth({
         : process.env.V0_RUNTIME_URL),
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true,
+    // Session is created ONLY after the user verifies their email via OTP.
+    autoSignIn: false,
+  },
+  // After a successful OTP verification we mark the email verified AND open a
+  // real session — this is what lets the user reach the dashboard.
+  emailVerification: {
+    sendOnSignUp: false,
+    autoSignInAfterVerification: true,
   },
   socialProviders,
   plugins: [

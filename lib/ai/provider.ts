@@ -14,6 +14,8 @@ import { GoogleGenAI, Type } from "@google/genai"
 
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
+const SECRET_PATTERN = /(api[_-]?key|secret|token|password|authorization|bearer)/i
+
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
 const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-3.1-flash-lite"
 
@@ -71,7 +73,64 @@ async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Prom
   return value
 }
 
-const SECRET_PATTERN = /(AIza[\w-]{20,}|(?:api[_-]?key|authorization|token)\s*[=:]\s*["']?[^\s,"'}]+)/gi
+const CHAT_SYSTEM = `You are Lumora, a knowledgeable, calm market-intelligence assistant. You help users understand stocks, indices, crypto, indicators, portfolio strategy, and financial concepts in plain, honest language.
+
+Rules:
+- Answer the user's question directly. Keep responses focused and useful.
+- Never invent prices, figures, or news. If you need live market data, say so and explain how the user can get it inside Lumora.
+- Do not give personalized financial advice that guarantees outcomes. Add a short reminder that this is educational, not financial advice, when the user asks for buy/sell decisions.
+- Use markdown: headings, lists, bold, and fenced code blocks when showing code or structured data.
+- Be concise but complete.`
+
+export type ChatMessageInput = { role: "user" | "assistant" | "model"; content: string }
+
+export type ChatStreamEvent =
+  | { type: "delta"; text: string }
+  | { type: "done"; usage: { promptTokens: number; completionTokens: number } }
+  | { type: "error"; message: string }
+
+/**
+ * Streams a multi-turn chat completion from Gemini. Yields token deltas and a
+ * final `done` event carrying token usage. Throws on configuration/billing
+ * errors so the caller can surface a proper message.
+ */
+export async function* streamChat(
+  messages: ChatMessageInput[],
+  opts?: { model?: string; system?: string },
+): AsyncGenerator<ChatStreamEvent> {
+  const client = getClient()
+  const contents = messages.map((m) => ({
+    role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }))
+  let promptTokens = 0
+  let completionTokens = 0
+  try {
+    const res = await client.models.generateContentStream({
+      model: opts?.model || MODEL,
+      contents,
+      config: {
+        systemInstruction: opts?.system || CHAT_SYSTEM,
+        temperature: 0.4,
+      },
+    })
+    for await (const chunk of res) {
+      const text = (chunk as { text?: string }).text
+      if (text) yield { type: "delta", text }
+      const u = (chunk as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } })
+        .usageMetadata
+      if (u) {
+        promptTokens = u.promptTokenCount ?? promptTokens
+        completionTokens = u.candidatesTokenCount ?? completionTokens
+      }
+    }
+    yield { type: "done", usage: { promptTokens, completionTokens } }
+  } catch (err) {
+    const classified = classify(err)
+    yield { type: "error", message: classified.message }
+  }
+}
+
 
 function redact(value: unknown, seen = new WeakSet<object>()): unknown {
   if (typeof value === "string") return value.replace(SECRET_PATTERN, "[REDACTED]")

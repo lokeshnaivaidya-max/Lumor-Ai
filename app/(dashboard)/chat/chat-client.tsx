@@ -1,218 +1,278 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "motion/react"
-import { Send, Bot, User, Sparkles, Trash2, ArrowDown, Brain, Cpu, MessageSquare } from "lucide-react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { motion } from "motion/react"
+import ReactMarkdown from "react-markdown"
+import { Send, Plus, Trash2, Bot, User, Loader2, Sparkles, MessageSquare } from "lucide-react"
+import { getConversations, getMessages, createConversation, deleteConversation } from "@/app/actions/chat"
 
-type Message = { role: "user" | "assistant"; content: string; timestamp: number }
+type Conversation = { id: number; title: string; updatedAt: string; preview?: string | null; messageCount?: number }
+type Msg = { id: string; role: "user" | "assistant"; content: string }
 
-const SUGGESTIONS = ["What's the outlook for NVDA?", "Compare AAPL and MSFT", "Explain RSI indicator for beginners", "How do I diversify my portfolio?"]
+const SUGGESTIONS = [
+  "What's a good strategy for a beginner investor?",
+  "Explain P/E ratio in simple terms",
+  "How does diversification reduce risk?",
+  "What factors move stock prices short term?",
+]
 
-function TypingIndicator() {
+function TypingDots() {
   return (
-    <div className="flex gap-3">
-      <div className="mt-1 shrink-0">
-        <div className="rounded-xl bg-gradient-to-br from-violet/15 to-blue/15 p-2 shadow-sm">
-          <Bot className="h-4 w-4 text-violet" />
-        </div>
-      </div>
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="glass-card rounded-2xl rounded-tl-md border border-border/20 px-5 py-4 shadow-sm"
-      >
-        <div className="flex items-center gap-2">
-          {[0, 0.15, 0.3].map((d, i) => (
-            <motion.span
-              key={i}
-              className="h-2 w-2 rounded-full bg-violet/60"
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: d }}
-            />
-          ))}
-        </div>
-      </motion.div>
-    </div>
+    <span className="inline-flex items-center gap-1 py-1">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+        />
+      ))}
+    </span>
   )
 }
 
-function MessageBubble({ message, index }: { message: Message; index: number }) {
+function Markdown({ content }: { content: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.05 }}
-      className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}
-    >
-      {message.role === "assistant" && (
-        <div className="mt-1 shrink-0">
-          <div className="rounded-xl bg-gradient-to-br from-violet/15 to-blue/15 p-2.5 shadow-sm">
-            <Bot className="h-4 w-4 text-violet" />
-          </div>
-        </div>
-      )}
-      <div className={`max-w-[80%] ${
-        message.role === "user"
-          ? "rounded-2xl rounded-tr-md bg-gradient-to-br from-blue/10 via-violet/10 to-blue/10 px-4 py-3 shadow-sm"
-          : "glass-card rounded-2xl rounded-tl-md border border-border/20 px-4 py-3 shadow-sm"
-      }`}>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground/50">{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          {message.role === "assistant" && (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground/40">
-              <Brain className="h-2.5 w-2.5" />Lumora AI
-            </span>
-          )}
-        </div>
-      </div>
-      {message.role === "user" && (
-        <div className="mt-1 shrink-0">
-          <div className="rounded-xl bg-gradient-to-br from-primary to-violet p-2.5 shadow-sm shadow-violet/20">
-            <User className="h-4 w-4 text-white" />
-          </div>
-        </div>
-      )}
-    </motion.div>
+    <div className="prose-invert max-w-none text-sm leading-relaxed">
+      <ReactMarkdown
+        components={{
+          code({ className, children, ...props }: any) {
+            const inline = !className
+            if (inline) return <code className="rounded bg-white/10 px-1 py-0.5 text-xs font-mono">{children}</code>
+            return (
+              <pre className="my-2 overflow-x-auto rounded-xl bg-black/30 p-3 text-xs">
+                <code className={className} {...props}>{children}</code>
+              </pre>
+            )
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   )
 }
 
 export function ChatClient() {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [streaming, setStreaming] = useState(false)
+  const [loadingMsgs, setLoadingMsgs] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
+  const loadConversations = useCallback(async () => {
+    try { setConversations(await getConversations()) } catch { /* ignore */ }
+  }, [])
 
-  async function handleSend() {
-    if (!input.trim() || loading) return
-    setMessages((prev) => [...prev, { role: "user", content: input.trim(), timestamp: Date.now() }])
+  useEffect(() => { loadConversations() }, [loadConversations])
+
+  useEffect(() => {
+    async function load() {
+      if (!activeId) { setMessages([]); return }
+      setLoadingMsgs(true)
+      try {
+        const msgs = await getMessages(activeId)
+        setMessages(msgs.map((m) => ({ id: String(m.id), role: m.role as "user" | "assistant", content: m.content })))
+      } finally { setLoadingMsgs(false) }
+    }
+    load()
+  }, [activeId])
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, streaming])
+
+  async function selectConversation(id: number) { setError(null); setActiveId(id) }
+
+  async function startNew() { setError(null); setActiveId(null); setMessages([]) }
+
+  async function handleDelete(id: number) {
+    try {
+      await deleteConversation(id)
+      if (activeId === id) { setActiveId(null); setMessages([]) }
+      await loadConversations()
+    } catch (e: any) { setError(e?.message || "Failed to delete") }
+  }
+
+  async function send(text: string) {
+    const content = text.trim()
+    if (!content || streaming) return
+    setError(null)
+
+    let convId = activeId
+    if (convId == null) {
+      const conv = await createConversation(content)
+      convId = conv.id
+      setActiveId(convId)
+      setConversations((prev) => [
+        { id: conv.id, title: conv.title, updatedAt: new Date(conv.updatedAt).toISOString() },
+        ...prev,
+      ])
+    }
+
+    const history = messages
+    setMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: "user", content }])
     setInput("")
-    setLoading(true)
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "assistant", content: genResponse(input.trim()), timestamp: Date.now() }])
-      setLoading(false)
-    }, 1500)
+    setStreaming(true)
+
+    const assistantId = `a-${Date.now()}`
+    setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }])
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ conversationId: convId, message: content, history }),
+      })
+      if (!res.ok || !res.body) {
+        const errText = await res.text().catch(() => "")
+        throw new Error(errText || `Request failed (${res.status})`)
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ""
+      let full = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        let idx: number
+        while ((idx = buffer.indexOf("\n\n")) >= 0) {
+          const chunk = buffer.slice(0, idx)
+          buffer = buffer.slice(idx + 2)
+          const dataLine = chunk.split("\n").find((l) => l.startsWith("data:"))
+          if (!dataLine) continue
+          const data = dataLine.slice(5).trim()
+          if (data === "[DONE]") continue
+          try {
+            const evt = JSON.parse(data) as { type: string; token?: string }
+            if (evt.type === "token" && evt.token) {
+              full += evt.token
+              setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: full } : m)))
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+      await loadConversations()
+      const fresh = await getMessages(convId)
+      setMessages(fresh.map((m) => ({ id: String(m.id), role: m.role as "user" | "assistant", content: m.content })))
+    } catch (e: any) {
+      setError(e?.message || "Something went wrong")
+      setMessages((prev) => prev.filter((m) => m.id !== assistantId))
+    } finally {
+      setStreaming(false)
+    }
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-4rem)] flex-col">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between border-b border-border/30 bg-background/70 px-6 py-3.5 backdrop-blur-2xl"
-      >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="rounded-2xl bg-gradient-to-br from-violet to-blue p-2.5 shadow-lg shadow-violet/20">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <motion.span
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald shadow-lg shadow-emerald/40"
-            />
-          </div>
-          <div>
-            <h1 className="font-heading text-sm font-medium">AI Assistant</h1>
-            <p className="text-xs text-muted-foreground">Ask anything about markets</p>
-          </div>
-        </div>
-        <AnimatePresence>
-          {messages.length > 0 && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              onClick={() => setMessages([])}
-              className="glass-card flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Trash2 className="h-3 w-3" />Clear
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <AnimatePresence mode="wait">
-          {messages.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex h-full flex-col items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 12 }}
-                className="mb-6 rounded-3xl bg-gradient-to-br from-violet/10 via-blue/5 to-violet/10 p-5 shadow-xl shadow-violet/5"
-              >
-                <Sparkles className="h-10 w-10 text-violet" />
-              </motion.div>
-              <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="font-heading text-lg font-medium">How can I help you?</motion.h2>
-              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-1 text-sm text-muted-foreground">Ask about stocks, indicators, or portfolio strategy.</motion.p>
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 flex flex-wrap justify-center gap-2">
-                {SUGGESTIONS.map((s) => (
-                  <motion.button
-                    key={s}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => { setInput(s); inputRef.current?.focus() }}
-                    className="glass-card rounded-2xl px-4 py-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {s}
-                  </motion.button>
-                ))}
-              </motion.div>
-            </motion.div>
+    <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-4 lg:p-6">
+      <div className="hidden w-64 shrink-0 flex-col gap-2 md:flex">
+        <button onClick={startNew} className="premium-btn premium-btn-primary flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
+          <Plus className="h-3.5 w-3.5" />New chat
+        </button>
+        <div className="flex-1 space-y-1 overflow-y-auto pr-1">
+          {conversations.length === 0 ? (
+            <p className="px-2 py-3 text-xs text-muted-foreground">No conversations yet.</p>
           ) : (
-            <motion.div key="messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl space-y-5">
-              {messages.map((m, i) => (
-                <MessageBubble key={i} message={m} index={i} />
-              ))}
-              <AnimatePresence>
-                {loading && <TypingIndicator />}
-              </AnimatePresence>
-              <div ref={bottomRef} />
-            </motion.div>
+            conversations.map((c) => (
+              <div
+                key={c.id}
+                className={`group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors ${activeId === c.id ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"}`}
+              >
+                <button onClick={() => selectConversation(c.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{c.title}</span>
+                </button>
+                <button onClick={() => handleDelete(c.id)} className="rounded-md p-1 text-muted-foreground/40 opacity-0 transition-opacity hover:text-neg group-hover:opacity-100">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
-      <div className="border-t border-border/30 bg-background/70 px-6 py-4 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <div className="glass-card relative flex-1 rounded-2xl shadow-lg shadow-black/5">
-            <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-              placeholder="Ask Lumora anything..."
-              className="w-full rounded-2xl bg-transparent py-3.5 pl-4 pr-14 text-sm outline-none placeholder:text-muted-foreground/60"
-            />
-            <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
-              <motion.button
-                onClick={handleSend} disabled={!input.trim() || loading}
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                className="rounded-xl bg-gradient-to-r from-violet to-blue p-2.5 text-white shadow-lg shadow-violet/20 transition-opacity disabled:opacity-40"
-              >
-                <Send className="h-4 w-4" />
-              </motion.button>
+      <div className="glass-card edge-light flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
+        <div className="flex items-center gap-2 border-b border-border/30 px-5 py-3.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet/10 text-violet">
+            <Bot className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Lumora AI</p>
+            <p className="text-[11px] text-muted-foreground">Grounded in real market data</p>
+          </div>
+        </div>
+
+        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 lg:px-6">
+          {loadingMsgs ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : messages.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="mb-4 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-border/30">
+                <Sparkles className="h-7 w-7 text-violet/70" />
+              </div>
+              <p className="font-heading text-base font-medium">Ask Lumora about the markets</p>
+              <p className="mt-1 text-sm text-muted-foreground">Get grounded insights on stocks, strategies, and investing.</p>
+              <div className="mt-5 grid w-full max-w-md grid-cols-1 gap-2 sm:grid-cols-2">
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} onClick={() => send(s)} className="glass-card edge-light rounded-2xl px-3 py-2.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground">
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
+          ) : (
+            messages.map((m) => (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+              >
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${m.role === "user" ? "bg-blue/10 text-blue" : "bg-violet/10 text-violet"}`}>
+                  {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                </div>
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-blue/10" : "bg-white/[0.04]"}`}>
+                  {m.role === "assistant" && !m.content ? <TypingDots /> : <Markdown content={m.content} />}
+                </div>
+              </motion.div>
+            ))
+          )}
+          {streaming && messages[messages.length - 1]?.content && (
+            <p className="px-1 text-[11px] text-muted-foreground/60">Generating…</p>
+          )}
+          <div ref={endRef} />
+        </div>
+
+        {error && <p className="px-5 pb-1 text-xs text-neg">{error}</p>}
+
+        <div className="border-t border-border/30 p-3">
+          <div className="flex items-end gap-2 rounded-2xl border border-border/30 bg-background/40 px-3 py-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input) }
+              }}
+              rows={1}
+              placeholder="Message Lumora…"
+              className="max-h-32 flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+            />
+            <button
+              onClick={() => send(input)}
+              disabled={streaming || !input.trim()}
+              className="premium-btn premium-btn-primary flex h-9 w-9 items-center justify-center rounded-xl p-0 disabled:opacity-50"
+            >
+              {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </button>
           </div>
         </div>
       </div>
     </div>
   )
-}
-
-function genResponse(q: string): string {
-  const l = q.toLowerCase()
-  if (l.includes("nvda") || l.includes("nvidia")) return "**NVIDIA (NVDA)** continues to show strong momentum in the AI chip space. With RSI at 62, the stock is in neutral-bullish territory. Key support at $845, resistance at $920. The company's data center revenue grew 154% YoY, and with the upcoming Blackwell architecture launch, analyst sentiment remains overwhelmingly positive. However, valuation at 35x forward P/E suggests elevated expectations — any miss could trigger a correction."
-  if (l.includes("aapl") && l.includes("msft") && l.includes("compare")) return "**AAPL vs MSFT — Quick Comparison:**\n\n**Apple (AAPL):** P/E 28x | Revenue growth 2% YoY | Services segment growing 14% | Strong brand loyalty, but hardware cyclicality remains a risk.\n\n**Microsoft (MSFT):** P/E 35x | Revenue growth 16% YoY | Azure growing 28% | OpenAI partnership gives AI leadership. More diversified revenue base.\n\n**Verdict:** MSFT has stronger growth drivers, while AAPL offers defensive quality."
-  if (l.includes("rsi")) return "The **Relative Strength Index (RSI)** is a momentum oscillator that measures the speed and magnitude of recent price changes. It ranges from 0 to 100. Traditionally, RSI above 70 indicates overbought conditions (potential sell signal), while below 30 suggests oversold (potential buy signal). For beginners: think of it as a 'crowdedness' meter — when too many people have bought, a reversal may be due."
-  if (l.includes("diversify") || l.includes("portfolio")) return "A well-diversified portfolio typically includes exposure to **different sectors, asset classes, and geographies**. A common starting point is the 60/40 split (60% equities, 40% bonds). Consider adding exposure to:\n- International markets (emerging + developed)\n- Different sectors (tech, healthcare, energy, financials)\n- Asset classes (bonds, REITs, commodities)\n- Various market caps (large, mid, small)"
-  return "Great question! Based on current market data, I'd need to run a full analysis to give you accurate insights. Could you specify a particular stock or topic you're interested in? I can help with company analysis, technical indicators, market trends, portfolio strategy, or explaining financial concepts."
 }

@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next"
+import { cookies } from "next/headers"
 import { Sora, Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google"
 import "./globals.css"
+
+function themeClass(theme: string): string {
+  if (theme === "dark") return "dark-root dark"
+  if (theme === "light") return "light-root"
+  return ""
+}
 
 const sora = Sora({
   subsets: ["latin"],
@@ -56,15 +63,16 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const theme = (await cookies()).get("lumora-theme")?.value ?? "system"
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} light-root bg-background`}
+      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} ${themeClass(theme)} bg-background`}
       suppressHydrationWarning
     >
       <body className="antialiased">{children}</body>

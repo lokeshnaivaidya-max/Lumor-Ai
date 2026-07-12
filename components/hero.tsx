@@ -4,24 +4,7 @@ import { motion, useScroll, useTransform } from "motion/react"
 import Link from "next/link"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { HeroGlobe } from "./hero-globe"
-
-const tickerItems = [
-  { sym: "AAPL", price: "237.45", ch: "+1.23%", up: true },
-  { sym: "GOOGL", price: "172.80", ch: "+0.87%", up: true },
-  { sym: "MSFT", price: "418.32", ch: "-0.42%", up: false },
-  { sym: "AMZN", price: "198.15", ch: "+2.14%", up: true },
-  { sym: "NVDA", price: "892.50", ch: "+4.56%", up: true },
-  { sym: "TSLA", price: "248.90", ch: "-1.78%", up: false },
-  { sym: "META", price: "512.60", ch: "+1.05%", up: true },
-  { sym: "JPM", price: "198.30", ch: "+0.62%", up: true },
-  { sym: "V", price: "275.40", ch: "+0.33%", up: true },
-  { sym: "JNJ", price: "156.20", ch: "-0.18%", up: false },
-  { sym: "WMT", price: "175.80", ch: "+1.42%", up: true },
-  { sym: "XOM", price: "118.25", ch: "+0.55%", up: true },
-  { sym: "AAPL", price: "237.45", ch: "+1.23%", up: true },
-  { sym: "GOOGL", price: "172.80", ch: "+0.87%", up: true },
-  { sym: "MSFT", price: "418.32", ch: "-0.42%", up: false },
-]
+import type { Quote } from "@/lib/market"
 
 const words = ["Every", "Market.", "Every", "Move.", "One", "Intelligence."]
 
@@ -52,10 +35,23 @@ function FloatingOrb({ index }: { index: number }) {
   )
 }
 
-export function Hero() {
+export function Hero({ quotes = [] }: { quotes?: Quote[] }) {
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 100])
   const scale = useTransform(scrollY, [0, 400], [1, 0.95])
+
+  const tickerItems = quotes.length > 0
+    ? quotes.slice(0, 12).map((q) => ({
+        sym: q.symbol,
+        price: q.price.toFixed(2),
+        ch: `${q.changePercent >= 0 ? "+" : ""}${q.changePercent.toFixed(2)}%`,
+        up: q.changePercent >= 0,
+      }))
+    : [
+        { sym: "AAPL", price: "—", ch: "—", up: true },
+        { sym: "GOOGL", price: "—", ch: "—", up: true },
+        { sym: "MSFT", price: "—", ch: "—", up: true },
+      ]
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
