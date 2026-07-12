@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { LumoraMark } from "./lumora-mark"
 import { MagneticButton } from "./magnetic-button"
+import { AccountMenu } from "./auth/account-menu"
 
 const links = [
   { label: "Markets", href: "/markets" },
