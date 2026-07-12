@@ -62,14 +62,6 @@ export function HeroGlobe() {
       t += 0.006
       ctx.clearRect(0, 0, W, H)
 
-      // Large ambient glow behind globe
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, globeR * 2.2)
-      glow.addColorStop(0, "oklch(0.55 0.18 255 / 0.08)")
-      glow.addColorStop(0.4, "oklch(0.6 0.16 168 / 0.04)")
-      glow.addColorStop(1, "oklch(0 0 0 / 0)")
-      ctx.fillStyle = glow
-      ctx.fillRect(0, 0, W, H)
-
       // ── Orbital rings ──
       ctx.globalCompositeOperation = "lighter"
       for (const ring of rings) {

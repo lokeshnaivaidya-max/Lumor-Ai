@@ -1,4 +1,3 @@
-import { AmbientBackground } from "@/components/ambient-background"
 import { CursorGlow } from "@/components/cursor-glow"
 import { Navbar } from "@/components/navbar"
 import { Hero } from "@/components/hero"
@@ -12,7 +11,6 @@ export default async function HomePage() {
   return (
     <>
       <LoadingSequence />
-      <AmbientBackground />
       <CursorGlow />
       <Navbar />
       <main className="relative z-10">

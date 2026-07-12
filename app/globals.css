@@ -305,27 +305,6 @@
     border: 1px solid oklch(0.99 0 0 / 0.08);
   }
 
-  /* ── Scroll indicator ── */
-  .scroll-indicator {
-    width: 1.5rem;
-    height: 2.5rem;
-    border-radius: 999px;
-    border: 2px solid oklch(0.55 0.015 265 / 0.2);
-    position: relative;
-    display: flex;
-    justify-content: center;
-  }
-  .scroll-indicator::after {
-    content: "";
-    width: 3px;
-    height: 8px;
-    border-radius: 999px;
-    background: oklch(0.55 0.015 265 / 0.35);
-    position: absolute;
-    top: 6px;
-    animation: scroll-bounce 2s ease-in-out infinite;
-  }
-
   /* ── Glass stat card (multi-layer) ── */
   .glass-stat {
     position: relative;
@@ -519,37 +498,6 @@
   }
   .premium-btn-soft:hover { background: oklch(0.55 0.18 255 / 0.14); transform: translateY(-1px); }
 
-  /* ── Section overlays (light-optimized) ── */
-  .section-blue {
-    background:
-      radial-gradient(ellipse 100% 60% at 50% 0%, oklch(0.55 0.18 255 / 0.05), transparent 70%),
-      radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.48 0.16 280 / 0.03), transparent 60%);
-  }
-  .section-emerald {
-    background:
-      radial-gradient(ellipse 100% 60% at 50% 0%, oklch(0.6 0.16 168 / 0.05), transparent 70%),
-      radial-gradient(ellipse 60% 50% at 20% 80%, oklch(0.52 0.18 195 / 0.03), transparent 60%);
-  }
-  .section-violet {
-    background:
-      radial-gradient(ellipse 100% 60% at 50% 0%, oklch(0.48 0.16 280 / 0.05), transparent 70%),
-      radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.52 0.17 275 / 0.03), transparent 60%);
-  }
-  .section-gold {
-    background:
-      radial-gradient(ellipse 100% 60% at 50% 0%, oklch(0.75 0.1 85 / 0.05), transparent 70%),
-      radial-gradient(ellipse 60% 50% at 20% 80%, oklch(0.65 0.12 70 / 0.03), transparent 60%);
-  }
-
-  /* ── Mesh gradient bg ── */
-  .mesh-bg {
-    background:
-      radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.55 0.18 255 / 0.08), transparent 70%),
-      radial-gradient(ellipse 60% 45% at 85% 35%, oklch(0.6 0.16 168 / 0.05), transparent 60%),
-      radial-gradient(ellipse 55% 55% at 15% 80%, oklch(0.48 0.16 280 / 0.05), transparent 55%),
-      radial-gradient(ellipse 50% 50% at 70% 90%, oklch(0.75 0.1 85 / 0.03), transparent 50%);
-  }
-
   /* ── Skeleton ── */
   .skeleton {
     background: linear-gradient(90deg, oklch(0.85 0.01 85 / 0.3) 25%, oklch(0.85 0.01 85 / 0.5) 50%, oklch(0.85 0.01 85 / 0.3) 75%);
@@ -633,7 +581,7 @@
 @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.05); opacity: 1; } }
 @keyframes hue-drift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 @keyframes levitate { 0%, 100% { transform: translateY(0) translateX(0); } 25% { transform: translateY(-8px) translateX(4px); } 50% { transform: translateY(-4px) translateX(-4px); } 75% { transform: translateY(-10px) translateX(2px); } }
-@keyframes scroll-bounce { 0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; } 50% { transform: translateX(-50%) translateY(6px); opacity: 0.4; } }
+
 @keyframes blob-float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
 
 @media (prefers-reduced-motion: reduce) {

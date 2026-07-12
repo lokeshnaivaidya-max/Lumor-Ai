@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/session"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { AmbientBackground } from "@/components/ambient-background"
 import { CursorGlow } from "@/components/cursor-glow"
 
 export const dynamic = "force-dynamic"
@@ -18,7 +17,6 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <AmbientBackground />
       <CursorGlow />
       <div className="flex min-h-screen">
         <DashboardSidebar />

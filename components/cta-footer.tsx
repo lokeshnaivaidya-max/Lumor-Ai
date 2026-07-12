@@ -26,10 +26,7 @@ const footerLinks = [
 export function CtaFooter() {
   return (
     <footer className="relative overflow-hidden">
-      <section className="section-blue relative px-4 py-32">
-        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue/[0.05] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-violet/[0.05] blur-[120px]" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald/[0.03] blur-[100px]" />
+      <section className="relative px-4 py-32">
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <motion.div

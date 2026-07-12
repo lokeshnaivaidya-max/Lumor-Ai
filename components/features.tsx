@@ -129,11 +129,6 @@ function FeatureCard({ f, i }: { f: (typeof features)[number]; i: number }) {
 export function Features() {
   return (
     <section id="intelligence" className="relative overflow-hidden px-4 py-32">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-blue/[0.015] via-transparent to-violet/[0.015]" />
-      <div
-        className="pointer-events-none absolute -top-[30%] left-1/2 h-[60vh] w-[60vh] -translate-x-1/2 rounded-full blur-[150px]"
-        style={{ background: "oklch(0.55 0.18 255 / 0.04)" }}
-      />
 
       <div className="mx-auto max-w-5xl">
         <motion.div

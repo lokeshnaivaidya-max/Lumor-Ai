@@ -16,8 +16,6 @@ export function Hero() {
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
       <HeroGlobe />
 
-      <div className="pointer-events-none absolute inset-0" style={{ zIndex: -1, background: "radial-gradient(ellipse 80% 60% at 50% 40%, transparent 40%, var(--background) 100%)" }} />
-
       <motion.div style={{ y, scale }} className="relative z-20 flex flex-col items-center pt-24">
         <motion.div
           initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
@@ -80,22 +78,6 @@ export function Hero() {
             Get Started
           </Link>
         </motion.div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 2.8 }}
-        className="absolute bottom-10 z-20 flex flex-col items-center gap-2"
-      >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="scroll-indicator"
-        />
-        <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground/50">
-          Scroll
-        </span>
       </motion.div>
     </section>
   )

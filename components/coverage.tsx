@@ -96,11 +96,6 @@ function StatCard({ stat, index }: { stat: (typeof stats)[number]; index: number
 export function Coverage() {
   return (
     <section id="coverage" className="relative overflow-hidden px-4 py-28">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-violet/[0.02] via-transparent to-blue/[0.02]" />
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[150px]"
-        style={{ background: "oklch(0.48 0.16 280 / 0.04)" }}
-      />
 
       <div className="mx-auto max-w-6xl">
         <motion.div
