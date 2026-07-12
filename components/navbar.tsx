@@ -6,6 +6,7 @@ import { motion } from "motion/react"
 import { usePathname } from "next/navigation"
 import { LumoraMark } from "./lumora-mark"
 import { AccountMenu } from "./auth/account-menu"
+import { Moon, Sun } from "lucide-react"
 
 const links = [
   { label: "Terminal", href: "/markets" },
@@ -16,6 +17,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
+  const [dark, setDark] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -25,6 +27,10 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark)
+  }, [dark])
+
   return (
     <motion.header
       initial={{ y: -90, opacity: 0 }}
@@ -33,13 +39,13 @@ export function Navbar() {
       className="fixed inset-x-0 top-0 z-40 flex justify-center px-4 pt-4"
     >
       <nav className={`edge-light relative flex w-full max-w-5xl items-center justify-between rounded-full px-4 py-2.5 transition-all duration-500 ${
-        scrolled ? "glass-blue shadow-2xl shadow-blue/20" : "bg-white/[0.04] backdrop-blur-xl border border-white/10"
+        scrolled ? "glass-strong" : "bg-white/40 backdrop-blur-xl border border-white/50"
       }`}>
         <Link href="/" className="group flex items-center gap-2.5 pl-2">
           <motion.span whileHover={{ rotate: 90, scale: 1.05 }} transition={{ type: "spring", stiffness: 300, damping: 18 }}>
             <LumoraMark className="h-7 w-7" />
           </motion.span>
-          <span className="font-heading text-[15px] font-semibold tracking-tight bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">Lumora</span>
+          <span className="font-heading text-[15px] font-semibold tracking-tight">Lumora</span>
         </Link>
 
         <div className="relative hidden items-center md:flex" onMouseLeave={() => setHovered(null)}>
@@ -50,12 +56,12 @@ export function Navbar() {
                 className="relative rounded-full px-4 py-2 text-sm transition-colors"
               >
                 {hovered === l.href && (
-                  <motion.span layoutId="nav-pill" className="absolute inset-0 -z-10 rounded-full bg-white/10"
+                  <motion.span layoutId="nav-pill" className="absolute inset-0 -z-10 rounded-full bg-black/5"
                     transition={{ type: "spring", stiffness: 400, damping: 32 }}
                   />
                 )}
                 {isActive && !hovered && (
-                  <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-blue/15 border border-blue/25"
+                  <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-blue/[0.08]"
                     transition={{ type: "spring", stiffness: 400, damping: 32 }}
                   />
                 )}
@@ -68,6 +74,13 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <button onClick={() => setDark((d) => !d)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground"
+            aria-label="Toggle theme"
+          >
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           <AccountMenu />
           <Link
             href="/markets"

@@ -100,7 +100,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
         {/* Region + quick watchlist */}
         <div className="flex w-full flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-black/20 p-0.5">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-bg/60 p-0.5">
             <Globe className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
             {REGIONS.map((r) => (
               <button

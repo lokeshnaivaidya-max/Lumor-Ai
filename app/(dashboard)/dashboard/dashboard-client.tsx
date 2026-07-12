@@ -39,7 +39,7 @@ function StatCard({ icon: Icon, label, value, change, accent }: { icon: React.El
           <p className="font-heading text-2xl font-semibold tracking-tight">{value}</p>
           {change && <p className="flex items-center gap-1 text-xs text-emerald"><TrendingUp className="h-3 w-3" />{change}</p>}
         </div>
-        <div className={`rounded-xl bg-white/5 p-2.5 ${accent === "blue" ? "text-blue" : accent === "emerald" ? "text-emerald" : accent === "purple" ? "text-violet" : "text-gold"}`}>
+        <div className={`rounded-xl bg-bg/40 p-2.5 ${accent === "blue" ? "text-blue" : accent === "emerald" ? "text-emerald" : accent === "purple" ? "text-violet" : "text-gold"}`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -105,7 +105,7 @@ export function DashboardClient() {
             </div>
             <div className="divide-y divide-border/30">
               {MOCK_WATCHLIST.map((item) => (
-                <div key={item.symbol} className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-white/[0.02]">
+                <div key={item.symbol} className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-bg/60">
                   <div><p className="text-sm font-medium">{item.symbol}</p><p className="text-xs text-muted-foreground">{item.name}</p></div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">

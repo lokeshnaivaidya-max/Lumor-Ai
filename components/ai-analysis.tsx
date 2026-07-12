@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import {
   Sparkles,
   Loader2,
@@ -30,6 +30,7 @@ import {
   Flag,
   GitBranch,
   PieChart,
+  ChevronDown,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -181,7 +182,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full border border-border bg-black/30 p-0.5">
+          <div className="flex rounded-full border border-border bg-bg/60 p-0.5">
             {HORIZONS.map((h) => (
               <button
                 key={h.id}
@@ -241,229 +242,216 @@ function Report({ data }: { data: Analysis }) {
 
   return (
     <div className="relative mt-5 space-y-6 border-t border-border/60 pt-6">
-      {/* 1 + 2 — Recommendation + Confidence */}
-      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-        <div className={`rounded-2xl border ${rec.border} ${rec.bg} p-5`}>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
-            Final Recommendation
-          </div>
-          <div className={`mt-2 flex items-center gap-2.5 text-2xl font-semibold ${rec.text}`}>
-            <RecIcon rec={data.recommendation} />
-            {data.recommendation}
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
-        </div>
 
-        <div className="glass-card flex items-center gap-4 p-5">
-          <ConfidenceMeter value={conf} color={rec.ring} />
-          <div className="min-w-0">
-            <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Confidence</div>
-            <div className="text-lg font-semibold text-foreground">{conf}%</div>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{data.confidenceNote}</p>
+      {/* ═══ COCKPIT GAUGE + RECOMMENDATION ═══ */}
+      <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
+
+        {/* Animated confidence gauge */}
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
+          className="glass-card edge-light relative flex flex-col items-center justify-center gap-2 p-6"
+        >
+          <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Confidence</span>
+          <ConfidenceMeter value={conf} color={rec.ring} size="lg" />
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">{data.confidenceNote}</p>
+        </motion.div>
+
+        {/* Hero recommendation card */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 100, damping: 16, delay: 0.2 }}
+          className={`relative overflow-hidden rounded-2xl border-2 ${rec.border} ${rec.bg} p-5 shadow-card`}
+        >
+          <div
+            className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full blur-[60px]"
+            style={{ background: rec.ring.replace(")", " / 0.2)") }}
+          />
+          <div className="relative">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <Sparkles className="h-3 w-3" /> AI verdict
+            </span>
+            <div className={`mt-3 flex items-center gap-2.5 text-2xl font-semibold ${rec.text}`}>
+              <RecIcon rec={data.recommendation} />
+              {data.recommendation}
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* 3 — Quick summary */}
+      {/* ═══ COCKPIT METRICS ROW ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-3 gap-3 sm:grid-cols-6"
+      >
+        <CockpitMetric icon={<LogIn />} label="Entry" value={data.entry} accent="blue" />
+        <CockpitMetric icon={<ArrowUpRight />} label="Target" value={data.target} accent="emerald" />
+        <CockpitMetric icon={<Ban />} label="Stop Loss" value={data.stopLoss} accent="rose" />
+        <CockpitMetric icon={<Clock />} label="Hold" value={data.holdingPeriod} accent="violet" />
+        <CockpitMetric icon={<Scale />} label="R:R" value={data.riskReward} accent="gold" />
+        <CockpitMetric icon={<CalendarClock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
+      </motion.div>
+
+      {/* quick summary chips */}
       {data.quickSummary?.length > 0 && (
-        <Section title="Quick Summary">
-          <ul className="grid gap-2 sm:grid-cols-3">
-            {data.quickSummary.slice(0, 3).map((s, i) => (
-              <li key={i} className="glass-card flex gap-2 p-3 text-sm leading-relaxed text-foreground/85">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                {s}
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="flex flex-wrap gap-2"
+        >
+          {data.quickSummary.slice(0, 3).map((s, i) => (
+            <span key={i} className="glass-card inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs leading-relaxed text-foreground/80">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-accent" />
+              {s}
+            </span>
+          ))}
+        </motion.div>
       )}
 
-      {/* 4 — If you buy today */}
-      <Section title="If You Buy Today" icon={<Target className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <StatCard icon={<LogIn className="h-4 w-4 text-pos" />} label="Entry" value={data.entry} />
-          <StatCard icon={<ArrowUpRight className="h-4 w-4 text-pos" />} label="Target" value={data.target} />
-          <StatCard icon={<Ban className="h-4 w-4 text-neg" />} label="Stop Loss" value={data.stopLoss} />
-          <StatCard icon={<Clock className="h-4 w-4 text-primary" />} label="Hold" value={data.holdingPeriod} />
-          <StatCard icon={<Scale className="h-4 w-4 text-gold" />} label="Risk : Reward" value={data.riskReward} />
-          <StatCard icon={<CalendarClock className="h-4 w-4 text-primary" />} label="Best Timeframe" value={data.bestTimeframe} />
-        </div>
-      </Section>
+      {/* ═══ SCENARIO PROBABILITY ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Section title="Probability" icon={<Gauge className="h-3.5 w-3.5 text-accent" />}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
+            <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
+          </div>
+          {data.probabilityReason && (
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.probabilityReason}</p>
+          )}
+        </Section>
+      </motion.div>
 
-      {/* Probability of profit / loss */}
-      <Section title="Chances" icon={<Gauge className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
-          <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
-        </div>
-        {data.probabilityReason && (
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.probabilityReason}</p>
-        )}
-      </Section>
+      {/* ═══ SCENARIO CARDS ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.45 }}
+      >
+        <Section title="Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-accent" />}>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
+            <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
+            <ScenarioCard label="Worst Case" tone="neg" value={data.scenarioWorst} />
+          </div>
+        </Section>
+      </motion.div>
 
-      {/* Possible scenarios */}
-      <Section title="Possible Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
-          <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
-          <ScenarioCard label="Worst Case" tone="neg" value={data.scenarioWorst} />
-        </div>
-      </Section>
+      {/* ═══ BULL/BEAR EXPANDABLE CASES ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="grid gap-4 sm:grid-cols-2"
+      >
+        <ExpandableCase title="Bull Case" tone="pos" points={data.whyBuy} />
+        <ExpandableCase title="Bear Case" tone="neg" points={data.whatCouldGoWrong} />
+      </motion.div>
 
-      {/* Risk vs reward */}
-      <Section title="Risk vs Reward" icon={<Scale className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <StatCard icon={<ArrowDownRight className="h-4 w-4 text-neg" />} label="Max Likely Downside" value={data.maxDownside} />
-          <StatCard icon={<ArrowUpRight className="h-4 w-4 text-pos" />} label="Expected Upside" value={data.expectedUpside} />
-          <StatCard icon={<Scale className="h-4 w-4 text-gold" />} label="Risk : Reward" value={data.riskReward} />
-        </div>
-        {data.riskRewardNote && (
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.riskRewardNote}</p>
-        )}
-      </Section>
-
-      {/* Position size advice */}
-      <Section title="How Much to Invest" icon={<PieChart className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <PositionCard label="Very Safe" value={data.positionVerySafe} tone="pos" />
-          <PositionCard label="Moderate Risk" value={data.positionModerate} tone="mid" />
-          <PositionCard label="Aggressive" value={data.positionAggressive} tone="neg" />
-        </div>
-        {data.positionNote && (
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.positionNote}</p>
-        )}
-      </Section>
-
-      {/* Holding time */}
-      <Section title="Best Holding Time" icon={<Clock className="h-3.5 w-3.5 text-accent" />}>
-        <div className="flex flex-wrap gap-2">
-          {HOLDING_OPTIONS.map((opt) => {
-            const active = opt === data.bestHoldingTime
-            return (
-              <span
-                key={opt}
-                className={
-                  active
-                    ? "rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-semibold text-accent"
-                    : "rounded-full border border-border bg-card/30 px-3 py-1 text-xs font-medium text-muted-foreground"
-                }
-              >
-                {opt}
-              </span>
-            )
-          })}
-        </div>
-        {data.holdingReason && (
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.holdingReason}</p>
-        )}
-      </Section>
-
-      {/* 5 + 6 — Why buy / what could go wrong */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <ListCard title="Why Buy?" tone="pos" icon={<CheckCircle2 className="h-4 w-4 text-pos" />} points={data.whyBuy} />
-        <ListCard
-          title="What Could Go Wrong?"
-          tone="neg"
-          icon={<AlertTriangle className="h-4 w-4 text-neg" />}
-          points={data.whatCouldGoWrong}
+      {/* ═══ INTERACTIVE SUPPORT / RESISTANCE TIMELINE ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.55 }}
+        className="grid gap-3 sm:grid-cols-2"
+      >
+        <TimelineLevel
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Support"
+          value={data.support}
+          note={data.supportNote}
+          accent="emerald"
+          side="bottom"
         />
-      </div>
+        <TimelineLevel
+          icon={<TrendingDown className="h-4 w-4" />}
+          label="Resistance"
+          value={data.resistance}
+          note={data.resistanceNote}
+          accent="rose"
+          side="top"
+        />
+      </motion.div>
 
-      {/* 7 — Price levels */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <LevelCard icon={<TrendingUp className="h-4 w-4 text-pos" />} label="Support" value={data.support} note={data.supportNote} />
-        <LevelCard icon={<TrendingDown className="h-4 w-4 text-neg" />} label="Resistance" value={data.resistance} note={data.resistanceNote} />
-      </div>
-
-      {/* 8 + 9 — Risk level + Market mood */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="glass-card p-4">
-          <div className="mb-2 flex items-center justify-between">
+      {/* ═══ RISK + MOOD PANEL ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="grid gap-4 sm:grid-cols-2"
+      >
+        {/* Visualized risk */}
+        <div className="glass-card edge-light p-5">
+          <div className="mb-3 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
               <ShieldAlert className="h-3.5 w-3.5" /> Risk Level
             </span>
-            <span className={`text-sm font-semibold ${risk.text}`}>{data.riskLevel}</span>
+            <motion.span
+              initial={{ x: 10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className={`text-sm font-semibold ${risk.text}`}
+            >
+              {data.riskLevel}
+            </motion.span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
-            <div className={`h-full rounded-full ${risk.bar}`} style={{ width: `${risk.pct}%` }} />
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/40">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${risk.pct}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+              className={`h-full rounded-full ${risk.bar}`}
+            />
           </div>
           <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.riskNote}</p>
         </div>
 
-        <div className="glass-card p-4">
+        {/* Market mood */}
+        <div className="glass-card edge-light p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Market Mood</span>
-            <span className={`flex items-center gap-1.5 text-sm font-semibold ${moodTone(data.marketMood)}`}>
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.9 }}
+              className={`flex items-center gap-1.5 text-sm font-semibold ${moodTone(data.marketMood)}`}
+            >
               <MoodIcon bias={data.marketMood} /> {data.marketMood}
-            </span>
+            </motion.span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.marketMoodNote}</p>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Suitable for */}
-      {data.suitableFor?.length > 0 && (
-        <Section title="Suitable For" icon={<Users className="h-3.5 w-3.5 text-accent" />}>
-          <div className="flex flex-wrap gap-2">
-            {data.suitableFor.map((s) => (
-              <span
-                key={s}
-                className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-foreground/90"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* 10 — Beginner explanation */}
-      <div className="rounded-2xl border border-accent/30 bg-accent/[0.06] p-5">
+      {/* ═══ BEGINNER EXPLANATION ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.65 }}
+        className="rounded-2xl border border-accent/30 bg-accent/[0.06] p-5"
+      >
         <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
           <Heart className="h-3.5 w-3.5" /> Explained Like I&apos;m Your Family
         </h4>
         <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
-      </div>
+      </motion.div>
 
-      {/* Your questions answered */}
-      <Section title="Your Questions, Answered" icon={<HelpCircle className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <QaCard q="Is this good to buy today?" a={data.isGoodToday} />
-          <QaCard q="Should I wait or buy now?" a={data.waitOrBuyNow} />
-          <QaCard q="What is the biggest risk?" a={data.biggestRisk} tone="warn" />
-          <QaCard q="What is the safest way in?" a={data.safestWay} tone="safe" />
-        </div>
-      </Section>
-
-      {/* Budget plans */}
-      <Section title="What Should I Do With My Money?" icon={<Wallet className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-2">
-            <div className="glass-card p-4">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5 text-pos" /> Small Budget
-            </div>
-            <p className="text-sm leading-relaxed text-foreground/85">{data.smallBudgetPlan}</p>
-          </div>
-          <div className="glass-card p-4">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5 text-primary" /> Larger Budget
-            </div>
-            <p className="text-sm leading-relaxed text-foreground/85">{data.largeBudgetPlan}</p>
-          </div>
-        </div>
-      </Section>
-
-      {/* Simple action plan */}
-      <Section title="Simple Action Plan" icon={<ListChecks className="h-3.5 w-3.5 text-accent" />}>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StepCard step="Today" value={data.actionToday} />
-          <StepCard step="Next 3 Days" value={data.actionNext3Days} />
-          <StepCard step="Next Week" value={data.actionNextWeek} />
-        </div>
-      </Section>
-
-      {/* Own money view */}
-      <div className="flex items-start gap-3 rounded-2xl border border-gold/30 bg-gold/[0.07] p-5">
+      {/* ═══ OWN MONEY VIEW ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        className="flex items-start gap-3 rounded-2xl border border-gold/30 bg-gold/[0.07] p-5"
+      >
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gold/20 text-gold">
           <UserCheck className="h-4 w-4" />
         </span>
@@ -473,23 +461,34 @@ function Report({ data }: { data: Analysis }) {
           </div>
           <p className="mt-1 text-sm leading-relaxed text-foreground/90">{data.ownMoneyView}</p>
         </div>
-      </div>
+      </motion.div>
 
-      {/* 11 — Pro investor view */}
+      {/* ═══ PRO INVESTOR VIEW (collapsible) ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.75 }}
+      >
         <details className="group glass-card p-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <LineChart className="h-3.5 w-3.5" /> Pro Investor View
-          </span>
-          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/70 group-open:hidden">
-            Tap to expand · technical
-          </span>
-        </summary>
-        <p className="mt-3 text-sm leading-relaxed text-foreground/75">{data.proInvestorView}</p>
-      </details>
+          <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <LineChart className="h-3.5 w-3.5" /> Pro Investor View
+            </span>
+            <span className="text-[10px] normal-case tracking-normal text-muted-foreground/70 group-open:hidden">
+              Tap to expand · technical
+            </span>
+          </summary>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/75">{data.proInvestorView}</p>
+        </details>
+      </motion.div>
 
-      {/* 12 — Final advice in one sentence */}
-      <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4">
+      {/* ═══ FINAL ADVICE ═══ */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4"
+      >
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/20 text-primary">
           <Flag className="h-4 w-4" />
         </span>
@@ -497,38 +496,52 @@ function Report({ data }: { data: Analysis }) {
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary">Final Advice</div>
           <p className="mt-1 text-sm font-medium leading-relaxed text-foreground/90">{data.aiVerdict}</p>
         </div>
-      </div>
+      </motion.div>
 
       <p className="pt-1 text-[11px] italic text-muted-foreground/70">{data.disclaimer}</p>
     </div>
   )
 }
 
-function ConfidenceMeter({ value, color }: { value: number; color: string }) {
-  const r = 26
+function ConfidenceMeter({ value, color, size = "sm" }: { value: number; color: string; size?: "sm" | "lg" }) {
+  const dimensions = size === "lg" ? { size: 140, r: 52, strokeW: 8, fontSize: "text-xl" } : { size: 68, r: 26, strokeW: 6, fontSize: "text-sm" }
+  const { size: sz, r, strokeW, fontSize } = dimensions
   const c = 2 * Math.PI * r
   const offset = c - (value / 100) * c
   return (
-    <div className="relative h-[68px] w-[68px] shrink-0">
-      <svg viewBox="0 0 68 68" className="h-full w-full -rotate-90">
-        <circle cx="34" cy="34" r={r} fill="none" stroke="oklch(0.99 0 0 / 0.1)" strokeWidth="6" />
-        <circle
-          cx="34"
-          cy="34"
+    <motion.div
+      initial={{ rotate: -90, scale: 0 }}
+      animate={{ rotate: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.15 }}
+      className={`relative h-[${sz}px] w-[${sz}px] shrink-0`}
+    >
+      <svg viewBox={`0 0 ${sz} ${sz}`} className="h-full w-full -rotate-90">
+        <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke="oklch(0.9 0 0 / 0.08)" strokeWidth={strokeW} />
+        <motion.circle
+          cx={sz / 2}
+          cy={sz / 2}
           r={r}
           fill="none"
           stroke={color}
-          strokeWidth="6"
+          strokeWidth={strokeW}
           strokeLinecap="round"
           strokeDasharray={c}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.8s ease" }}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="font-mono text-sm font-semibold text-foreground">{value}%</span>
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className={`font-mono font-semibold text-foreground ${fontSize}`}
+        >
+          {value}%
+        </motion.span>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -561,15 +574,87 @@ function ProbBar({
   )
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function CockpitMetric({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: "blue" | "emerald" | "rose" | "violet" | "gold" | "cyan" }) {
+  const dotMap = { blue: "bg-blue", emerald: "bg-emerald", rose: "bg-rose", violet: "bg-violet", gold: "bg-gold", cyan: "bg-cyan" }
   return (
-    <div className="glass-card p-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-        {icon}
+    <motion.div whileHover={{ y: -2 }} className="glass-card edge-light flex flex-col items-center justify-center gap-1 rounded-xl p-3 text-center">
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
+      <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+        <span className={`inline-block h-1 w-1 rounded-full ${dotMap[accent]}`} />
         {label}
+      </span>
+    </motion.div>
+  )
+}
+
+function ExpandableCase({ title, tone, points }: { title: string; tone: "pos" | "neg"; points: string[] }) {
+  const [open, setOpen] = useState(false)
+  const color = tone === "pos" ? "text-pos border-emerald/30 bg-emerald/[0.04]" : "text-neg border-rose/30 bg-rose/[0.04]"
+  const dot = tone === "pos" ? "bg-pos" : "bg-neg"
+  const icon = tone === "pos" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
+  return (
+    <motion.div layout className={`rounded-2xl border ${color} p-4 cursor-pointer`} onClick={() => setOpen(!open)}>
+      <div className="flex items-center justify-between">
+        <h4 className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${tone === "pos" ? "text-pos" : "text-neg"}`}>
+          {icon}{title}
+        </h4>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} className="text-muted-foreground">
+          <ChevronDown className="h-3.5 w-3.5" />
+        </motion.span>
       </div>
-      <p className="mt-1 font-mono text-sm font-semibold text-foreground">{value}</p>
-    </div>
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="mt-3 space-y-1.5 overflow-hidden"
+          >
+            {points?.slice(0, 5).map((p, i) => (
+              <motion.li
+                key={i}
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex gap-2 text-sm leading-relaxed text-foreground/80"
+              >
+                <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${dot}`} />
+                {p}
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+      {!open && points?.length > 0 && (
+        <p className="mt-1 text-xs text-muted-foreground/70">{points.length} points — tap to expand</p>
+      )}
+    </motion.div>
+  )
+}
+
+function TimelineLevel({ icon, label, value, note, accent, side }: { icon: React.ReactNode; label: string; value: string; note: string; accent: "emerald" | "rose"; side: "top" | "bottom" }) {
+  const barColor = accent === "emerald" ? "bg-emerald/30" : "bg-rose/30"
+  const textColor = accent === "emerald" ? "text-emerald" : "text-rose"
+  return (
+    <motion.div whileHover={{ scale: 1.01 }} className="glass-card edge-light relative overflow-hidden p-4">
+      <div className={`absolute left-0 right-0 h-1 ${side === "top" ? "top-0" : "bottom-0"} ${barColor}`} />
+      <div className="flex items-center justify-between">
+        <span className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wide ${textColor}`}>
+          {icon}{label}
+        </span>
+        <motion.span
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
+          className="font-mono text-sm font-semibold text-foreground"
+        >
+          {value}
+        </motion.span>
+      </div>
+      <p className="mt-1.5 text-sm leading-relaxed text-foreground/75">{note}</p>
+    </motion.div>
   )
 }
 
@@ -629,38 +714,6 @@ function ScenarioCard({ label, value, tone }: { label: string; value: string; to
   return (
     <div className={`rounded-2xl border ${box} p-4`}>
       <div className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${text}`}>{label}</div>
-      <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
-    </div>
-  )
-}
-
-function PositionCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
-  const color = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
-  return (
-    <div className="glass-card p-4 text-center">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold ${color}`}>{value}</div>
-      <div className="mt-0.5 text-[11px] text-muted-foreground">of your capital</div>
-    </div>
-  )
-}
-
-function QaCard({ q, a, tone }: { q: string; a: string; tone?: "warn" | "safe" }) {
-  const accent = tone === "warn" ? "text-neg" : tone === "safe" ? "text-pos" : "text-accent"
-  return (
-    <div className="glass-card p-4">
-      <p className={`mb-1 text-xs font-semibold ${accent}`}>{q}</p>
-      <p className="text-sm leading-relaxed text-foreground/85">{a}</p>
-    </div>
-  )
-}
-
-function StepCard({ step, value }: { step: string; value: string }) {
-  return (
-    <div className="glass-card p-4">
-      <div className="mb-1.5 inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
-        {step}
-      </div>
       <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
     </div>
   )

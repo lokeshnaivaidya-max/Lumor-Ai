@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#08111F",
+  themeColor: "#F5F0EB",
   width: "device-width",
   initialScale: 1,
 }
@@ -64,7 +64,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} bg-background`}
+      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} light-root bg-background`}
+      suppressHydrationWarning
     >
       <body className="antialiased">{children}</body>
     </html>

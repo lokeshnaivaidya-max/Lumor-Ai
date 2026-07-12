@@ -1,29 +1,22 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Globe2, Building2, Landmark, Banknote, Orbit } from "lucide-react"
+import { Globe2, Building2, Landmark, Banknote } from "lucide-react"
 import { CountUp } from "./count-up"
 
 const exchanges = [
-  { name: "NYSE", icon: Building2 },
-  { name: "NASDAQ", icon: Building2 },
-  { name: "NSE", icon: Landmark },
-  { name: "BSE", icon: Landmark },
-  { name: "LSE", icon: Banknote },
-  { name: "TSE", icon: Banknote },
-  { name: "FSE", icon: Banknote },
-  { name: "HKEX", icon: Banknote },
-  { name: "ASX", icon: Building2 },
-  { name: "SSE", icon: Banknote },
-  { name: "TSX", icon: Building2 },
-  { name: "Euronext", icon: Globe2 },
+  { name: "NYSE", icon: Building2 }, { name: "NASDAQ", icon: Building2 },
+  { name: "NSE", icon: Landmark }, { name: "BSE", icon: Landmark },
+  { name: "LSE", icon: Banknote }, { name: "TSE", icon: Banknote },
+  { name: "FSE", icon: Banknote }, { name: "HKEX", icon: Banknote },
+  { name: "ASX", icon: Building2 }, { name: "SSE", icon: Banknote },
+  { name: "TSX", icon: Building2 }, { name: "Euronext", icon: Globe2 },
 ]
 
 const stats = [
-  { value: 60, suffix: "+", label: "Exchanges", icon: Globe2, accent: "border-blue/30 bg-blue/[0.08]" },
-  { value: 12000, suffix: "+", label: "Instruments", icon: Orbit, accent: "border-emerald/30 bg-emerald/[0.08]" },
-  { value: 40, suffix: "+", label: "Countries", icon: Building2, accent: "border-violet/30 bg-violet/[0.08]" },
-  { value: 99.9, suffix: "%", label: "Uptime", icon: Landmark, accent: "border-gold/30 bg-gold/[0.08]" },
+  { value: 60, suffix: "+", label: "Exchanges", accent: "border-blue/20 bg-blue/[0.04]", icon: Globe2 },
+  { value: 12, suffix: "K+", label: "Instruments", accent: "border-emerald/20 bg-emerald/[0.04]", icon: Building2 },
+  { value: 40, suffix: "+", label: "Countries", accent: "border-violet/20 bg-violet/[0.04]", icon: Landmark },
 ]
 
 export function Coverage() {
@@ -34,55 +27,52 @@ export function Coverage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 text-center"
         >
-          <span className="inline-block rounded-full badge-violet px-3 py-1 text-xs font-medium mb-4">
-            Coverage
-          </span>
-          <h2 className="font-heading text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            Global{" "}
-            <span className="text-gradient-violet">Market</span>{" "}
-            Coverage
+          <span className="badge-violet mb-4 inline-block rounded-full px-3 py-1 text-xs font-medium">Coverage</span>
+          <h2 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
+            Global <span className="text-gradient-violet">Market</span> Coverage
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/50">
+          <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
             Every major exchange, every asset class. One unified intelligence layer.
           </p>
         </motion.div>
 
-        {/* Stats */}
-        <div className="mb-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
+        {/* Floating stat widgets — asymmetrical */}
+        <div className="mb-16 flex flex-wrap justify-center gap-6">
+          {stats.map((s, i) => (
             <motion.div
               key={s.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className={`flex items-center gap-4 rounded-2xl border p-5 ${s.accent}`}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className={`float-up glass-card relative rounded-2xl border p-6 ${s.accent}`}
+              style={{ animationDelay: `${-i * 2}s` }}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
-                <s.icon className="h-5 w-5 text-white/70" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="font-heading text-3xl font-semibold tabular-nums text-white">
-                    <CountUp to={s.value} />
-                  </span>
-                  <span className="font-heading text-xl font-semibold text-white">{s.suffix}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/60">
+                  <s.icon className="h-5 w-5 text-foreground/60" />
                 </div>
-                <p className="text-xs text-white/50">{s.label}</p>
+                <div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="font-heading text-3xl font-semibold tabular-nums">
+                      <CountUp to={s.value} />
+                    </span>
+                    <span className="font-heading text-xl font-semibold">{s.suffix}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Exchange grid */}
+        {/* Exchange tags — animated grid */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-wrap justify-center gap-3"
         >
           {exchanges.map((ex, i) => (
@@ -91,12 +81,12 @@ export function Coverage() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              whileHover={{ y: -4, scale: 1.05 }}
-              transition={{ duration: 0.3, delay: i * 0.03 }}
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 backdrop-blur-xl transition-all hover:border-blue/30 hover:bg-blue/[0.08] hover:shadow-lg"
+              whileHover={{ y: -3, scale: 1.05 }}
+              transition={{ duration: 0.3, delay: i * 0.02 }}
+              className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all hover:border-blue/30 hover:bg-blue/[0.04] hover:shadow-md"
             >
-              <ex.icon className="h-3.5 w-3.5 text-white/50" />
-              <span className="text-sm font-medium text-white/70">{ex.name}</span>
+              <ex.icon className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-medium">{ex.name}</span>
             </motion.div>
           ))}
         </motion.div>
