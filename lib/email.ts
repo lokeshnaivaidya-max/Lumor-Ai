@@ -97,24 +97,53 @@ export async function sendOtpEmail({
 }) {
   const { subject, html } = buildOtpEmail({ otp, type })
 
-  // Always log OTP so it's visible in Vercel/development logs
-  console.log(`[EMAIL] To: ${email}`)
-  console.log(`[EMAIL] Subject: ${subject}`)
-  console.log(`[EMAIL] OTP: ${otp}`)
+  // Log all details for debugging
+  const hasApiKey = !!process.env.RESEND_API_KEY
+  const apiKeyPreview = process.env.RESEND_API_KEY
+    ? process.env.RESEND_API_KEY.substring(0, 6) + "..."
+    : "NOT SET"
+  const configuredFrom = process.env.RESEND_FROM_EMAIL || "NOT SET"
+  console.log(`[EMAIL lib/email.ts:89] sendOtpEmail called`)
+  console.log(`[EMAIL lib/email.ts:90] To: ${email}`)
+  console.log(`[EMAIL lib/email.ts:91] Subject: ${subject}`)
+  console.log(`[EMAIL lib/email.ts:92] OTP: ${otp}`)
+  console.log(`[EMAIL lib/email.ts:93] RESEND_API_KEY: ${apiKeyPreview} (present: ${hasApiKey})`)
+  console.log(`[EMAIL lib/email.ts:94] RESEND_FROM_EMAIL env: ${configuredFrom}`)
 
-  // Send via Resend when API key is configured
-  if (process.env.RESEND_API_KEY) {
+  if (hasApiKey) {
     try {
       const { Resend } = await import("resend")
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const from = process.env.RESEND_FROM_EMAIL || "Lumora <verify@lumora.ai>"
-      await resend.emails.send({ from, to: email, subject, html })
-      console.log(`[EMAIL] Sent successfully via Resend to ${email}`)
+      // Use onboarding@resend.dev as default — it's Resend's pre-verified test sender.
+      // Change to your verified domain in Resend settings for production.
+      const from = process.env.RESEND_FROM_EMAIL || "Lumora <onboarding@resend.dev>"
+      console.log(`[EMAIL lib/email.ts:109] Using from: ${from}`)
+      console.log(`[EMAIL lib/email.ts:110] Calling resend.emails.send(...)`)
+
+      const resendResponse = await resend.emails.send({
+        from,
+        to: email,
+        subject,
+        html,
+      })
+
+      console.log(`[EMAIL lib/email.ts:116] Resend response:`, JSON.stringify(resendResponse, null, 2))
+      console.log(`[EMAIL lib/email.ts:117] Sent successfully via Resend to ${email}`)
     } catch (err) {
-      console.error(`[EMAIL] Resend send failed for ${email}:`, err)
+      console.error(`[EMAIL lib/email.ts:119] Resend send failed for ${email}`)
+      console.error(`[EMAIL lib/email.ts:120] Error name:`, err instanceof Error ? err.name : typeof err)
+      console.error(`[EMAIL lib/email.ts:121] Error message:`, err instanceof Error ? err.message : String(err))
+      console.error(`[EMAIL lib/email.ts:122] Full error:`, err)
+      if (err && typeof err === "object") {
+        try {
+          console.error(`[EMAIL lib/email.ts:124] Error keys:`, Object.getOwnPropertyNames(err))
+          console.error(`[EMAIL lib/email.ts:125] Error JSON:`, JSON.stringify(err, Object.getOwnPropertyNames(err)))
+        } catch {}
+      }
     }
   } else {
-    console.log(`[EMAIL] RESEND_API_KEY not set — email not sent to ${email}`)
+    console.log(`[EMAIL lib/email.ts:129] RESEND_API_KEY not set in Vercel env — email NOT sent to ${email}`)
+    console.log(`[EMAIL lib/email.ts:130] Add it in Vercel → Settings → Environment Variables → RESEND_API_KEY`)
   }
 
   return { success: true }
