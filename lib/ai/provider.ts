@@ -14,8 +14,8 @@ import { GoogleGenAI, Type } from "@google/genai"
 
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash"
-const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-2.5-flash-lite"
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
+const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-3.1-flash-lite"
 
 type ErrorWithDetails = Error & {
   status?: unknown
