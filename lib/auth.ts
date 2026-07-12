@@ -1,10 +1,9 @@
 import { betterAuth } from "better-auth"
 import { emailOTP } from "better-auth/plugins"
 import { pool } from "@/lib/db"
+import { sendOtpEmail } from "@/lib/email"
 
 // Only enable an OAuth provider when both its client id and secret are present.
-// This lets the app run with email+password immediately, and light up each
-// social button as soon as you add that provider's credentials.
 const socialProviders: Record<string, unknown> = {}
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -53,10 +52,10 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       otpLength: 6,
-      expiresIn: 300, // 5 minutes
-      async sendVerificationOTP({ email, otp }) {
-        // In production, send via SendGrid / Resend / etc.
-        console.log(`OTP for ${email}: ${otp}`)
+      expiresIn: 600, // 10 minutes
+      async sendVerificationOTP({ email, otp, type }) {
+        const emailType = type === "forget-password" || type === "sign-in" ? "reset" : "verification"
+        await sendOtpEmail({ email, otp, type: emailType })
       },
     }),
   ],
@@ -74,8 +73,6 @@ export const auth = betterAuth({
   ...(process.env.NODE_ENV === "development"
     ? {
         advanced: {
-          // In dev (v0 preview iframe), force cross-site cookies so the
-          // session cookie is stored by the browser.
           defaultCookieAttributes: {
             sameSite: "none" as const,
             secure: true,

@@ -27,10 +27,6 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [otpSent, setOtpSent] = useState(false)
-  const [otp, setOtp] = useState("")
-  const [otpLoading, setOtpLoading] = useState(false)
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -39,45 +35,17 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       if (isSignUp) {
         const { error } = await authClient.signUp.email({ email, password, name })
         if (error) throw new Error(error.message || "Could not create account")
-        // Send OTP for email verification
-        const otpRes = await fetch("/api/auth/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, type: "email-verification" }),
-        })
-        if (!otpRes.ok) throw new Error("Failed to send verification code")
-        setOtpSent(true)
-        setLoading(false)
-        return
+        // Redirect to verify-email page
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
       } else {
         const { error } = await authClient.signIn.email({ email, password })
         if (error) throw new Error(error.message || "Invalid email or password")
+        router.push("/dashboard")
+        router.refresh()
       }
-      router.push("/dashboard")
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
       setLoading(false)
-    }
-  }
-
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setOtpLoading(true)
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, type: "email-verification" }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || "Invalid verification code")
-      router.push("/dashboard")
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed")
-      setOtpLoading(false)
     }
   }
 
@@ -129,7 +97,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           transition={{ delay: 0.2 }}
           className="mt-8 font-heading text-2xl font-medium tracking-tight text-foreground"
         >
-          {otpSent ? "Check your email" : isSignUp ? "Create your account" : "Welcome back"}
+          {isSignUp ? "Create your account" : "Welcome back"}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -137,11 +105,9 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           transition={{ delay: 0.25 }}
           className="mt-2 text-sm text-muted-foreground"
         >
-          {otpSent
-            ? `We sent a 6-digit code to ${email}`
-            : isSignUp
-              ? "Start tracking global markets with AI-grade intelligence."
-              : "Sign in to your Lumora terminal and portfolio."}
+          {isSignUp
+            ? "Start tracking global markets with AI-grade intelligence."
+            : "Sign in to your Lumora terminal and portfolio."}
         </motion.p>
 
         {enabledProviders.length > 0 && (
@@ -184,105 +150,68 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           </motion.div>
         )}
 
-        {otpSent ? (
-          <motion.form
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onSubmit={handleVerifyOtp}
-            className={enabledProviders.length > 0 ? "mt-0" : "mt-8"}
-          >
-            <Field label="Verification Code">
+        <motion.form
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          onSubmit={handleSubmit}
+          className={enabledProviders.length > 0 ? "" : "mt-8"}
+        >
+          <div className="flex flex-col gap-4">
+            {isSignUp && (
+              <Field label="Full name">
+                <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="premium-input" autoComplete="name" />
+              </Field>
+            )}
+            <Field label="Email">
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="premium-input" autoComplete="email" />
+            </Field>
+            <Field label="Password">
               <div className="relative">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  required
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="000000"
-                  className="premium-input text-center text-2xl font-mono tracking-[0.3em]"
-                />
+                <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="premium-input pr-11" autoComplete={isSignUp ? "new-password" : "current-password"} />
+                <motion.button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </motion.button>
               </div>
             </Field>
+          </div>
 
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <motion.button
-              type="submit"
-              disabled={otpLoading || otp.length !== 6}
-              whileHover={{ scale: otp.length === 6 ? 1.01 : 1 }}
-              whileTap={{ scale: otp.length === 6 ? 0.98 : 1 }}
-              className="premium-btn premium-btn-primary mt-6 w-full py-3"
-            >
-              {otpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Verify email
-            </motion.button>
-          </motion.form>
-        ) : (
-          <motion.form
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onSubmit={handleSubmit}
-            className={enabledProviders.length > 0 ? "" : "mt-8"}
-          >
-            <div className="flex flex-col gap-4">
-              {isSignUp && (
-                <Field label="Full name">
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="premium-input" autoComplete="name" />
-                </Field>
-              )}
-              <Field label="Email">
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="premium-input" autoComplete="email" />
-              </Field>
-              <Field label="Password">
-                <div className="relative">
-                  <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="premium-input pr-11" autoComplete={isSignUp ? "new-password" : "current-password"} />
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </motion.button>
-                </div>
-              </Field>
+          {!isSignUp && (
+            <div className="mt-2 flex justify-end">
+              <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground">
+                Forgot password?
+              </Link>
             </div>
+          )}
 
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <motion.button
-              type="submit"
-              disabled={loading || oauthLoading !== null}
-              whileHover={{ scale: loading ? 1 : 1.01 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="premium-btn premium-btn-primary mt-6 w-full py-3"
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isSignUp ? "Create account" : "Sign in"}
-            </motion.button>
-          </motion.form>
-        )}
+              {error}
+            </motion.p>
+          )}
+
+          <motion.button
+            type="submit"
+            disabled={loading || oauthLoading !== null}
+            whileHover={{ scale: loading ? 1 : 1.01 }}
+            whileTap={{ scale: loading ? 1 : 0.98 }}
+            className="premium-btn premium-btn-primary mt-6 w-full py-3"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSignUp ? "Create account" : "Sign in"}
+          </motion.button>
+        </motion.form>
 
         <motion.p
           initial={{ opacity: 0 }}
