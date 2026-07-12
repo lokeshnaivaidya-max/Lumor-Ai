@@ -28,6 +28,8 @@ import {
   ListChecks,
   UserCheck,
   Flag,
+  GitBranch,
+  PieChart,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -53,8 +55,21 @@ type Analysis = {
   riskReward: string
   probabilityOfProfit: number
   probabilityOfLoss: number
+  probabilityReason: string
   bestTimeframe: string
   suitableFor: string[]
+  scenarioBest: string
+  scenarioLikely: string
+  scenarioWorst: string
+  maxDownside: string
+  expectedUpside: string
+  riskRewardNote: string
+  positionVerySafe: string
+  positionModerate: string
+  positionAggressive: string
+  positionNote: string
+  bestHoldingTime: string
+  holdingReason: string
   whyBuy: string[]
   whatCouldGoWrong: string[]
   support: string
@@ -281,6 +296,66 @@ function Report({ data }: { data: Analysis }) {
           <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
           <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
         </div>
+        {data.probabilityReason && (
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.probabilityReason}</p>
+        )}
+      </Section>
+
+      {/* Possible scenarios */}
+      <Section title="Possible Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
+          <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
+          <ScenarioCard label="Worst Case" tone="neg" value={data.scenarioWorst} />
+        </div>
+      </Section>
+
+      {/* Risk vs reward */}
+      <Section title="Risk vs Reward" icon={<Scale className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard icon={<ArrowDownRight className="h-4 w-4 text-neg" />} label="Max Likely Downside" value={data.maxDownside} />
+          <StatCard icon={<ArrowUpRight className="h-4 w-4 text-pos" />} label="Expected Upside" value={data.expectedUpside} />
+          <StatCard icon={<Scale className="h-4 w-4 text-gold" />} label="Risk : Reward" value={data.riskReward} />
+        </div>
+        {data.riskRewardNote && (
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.riskRewardNote}</p>
+        )}
+      </Section>
+
+      {/* Position size advice */}
+      <Section title="How Much to Invest" icon={<PieChart className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <PositionCard label="Very Safe" value={data.positionVerySafe} tone="pos" />
+          <PositionCard label="Moderate Risk" value={data.positionModerate} tone="mid" />
+          <PositionCard label="Aggressive" value={data.positionAggressive} tone="neg" />
+        </div>
+        {data.positionNote && (
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.positionNote}</p>
+        )}
+      </Section>
+
+      {/* Holding time */}
+      <Section title="Best Holding Time" icon={<Clock className="h-3.5 w-3.5 text-accent" />}>
+        <div className="flex flex-wrap gap-2">
+          {HOLDING_OPTIONS.map((opt) => {
+            const active = opt === data.bestHoldingTime
+            return (
+              <span
+                key={opt}
+                className={
+                  active
+                    ? "rounded-full border border-accent bg-accent/15 px-3 py-1 text-xs font-semibold text-accent"
+                    : "rounded-full border border-border bg-card/30 px-3 py-1 text-xs font-medium text-muted-foreground"
+                }
+              >
+                {opt}
+              </span>
+            )
+          })}
+        </div>
+        {data.holdingReason && (
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.holdingReason}</p>
+        )}
       </Section>
 
       {/* 5 + 6 — Why buy / what could go wrong */}
@@ -537,6 +612,35 @@ function ListCard({
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+const HOLDING_OPTIONS = ["Intraday", "1 Week", "1 Month", "3 Months", "Long Term"] as const
+
+function ScenarioCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
+  const box =
+    tone === "pos"
+      ? "border-pos/30 bg-pos/[0.06]"
+      : tone === "neg"
+        ? "border-neg/30 bg-neg/[0.06]"
+        : "border-gold/30 bg-gold/[0.06]"
+  const text = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
+  return (
+    <div className={`rounded-2xl border ${box} p-4`}>
+      <div className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${text}`}>{label}</div>
+      <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
+    </div>
+  )
+}
+
+function PositionCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
+  const color = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-4 text-center">
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`mt-1 text-2xl font-semibold ${color}`}>{value}</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">of your capital</div>
     </div>
   )
 }

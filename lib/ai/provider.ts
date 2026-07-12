@@ -157,8 +157,25 @@ export type Analysis = {
   // New features
   probabilityOfProfit: number
   probabilityOfLoss: number
+  probabilityReason: string
   bestTimeframe: string
   suitableFor: string[]
+  // Possible scenarios
+  scenarioBest: string
+  scenarioLikely: string
+  scenarioWorst: string
+  // Risk vs reward
+  maxDownside: string
+  expectedUpside: string
+  riskRewardNote: string
+  // Position size advice (percent of capital, never above 30%)
+  positionVerySafe: string
+  positionModerate: string
+  positionAggressive: string
+  positionNote: string
+  // Holding time
+  bestHoldingTime: string
+  holdingReason: string
   // 5 / 6
   whyBuy: string[]
   whatCouldGoWrong: string[]
@@ -243,12 +260,25 @@ const analysisSchema = {
     riskReward: { type: Type.STRING, description: "Risk to reward ratio, e.g. '1 : 2.7'." },
     probabilityOfProfit: { type: Type.NUMBER, description: "Integer 0-100 estimated probability the trade is profitable, based on the data. probabilityOfProfit + probabilityOfLoss must equal 100." },
     probabilityOfLoss: { type: Type.NUMBER, description: "Integer 0-100 estimated probability of loss. Must equal 100 minus probabilityOfProfit." },
+    probabilityReason: { type: Type.STRING, description: "One simple sentence explaining WHY these probabilities, in plain English tied to the data. No jargon." },
     bestTimeframe: { type: Type.STRING, description: "The single best timeframe for this idea in plain words, e.g. 'Swing (a few weeks)'." },
     suitableFor: {
       type: Type.ARRAY,
       items: { type: Type.STRING, enum: ["Intraday", "Swing", "Long Term", "Dividend Investors", "Beginners", "Experienced Traders"] },
       description: "Who this idea suits best. Pick only the ones that genuinely fit the data.",
     },
+    scenarioBest: { type: Type.STRING, description: "Best case: what happens if everything goes well. One or two short plain sentences, ideally with a rough % or price move." },
+    scenarioLikely: { type: Type.STRING, description: "Most likely / realistic outcome. One or two short plain sentences, ideally with a rough % or price move." },
+    scenarioWorst: { type: Type.STRING, description: "Worst case: what can go wrong. One or two short plain sentences, ideally with a rough % or price move." },
+    maxDownside: { type: Type.STRING, description: "Maximum likely downside as a percent, e.g. '-4%'. Derived from stop-loss/support vs entry." },
+    expectedUpside: { type: Type.STRING, description: "Expected upside as a percent, e.g. '+10%'. Derived from target vs entry." },
+    riskRewardNote: { type: Type.STRING, description: "ONE simple sentence explaining the risk-reward in plain English (e.g. 'You risk about 4% to try to make about 10%.')." },
+    positionVerySafe: { type: Type.STRING, description: "Percent of capital to invest for a very safe approach, e.g. '10%'. Never above 30%." },
+    positionModerate: { type: Type.STRING, description: "Percent of capital for a moderate approach, e.g. '20%'. Never above 30%." },
+    positionAggressive: { type: Type.STRING, description: "Percent of capital for an aggressive approach, e.g. '30%'. NEVER above 30%." },
+    positionNote: { type: Type.STRING, description: "One simple sentence reminding never to put all money into one stock, and to size based on comfort with risk." },
+    bestHoldingTime: { type: Type.STRING, enum: ["Intraday", "1 Week", "1 Month", "3 Months", "Long Term"], description: "The single best holding time for this idea, chosen from the options." },
+    holdingReason: { type: Type.STRING, description: "One simple sentence explaining why that holding time is best, tied to the data." },
     whyBuy: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Max 4 simple reasons to buy, each in plain English tied to the data." },
     whatCouldGoWrong: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Max 4 simple risks in plain English tied to the data/headlines." },
     support: { type: Type.STRING, description: "Support price level with currency symbol." },
@@ -292,8 +322,21 @@ const analysisSchema = {
     "riskReward",
     "probabilityOfProfit",
     "probabilityOfLoss",
+    "probabilityReason",
     "bestTimeframe",
     "suitableFor",
+    "scenarioBest",
+    "scenarioLikely",
+    "scenarioWorst",
+    "maxDownside",
+    "expectedUpside",
+    "riskRewardNote",
+    "positionVerySafe",
+    "positionModerate",
+    "positionAggressive",
+    "positionNote",
+    "bestHoldingTime",
+    "holdingReason",
     "whyBuy",
     "whatCouldGoWrong",
     "support",
@@ -331,8 +374,21 @@ const analysisSchema = {
     "riskReward",
     "probabilityOfProfit",
     "probabilityOfLoss",
+    "probabilityReason",
     "bestTimeframe",
     "suitableFor",
+    "scenarioBest",
+    "scenarioLikely",
+    "scenarioWorst",
+    "maxDownside",
+    "expectedUpside",
+    "riskRewardNote",
+    "positionVerySafe",
+    "positionModerate",
+    "positionAggressive",
+    "positionNote",
+    "bestHoldingTime",
+    "holdingReason",
     "whyBuy",
     "whatCouldGoWrong",
     "support",
@@ -415,12 +471,20 @@ STYLE RULES (apply to every field EXCEPT "proInvestorView"):
 - "proInvestorView" is the ONLY field where you may use full technical terms and numbers for advanced users.
 
 QUALITY RULES:
-- Keep the whole plain-language analysis SHORT — under 400 words total across all beginner fields (everything except proInvestorView).
+- Write as if Warren Buffett is patiently explaining to a beginner: simple, honest, no marketing, no hype, no emojis anywhere.
+- Keep the whole plain-language analysis SHORT — under 350 words TOTAL across all beginner fields (everything except proInvestorView).
 - NEVER repeat the same fact in more than one field. Each field must add something new.
 - Every sentence must add real value. No filler, no generic lines like "do your own research" beyond the disclaimer.
+- EXPLAIN EVERY NUMBER. Never state a raw metric like "RSI 71" on its own; always follow it with a plain-English meaning in brackets, e.g. "RSI 71 (this means many people already bought recently)". This applies even in short fields.
 - Explain every risk like you are talking to your parents who know nothing about the stock market: say what could physically happen and how it affects their money.
 - NEVER exaggerate and NEVER promise profits. Always be clear that outcomes are uncertain.
-- CONFIDENCE RULE: if confidenceScore is below 60, do NOT push a Buy. The recommendation should be "Wait" or "Hold", and waitOrBuyNow, ownMoneyView and aiVerdict must clearly advise waiting for a better/confirmed opportunity.
+- PROBABILITIES: give a real probability of profit and loss (they must sum to 100) and explain in one simple sentence why.
+- SCENARIOS: give best case, most likely, and worst case outcomes with rough percentage moves.
+- RISK VS REWARD: give maximum likely downside %, expected upside %, and a risk-reward ratio, then explain it in one plain sentence.
+- POSITION SIZE: recommend a percentage of capital for very safe / moderate / aggressive approaches. NEVER recommend more than 30% into a single purchase, and never tell the user to invest everything.
+- HOLDING TIME: choose the single best holding time (Intraday, 1 Week, 1 Month, 3 Months, or Long Term) and explain why.
+- CONFIDENCE RULE: if confidenceScore is below 60, do NOT push a Buy. The recommendation must be "Wait" or "Hold", and waitOrBuyNow, ownMoneyView and aiVerdict must clearly advise waiting for a better/confirmed opportunity.
+- ONE-LINE DECISION: aiVerdict must be a single honest sentence in first person, e.g. "If I were investing today, I would wait for a small price drop before buying."
 - Answer the reader's real questions clearly across the fields: Is it good today? Why? What is the biggest risk? What is the safest way in? Wait or buy now? What to do with a small budget vs a larger budget?
 
 GROUNDING: ${GROUNDING}`
