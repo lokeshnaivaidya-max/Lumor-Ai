@@ -175,9 +175,22 @@ export type Analysis = {
   marketMoodNote: string
   // 10. Beginner explanation
   beginnerExplanation: string
+  // Direct answers to the questions a beginner actually asks
+  isGoodToday: string
+  biggestRisk: string
+  safestWay: string
+  waitOrBuyNow: string
+  smallBudgetPlan: string
+  largeBudgetPlan: string
+  // Simple action plan
+  actionToday: string
+  actionNext3Days: string
+  actionNextWeek: string
+  // Honest personal take
+  ownMoneyView: string
   // 11. Pro investor view
   proInvestorView: string
-  // 12. AI verdict
+  // 12. Final advice in one sentence
   aiVerdict: string
   disclaimer: string
 }
@@ -248,13 +261,23 @@ const analysisSchema = {
     marketMoodNote: { type: Type.STRING, description: "One simple sentence explaining the mood. Avoid the words bullish/bearish in the explanation." },
     beginnerExplanation: {
       type: Type.STRING,
-      description: "Max 120 words. Explain like talking to a family member who never studied finance. Very short sentences. No technical words. Warm, honest, like a trusted elder brother.",
+      description: "Max 60 words. Explain like talking to a family member who never studied finance. Very short sentences. No technical words. Warm and honest. Do NOT repeat facts already covered in other fields.",
     },
+    isGoodToday: { type: Type.STRING, description: "One plain sentence answering 'Is this stock good to buy today?' — a clear yes/no/partly with the single main reason." },
+    biggestRisk: { type: Type.STRING, description: "The ONE biggest risk, explained like to a parent who knows nothing about markets. Say what could happen and what it means for their money. Do not just name a term." },
+    safestWay: { type: Type.STRING, description: "One plain sentence on the safest way to invest here (e.g. buy a little at a time, keep a stop-loss)." },
+    waitOrBuyNow: { type: Type.STRING, description: "One plain sentence: should they wait or buy now, and why. If confidenceScore is below 60, this MUST recommend waiting." },
+    smallBudgetPlan: { type: Type.STRING, description: "What to do with a SMALL starter budget in the instrument's own currency (e.g. ₹5,000 for INR stocks, $100 for USD). One or two short sentences." },
+    largeBudgetPlan: { type: Type.STRING, description: "What to do with a LARGER budget in the instrument's own currency (e.g. ₹50,000 for INR stocks, $1,000 for USD). One or two short sentences. Stress spreading out purchases." },
+    actionToday: { type: Type.STRING, description: "Simple action for today. Short. May start with 'Buy small', 'Wait', etc." },
+    actionNext3Days: { type: Type.STRING, description: "Simple thing to watch over the next 3 days, referencing a real price level from the data." },
+    actionNextWeek: { type: Type.STRING, description: "Simple action for next week, referencing a real price level from the data." },
+    ownMoneyView: { type: Type.STRING, description: "Honest answer to 'What would I do if this was my own money?' Speak in first person, no chatbot hedging. Give a concrete % to buy now vs wait (e.g. 'I would buy only 20-30% today')." },
     proInvestorView: {
       type: Type.STRING,
       description: "Technical section for advanced users. Cover trend, momentum, RSI, MACD, ADX, volume, moving averages, and institutional view, citing the numbers.",
     },
-    aiVerdict: { type: Type.STRING, description: "ONE honest, simple sentence — what you would do if it were your own money." },
+    aiVerdict: { type: Type.STRING, description: "Final Advice in ONE honest sentence, e.g. 'If this was my family's money, I would wait for a better buying opportunity.'" },
   },
   required: [
     "recommendation",
@@ -282,6 +305,16 @@ const analysisSchema = {
     "marketMood",
     "marketMoodNote",
     "beginnerExplanation",
+    "isGoodToday",
+    "biggestRisk",
+    "safestWay",
+    "waitOrBuyNow",
+    "smallBudgetPlan",
+    "largeBudgetPlan",
+    "actionToday",
+    "actionNext3Days",
+    "actionNextWeek",
+    "ownMoneyView",
     "proInvestorView",
     "aiVerdict",
   ],
@@ -311,6 +344,16 @@ const analysisSchema = {
     "marketMood",
     "marketMoodNote",
     "beginnerExplanation",
+    "isGoodToday",
+    "biggestRisk",
+    "safestWay",
+    "waitOrBuyNow",
+    "smallBudgetPlan",
+    "largeBudgetPlan",
+    "actionToday",
+    "actionNext3Days",
+    "actionNextWeek",
+    "ownMoneyView",
     "proInvestorView",
     "aiVerdict",
   ],
@@ -368,7 +411,17 @@ STYLE RULES (apply to every field EXCEPT "proInvestorView"):
 - Instead of "support is X" say "If the price falls near X, buyers often step in, so it usually stops falling around there."
 - Instead of "resistance is X" say "Near X many people tend to sell, so it can be hard for the price to climb higher."
 - Be honest and calm. Never hype. Sound human, never like a report or a chatbot.
+- Whenever a technical idea is unavoidable, immediately explain it in one simple sentence in brackets, e.g. "Many people bought recently (so the price may slow down for a while)."
 - "proInvestorView" is the ONLY field where you may use full technical terms and numbers for advanced users.
+
+QUALITY RULES:
+- Keep the whole plain-language analysis SHORT — under 400 words total across all beginner fields (everything except proInvestorView).
+- NEVER repeat the same fact in more than one field. Each field must add something new.
+- Every sentence must add real value. No filler, no generic lines like "do your own research" beyond the disclaimer.
+- Explain every risk like you are talking to your parents who know nothing about the stock market: say what could physically happen and how it affects their money.
+- NEVER exaggerate and NEVER promise profits. Always be clear that outcomes are uncertain.
+- CONFIDENCE RULE: if confidenceScore is below 60, do NOT push a Buy. The recommendation should be "Wait" or "Hold", and waitOrBuyNow, ownMoneyView and aiVerdict must clearly advise waiting for a better/confirmed opportunity.
+- Answer the reader's real questions clearly across the fields: Is it good today? Why? What is the biggest risk? What is the safest way in? Wait or buy now? What to do with a small budget vs a larger budget?
 
 GROUNDING: ${GROUNDING}`
   try {

@@ -24,6 +24,11 @@ import {
   ArrowDownRight,
   Users,
   CalendarClock,
+  HelpCircle,
+  Wallet,
+  ListChecks,
+  UserCheck,
+  Flag,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -62,6 +67,16 @@ type Analysis = {
   marketMood: Bias
   marketMoodNote: string
   beginnerExplanation: string
+  isGoodToday: string
+  biggestRisk: string
+  safestWay: string
+  waitOrBuyNow: string
+  smallBudgetPlan: string
+  largeBudgetPlan: string
+  actionToday: string
+  actionNext3Days: string
+  actionNextWeek: string
+  ownMoneyView: string
   proInvestorView: string
   aiVerdict: string
   disclaimer: string
@@ -336,6 +351,56 @@ function Report({ data }: { data: Analysis }) {
         <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
       </div>
 
+      {/* Your questions answered */}
+      <Section title="Your Questions, Answered" icon={<HelpCircle className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <QaCard q="Is this good to buy today?" a={data.isGoodToday} />
+          <QaCard q="Should I wait or buy now?" a={data.waitOrBuyNow} />
+          <QaCard q="What is the biggest risk?" a={data.biggestRisk} tone="warn" />
+          <QaCard q="What is the safest way in?" a={data.safestWay} tone="safe" />
+        </div>
+      </Section>
+
+      {/* Budget plans */}
+      <Section title="What Should I Do With My Money?" icon={<Wallet className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5 text-pos" /> Small Budget
+            </div>
+            <p className="text-sm leading-relaxed text-foreground/85">{data.smallBudgetPlan}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5 text-primary" /> Larger Budget
+            </div>
+            <p className="text-sm leading-relaxed text-foreground/85">{data.largeBudgetPlan}</p>
+          </div>
+        </div>
+      </Section>
+
+      {/* Simple action plan */}
+      <Section title="Simple Action Plan" icon={<ListChecks className="h-3.5 w-3.5 text-accent" />}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <StepCard step="Today" value={data.actionToday} />
+          <StepCard step="Next 3 Days" value={data.actionNext3Days} />
+          <StepCard step="Next Week" value={data.actionNextWeek} />
+        </div>
+      </Section>
+
+      {/* Own money view */}
+      <div className="flex items-start gap-3 rounded-2xl border border-gold/30 bg-gold/[0.07] p-5">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gold/20 text-gold">
+          <UserCheck className="h-4 w-4" />
+        </span>
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-gold">
+            What Would I Do With My Own Money?
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-foreground/90">{data.ownMoneyView}</p>
+        </div>
+      </div>
+
       {/* 11 — Pro investor view */}
       <details className="group rounded-2xl border border-border bg-card/40 p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
@@ -349,13 +414,13 @@ function Report({ data }: { data: Analysis }) {
         <p className="mt-3 text-sm leading-relaxed text-foreground/75">{data.proInvestorView}</p>
       </details>
 
-      {/* 12 — AI verdict */}
+      {/* 12 — Final advice in one sentence */}
       <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/20 text-primary">
-          <ShieldCheck className="h-4 w-4" />
+          <Flag className="h-4 w-4" />
         </span>
         <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary">AI Verdict</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary">Final Advice</div>
           <p className="mt-1 text-sm font-medium leading-relaxed text-foreground/90">{data.aiVerdict}</p>
         </div>
       </div>
@@ -473,6 +538,27 @@ function ListCard({
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+function QaCard({ q, a, tone }: { q: string; a: string; tone?: "warn" | "safe" }) {
+  const accent = tone === "warn" ? "text-neg" : tone === "safe" ? "text-pos" : "text-accent"
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-4">
+      <p className={`mb-1 text-xs font-semibold ${accent}`}>{q}</p>
+      <p className="text-sm leading-relaxed text-foreground/85">{a}</p>
+    </div>
+  )
+}
+
+function StepCard({ step, value }: { step: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-4">
+      <div className="mb-1.5 inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+        {step}
+      </div>
+      <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
     </div>
   )
 }
