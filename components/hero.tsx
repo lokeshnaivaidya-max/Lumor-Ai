@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useMemo, useRef, useState } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
 import Link from "next/link"
 import { ArrowRight, Sparkles } from "lucide-react"
@@ -25,6 +26,33 @@ const tickerItems = [
 
 const words = ["Every", "Market.", "Every", "Move.", "One", "Intelligence."]
 
+function FloatingOrb({ index }: { index: number }) {
+  const configs = [
+    { size: 32, top: "12%", right: "8%", left: "auto", bottom: "auto", duration: 12, delay: 0, color: "oklch(0.55 0.18 255 / 0.06)", shadow: "oklch(0.55 0.18 255 / 0.04)" },
+    { size: 24, top: "25%", left: "5%", right: "auto", bottom: "auto", duration: 15, delay: 2, color: "oklch(0.6 0.16 168 / 0.05)", shadow: "oklch(0.6 0.16 168 / 0.03)" },
+    { size: 20, bottom: "20%", right: "10%", left: "auto", top: "auto", duration: 18, delay: 5, color: "oklch(0.48 0.16 280 / 0.04)", shadow: "oklch(0.48 0.16 280 / 0.03)" },
+  ]
+  const c = configs[index % configs.length]
+
+  return (
+    <motion.div
+      animate={{ y: [0, -(8 + index * 3), 0] }}
+      transition={{ duration: c.duration, repeat: Infinity, ease: "easeInOut", delay: c.delay }}
+      className="pointer-events-none absolute z-0 rounded-full opacity-40 blur-xl max-md:hidden"
+      style={{
+        width: c.size * 8,
+        height: c.size * 8,
+        top: c.top,
+        left: c.left,
+        right: c.right,
+        bottom: c.bottom,
+        background: `radial-gradient(circle at 50% 50%, ${c.color}, transparent 70%)`,
+        boxShadow: `0 0 ${c.size * 6}px ${c.shadow}`,
+      }}
+    />
+  )
+}
+
 export function Hero() {
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 100])
@@ -34,54 +62,11 @@ export function Hero() {
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
       <HeroGlobe />
 
-      <div className="pointer-events-none absolute inset-0 aurora-gradient opacity-70" />
+      <div className="pointer-events-none absolute inset-0 aurora-gradient opacity-60" />
 
-      <motion.div
-        animate={{ y: [0, -30, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute top-[12%] right-[8%] z-0 h-32 w-32 rounded-full opacity-30 blur-sm"
-        style={{
-          background: "radial-gradient(circle at 30% 25%, oklch(0.99 0 0 / 0.6), oklch(0.55 0.18 255 / 0.1))",
-          boxShadow: "0 0 80px oklch(0.55 0.18 255 / 0.1)",
-          backdropFilter: "blur(8px)",
-          border: "1px solid oklch(0.99 0 0 / 0.15)",
-        }}
-      />
-      <motion.div
-        animate={{ y: [0, 25, 0], rotate: [0, -8, 0], scale: [1, 0.95, 1] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="pointer-events-none absolute top-[25%] left-[5%] z-0 h-24 w-24 rounded-full opacity-25 blur-sm"
-        style={{
-          background: "radial-gradient(circle at 65% 30%, oklch(0.99 0 0 / 0.5), oklch(0.6 0.16 168 / 0.08))",
-          boxShadow: "0 0 60px oklch(0.6 0.16 168 / 0.08)",
-          backdropFilter: "blur(6px)",
-          border: "1px solid oklch(0.99 0 0 / 0.12)",
-        }}
-      />
-      <motion.div
-        animate={{ y: [0, -20, 0], rotate: [0, 12, 0], scale: [1, 1.03, 1] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 5 }}
-        className="pointer-events-none absolute bottom-[20%] right-[10%] z-0 h-20 w-20 rounded-full opacity-20 blur-sm"
-        style={{
-          background: "radial-gradient(circle at 40% 60%, oklch(0.99 0 0 / 0.5), oklch(0.48 0.16 280 / 0.06))",
-          boxShadow: "0 0 50px oklch(0.48 0.16 280 / 0.08)",
-          backdropFilter: "blur(5px)",
-          border: "1px solid oklch(0.99 0 0 / 0.1)",
-        }}
-      />
-
-      <motion.div
-        animate={{ y: [0, -35, 0], rotateX: [0, 350], scale: [1, 1.08, 1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute top-[40%] left-[3%] z-0 h-16 w-16 opacity-15 blur-[1px]"
-        style={{
-          background: "linear-gradient(135deg, oklch(0.99 0 0 / 0.4), oklch(0.75 0.1 85 / 0.1))",
-          clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 0 40px oklch(0.75 0.1 85 / 0.1)",
-          border: "1px solid oklch(0.99 0 0 / 0.1)",
-        }}
-      />
+      <FloatingOrb index={0} />
+      <FloatingOrb index={1} />
+      <FloatingOrb index={2} />
 
       <motion.div
         initial={{ y: -24, opacity: 0 }}
@@ -130,7 +115,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="font-heading text-balance text-center text-[2rem] font-semibold leading-[0.85] tracking-[-0.05em] sm:text-7xl lg:text-[7rem] xl:text-[8rem]"
+          className="font-heading text-balance text-center text-[2.5rem] font-semibold leading-[0.85] tracking-[-0.06em] sm:text-7xl lg:text-[7rem] xl:text-[8rem]"
         >
           {words.map((word, i) => (
             <motion.span

@@ -54,8 +54,9 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
         const result = await authClient.signUp.email({ email, password, name })
 
         if (result.error) {
-          const isDuplicate = result.error.status === 409
-          throw new Error(isDuplicate ? "An account with this email already exists" : result.error.message || "Could not create account. Please try again.")
+          const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Could not create account. Please try again."
+          const isDuplicate = (result.error as Record<string, unknown>).status === 409 || String(errMsg).toLowerCase().includes("already exists")
+          throw new Error(isDuplicate ? "An account with this email already exists" : String(errMsg))
         }
 
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
@@ -63,7 +64,8 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
         const result = await authClient.signIn.email({ email, password })
 
         if (result.error) {
-          throw new Error(result.error.message || "Invalid email or password")
+          const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Invalid email or password"
+          throw new Error(String(errMsg))
         }
 
         router.push("/dashboard")

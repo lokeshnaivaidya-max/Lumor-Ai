@@ -147,8 +147,14 @@
 }
 
 @layer base {
-  * {
+  *,
+  *::before,
+  *::after {
     border-color: var(--border);
+  }
+  :root {
+    --rotateX: 0deg;
+    --rotateY: 0deg;
   }
   html {
     scroll-behavior: smooth;

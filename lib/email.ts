@@ -97,18 +97,25 @@ export async function sendOtpEmail({
 }) {
   const { subject, html } = buildOtpEmail({ otp, type })
 
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[EMAIL] To: ${email}`)
-    console.log(`[EMAIL] Subject: ${subject}`)
-    console.log(`[EMAIL] OTP: ${otp}`)
-    return { success: true }
+  // Always log OTP so it's visible in Vercel/development logs
+  console.log(`[EMAIL] To: ${email}`)
+  console.log(`[EMAIL] Subject: ${subject}`)
+  console.log(`[EMAIL] OTP: ${otp}`)
+
+  // Send via Resend when API key is configured
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const { Resend } = await import("resend")
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      const from = process.env.RESEND_FROM_EMAIL || "Lumora <verify@lumora.ai>"
+      await resend.emails.send({ from, to: email, subject, html })
+      console.log(`[EMAIL] Sent successfully via Resend to ${email}`)
+    } catch (err) {
+      console.error(`[EMAIL] Resend send failed for ${email}:`, err)
+    }
+  } else {
+    console.log(`[EMAIL] RESEND_API_KEY not set — email not sent to ${email}`)
   }
 
-  // Production: integrate with Resend / SendGrid / SES etc.
-  // import { Resend } from "resend"
-  // const resend = new Resend(process.env.RESEND_API_KEY)
-  // await resend.emails.send({ from: "Lumora <verify@lumora.ai>", to: email, subject, html })
-
-  console.log(`[EMAIL] Production send disabled — would send to ${email}`)
   return { success: true }
 }
