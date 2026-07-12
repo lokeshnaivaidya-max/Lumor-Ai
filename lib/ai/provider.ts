@@ -203,7 +203,16 @@ export type Analysis = {
   actionToday: string
   actionNext3Days: string
   actionNextWeek: string
-  // Honest personal take
+  // Advisor-grade trust & guidance
+  investmentStyle: "Intraday" | "Swing" | "Positional" | "Long Term"
+  investmentStyleReason: string
+  dataUsed: string[]
+  aiCannotKnow: string[]
+  whoCanConsider: string[]
+  whoShouldAvoid: string[]
+  worstMistake: string
+  simpleExample: string
+  // Honest personal take — "If this was my family member"
   ownMoneyView: string
   // 11. Pro investor view
   proInvestorView: string
@@ -302,7 +311,31 @@ const analysisSchema = {
     actionToday: { type: Type.STRING, description: "Simple action for today. Short. May start with 'Buy small', 'Wait', etc." },
     actionNext3Days: { type: Type.STRING, description: "Simple thing to watch over the next 3 days, referencing a real price level from the data." },
     actionNextWeek: { type: Type.STRING, description: "Simple action for next week, referencing a real price level from the data." },
-    ownMoneyView: { type: Type.STRING, description: "Honest answer to 'What would I do if this was my own money?' Speak in first person, no chatbot hedging. Give a concrete % to buy now vs wait (e.g. 'I would buy only 20-30% today')." },
+    investmentStyle: { type: Type.STRING, enum: ["Intraday", "Swing", "Positional", "Long Term"], description: "The single best investment style for this idea based on the data." },
+    investmentStyleReason: { type: Type.STRING, description: "One simple sentence explaining why that style fits, tied to the data." },
+    dataUsed: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "'Why should I trust this?' — the exact data checked, ONLY items truly present in the supplied context. Use short labels like 'Live Price', 'RSI', 'MACD', 'Volume', 'Moving Averages', 'News Headlines', 'Company Fundamentals'. Do NOT list data that was not provided.",
+    },
+    aiCannotKnow: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "'Things AI cannot know' — 4-5 honest short items, e.g. tomorrow's news, sudden government decisions, company fraud, global conflicts, surprise earnings.",
+    },
+    whoCanConsider: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "'Who can consider this stock' — 3-4 short plain phrases, e.g. 'Long-term investors', 'SIP investors', 'Beginners', 'Moderate-risk investors'. Fit them to the data.",
+    },
+    whoShouldAvoid: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "'Who should avoid this stock' — 3-4 short plain phrases, e.g. 'You panic easily', 'You need the money within a week', 'You cannot tolerate temporary losses'.",
+    },
+    worstMistake: { type: Type.STRING, description: "'Worst mistake to avoid' — one clear, simple sentence, e.g. 'Do not put all your money in at one price.'" },
+    simpleExample: { type: Type.STRING, description: "A concrete money split example in the instrument's own currency. Give 2-3 short lines, e.g. 'If your budget is ₹10,000: buy ₹3,000 today, ₹3,000 if price falls near support, keep ₹4,000 in cash.' Use \\n between lines." },
+    ownMoneyView: { type: Type.STRING, description: "'If this was my family member...' — 2-3 natural, human lines in first person. No AI/chatbot language, no jargon. Give a concrete stance (e.g. buy a little now, keep cash ready). Do NOT repeat wording from other fields." },
     proInvestorView: {
       type: Type.STRING,
       description: "Technical section for advanced users. Cover trend, momentum, RSI, MACD, ADX, volume, moving averages, and institutional view, citing the numbers.",
@@ -357,6 +390,14 @@ const analysisSchema = {
     "actionToday",
     "actionNext3Days",
     "actionNextWeek",
+    "investmentStyle",
+    "investmentStyleReason",
+    "dataUsed",
+    "aiCannotKnow",
+    "whoCanConsider",
+    "whoShouldAvoid",
+    "worstMistake",
+    "simpleExample",
     "ownMoneyView",
     "proInvestorView",
     "aiVerdict",
