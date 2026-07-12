@@ -8,33 +8,6 @@ import type { Quote } from "@/lib/market"
 
 const words = ["Every", "Market.", "Every", "Move.", "One", "Intelligence."]
 
-function FloatingOrb({ index }: { index: number }) {
-  const configs = [
-    { size: 32, top: "12%", right: "8%", left: "auto", bottom: "auto", duration: 12, delay: 0, color: "oklch(0.55 0.18 255 / 0.06)", shadow: "oklch(0.55 0.18 255 / 0.04)" },
-    { size: 24, top: "25%", left: "5%", right: "auto", bottom: "auto", duration: 15, delay: 2, color: "oklch(0.6 0.16 168 / 0.05)", shadow: "oklch(0.6 0.16 168 / 0.03)" },
-    { size: 20, bottom: "20%", right: "10%", left: "auto", top: "auto", duration: 18, delay: 5, color: "oklch(0.48 0.16 280 / 0.04)", shadow: "oklch(0.48 0.16 280 / 0.03)" },
-  ]
-  const c = configs[index % configs.length]
-
-  return (
-    <motion.div
-      animate={{ y: [0, -(8 + index * 3), 0] }}
-      transition={{ duration: c.duration, repeat: Infinity, ease: "easeInOut", delay: c.delay }}
-      className="pointer-events-none absolute z-0 rounded-full opacity-40 blur-xl max-md:hidden"
-      style={{
-        width: c.size * 8,
-        height: c.size * 8,
-        top: c.top,
-        left: c.left,
-        right: c.right,
-        bottom: c.bottom,
-        background: `radial-gradient(circle at 50% 50%, ${c.color}, transparent 70%)`,
-        boxShadow: `0 0 ${c.size * 6}px ${c.shadow}`,
-      }}
-    />
-  )
-}
-
 export function Hero({ quotes = [] }: { quotes?: Quote[] }) {
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 100])
@@ -57,11 +30,9 @@ export function Hero({ quotes = [] }: { quotes?: Quote[] }) {
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
       <HeroGlobe />
 
-      <div className="pointer-events-none absolute inset-0 aurora-gradient opacity-60" />
+      <div className="pointer-events-none absolute inset-0 aurora-gradient opacity-40" style={{ zIndex: -1 }} />
 
-      <FloatingOrb index={0} />
-      <FloatingOrb index={1} />
-      <FloatingOrb index={2} />
+      <div className="pointer-events-none absolute inset-0" style={{ zIndex: -1, background: "radial-gradient(ellipse 80% 60% at 50% 40%, transparent 40%, var(--background) 100%)" }} />
 
       <motion.div
         initial={{ y: -24, opacity: 0 }}

@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from "react"
 import { motion, useMotionValue, useSpring } from "motion/react"
-import { BarChart3, Brain, PieChart, Shield, Sparkles } from "lucide-react"
+import { BarChart3, Brain, PieChart, Shield, Sparkles, ArrowUpRight } from "lucide-react"
 
 const features = [
   {
@@ -106,7 +106,10 @@ function FeatureCard({ f, i }: { f: (typeof features)[number]; i: number }) {
           >
             <f.icon className={`h-6 w-6 ${f.accent}`} />
           </motion.div>
-          <h3 className="font-heading text-lg font-semibold text-foreground">{f.title}</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-heading text-lg font-semibold text-foreground">{f.title}</h3>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/30 transition-all duration-300 group-hover:text-foreground/60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.description}</p>
           <span
             className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium"

@@ -4,6 +4,25 @@ import { motion } from "motion/react"
 import Link from "next/link"
 import { Sparkles, ArrowRight } from "lucide-react"
 
+const footerLinks = [
+  {
+    heading: "Product",
+    links: [
+      { label: "Markets", href: "/markets" },
+      { label: "Intelligence", href: "#intelligence" },
+      { label: "Coverage", href: "#coverage" },
+      { label: "Dashboard", href: "/dashboard" },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { label: "Privacy", href: "#" },
+      { label: "Terms", href: "#" },
+    ],
+  },
+]
+
 export function CtaFooter() {
   return (
     <footer className="relative overflow-hidden">
@@ -55,48 +74,60 @@ export function CtaFooter() {
       </section>
 
       <div className="border-t border-border/40 px-4 py-16">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 text-center">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-start gap-4 sm:col-span-2 lg:col-span-2"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-heading text-xl font-semibold tracking-tight">Lumora</span>
+                <span className="rounded-full bg-blue/10 px-2.5 py-0.5 text-[10px] font-medium text-blue">AI</span>
+              </div>
+              <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+                AI-powered market intelligence platform. Real-time data, predictive analytics, and portfolio optimization for the modern investor.
+              </p>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                Designed &amp; Developed by <span className="font-medium text-foreground">Lokesh</span>
+              </div>
+            </motion.div>
+
+            {footerLinks.map((group, i) => (
+              <motion.div
+                key={group.heading}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + i * 0.1 }}
+                className="flex flex-col items-start gap-3"
+              >
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                  {group.heading}
+                </span>
+                {group.links.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={link.href === "#" ? (e) => e.preventDefault() : undefined}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </motion.div>
+            ))}
+          </div>
+
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="flex items-center gap-2"
+            transition={{ delay: 0.4 }}
+            className="mt-12 border-t border-border/30 pt-8 text-center text-xs text-muted-foreground/60"
           >
-            <span className="font-heading text-xl font-semibold tracking-tight">Lumora</span>
-            <span className="rounded-full bg-blue/10 px-2.5 py-0.5 text-[10px] font-medium text-blue">AI</span>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="max-w-md text-sm leading-relaxed text-muted-foreground"
-          >
-            Built with passion for everyone who dreams of financial freedom through intelligent investing.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-1 text-sm text-muted-foreground"
-          >
-            Designed &amp; Developed by <span className="font-medium text-foreground">Lokesh</span>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center gap-8 text-xs text-muted-foreground"
-          >
-            <span>&copy; 2026 Lumora AI</span>
-            <Link href="/privacy" className="transition-colors hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition-colors hover:text-foreground">
-              Terms
-            </Link>
+            &copy; 2026 Lumora AI. All rights reserved.
           </motion.div>
         </div>
       </div>
