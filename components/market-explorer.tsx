@@ -45,7 +45,7 @@ function bigNum(n?: number) {
 
 function ChartSkeleton() {
   return (
-    <div className="flex h-80 items-center justify-center rounded-[1.75rem] border border-border bg-card/40 text-sm text-muted-foreground">
+    <div className="glass-card flex h-80 items-center justify-center text-sm text-muted-foreground">
       <Clock className="mr-2 h-4 w-4 animate-spin" />
       Loading chart…
     </div>
@@ -171,7 +171,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       {/* Indicators */}
-      <h2 className="mb-4 mt-12 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+      <h2 className="mb-4 mt-12 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
         Technical Indicators
       </h2>
       <IndicatorPanel ind={indicators} />
@@ -189,7 +189,7 @@ const QuoteHeader = memo(function QuoteHeader({
   positive: boolean
 }) {
   return (
-    <div className="glass-panel relative overflow-hidden rounded-[28px] p-6 sm:p-8">
+    <div className="glass-card relative overflow-hidden p-6 sm:p-8">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl"
@@ -215,7 +215,7 @@ const QuoteHeader = memo(function QuoteHeader({
                 }}
               />
             )}
-            <h1 className="font-mono text-3xl tracking-tight text-foreground">{quote?.symbol ?? symbol}</h1>
+            <h1 className="font-heading text-3xl tracking-tight text-foreground">{quote?.symbol ?? symbol}</h1>
             <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground">
               {quote?.exchange || "—"}
             </span>
@@ -289,7 +289,7 @@ const StatsGrid = memo(function StatsGrid({ quote, ccy }: { quote: Quote | null;
   return (
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {stats.map((s) => (
-        <div key={s.label} className="rounded-2xl border border-border bg-card/40 px-4 py-3.5 transition-colors hover:border-foreground/20">
+        <div key={s.label} className="glass-card px-4 py-3.5 transition-colors hover:border-foreground/20">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
           <div className="mt-1 font-mono text-sm text-foreground">{s.value}</div>
         </div>

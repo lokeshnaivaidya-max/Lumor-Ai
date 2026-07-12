@@ -25,7 +25,7 @@ export function SavedAnalysisClient() {
         <p className="mt-1 text-sm text-muted-foreground">Every analysis is automatically saved. Revisit past reports anytime.</p>
       </motion.div>
 
-      <div className="mb-6 glass relative rounded-2xl max-w-md">
+      <div className="mb-6 glass-card relative rounded-2xl max-w-md">
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search analyses..." className="w-full rounded-2xl bg-transparent py-3 pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground/60" />
       </div>
@@ -58,10 +58,10 @@ export function SavedAnalysisClient() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="glass rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:text-foreground">
+                <button className="glass-card rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:text-foreground">
                   <ExternalLink className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => handleDelete(a.symbol)} className="glass rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:text-neg">
+                <button onClick={() => handleDelete(a.symbol)} className="glass-card rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:text-neg">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>

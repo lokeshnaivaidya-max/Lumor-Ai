@@ -87,7 +87,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
               const { label, Icon } = PROVIDER_META[p]
               return (
                 <button key={p} type="button" onClick={() => handleOAuth(p)} disabled={oauthLoading !== null || loading}
-                  className="glass flex items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium text-foreground transition-all hover:border-primary/40 disabled:opacity-60"
+                  className="glass-card flex items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium text-foreground transition-all disabled:opacity-60"
                 >
                   {oauthLoading === p ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
                   {label}

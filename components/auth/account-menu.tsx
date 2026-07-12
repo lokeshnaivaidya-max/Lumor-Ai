@@ -60,13 +60,13 @@ export function AccountMenu() {
       <div className="flex items-center gap-2">
         <Link
           href="/sign-in"
-          className="hidden rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+          className="premium-btn premium-btn-ghost hidden rounded-full px-4 py-2 text-sm sm:block"
         >
           Sign in
         </Link>
         <Link
           href="/sign-up"
-          className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          className="premium-btn premium-btn-primary rounded-full px-4 py-2 text-sm font-medium"
         >
           Get started
         </Link>
@@ -80,7 +80,7 @@ export function AccountMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full border border-border p-0.5 pr-2.5 transition-colors hover:border-foreground/30"
+        className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-colors hover:border-foreground/30"
         aria-label="Account menu"
         aria-expanded={open}
       >
@@ -108,7 +108,7 @@ export function AccountMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-strong absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl p-1.5 shadow-2xl shadow-black/40"
+            className="glass-card absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl p-1.5 shadow-2xl shadow-black/40"
           >
             <div className="px-3 py-2.5">
               <p className="truncate text-sm font-medium text-foreground">

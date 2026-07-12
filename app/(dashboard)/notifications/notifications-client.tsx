@@ -31,7 +31,7 @@ export function NotificationsClient() {
           <p className="mt-1 text-sm text-muted-foreground">Stay informed about your portfolio and market moves.</p>
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="glass flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+          <button onClick={markAllRead} className="glass-card flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
             <CheckCheck className="h-3.5 w-3.5" />Mark all read
           </button>
         )}

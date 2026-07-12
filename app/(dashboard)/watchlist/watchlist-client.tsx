@@ -39,11 +39,11 @@ export function WatchlistClient() {
       </motion.div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="glass relative flex-1 max-w-md rounded-2xl">
+        <div className="glass-card relative flex-1 max-w-md rounded-2xl">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search symbols..." className="w-full rounded-2xl bg-transparent py-3 pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground/60" />
         </div>
-        <button className="glass flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <button className="glass-card flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
           <Star className="h-3.5 w-3.5 text-gold" />Favorites
         </button>
         <button className="premium-btn premium-btn-primary px-4 py-2.5 text-xs">
@@ -87,7 +87,7 @@ export function WatchlistClient() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button className="glass rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                    <button className="glass-card rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
                       <Brain className="mr-1 inline h-3 w-3" />Analyze
                     </button>
                   </td>

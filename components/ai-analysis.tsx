@@ -164,7 +164,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="edge-light grain relative overflow-hidden rounded-[1.75rem] glass-panel p-5 sm:p-6">
+    <div className="edge-light grain glass-card relative overflow-hidden p-5 sm:p-6">
       <div
         className="animate-pulse-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
         style={{ background: "oklch(0.62 0.16 168 / 0.4)" }}
@@ -175,7 +175,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="text-sm font-medium text-foreground">Lumora AI Analysis</h3>
+            <h3 className="font-heading text-sm font-medium text-foreground">Lumora AI Analysis</h3>
             <p className="text-xs text-muted-foreground">Explained simply · grounded in live data</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             whileTap={{ scale: loading ? 1 : 0.97 }}
             onClick={run}
             disabled={loading}
-            className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground disabled:opacity-60"
+            className="premium-btn premium-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             {loading ? "Analyzing…" : "Analyze"}
@@ -254,7 +254,7 @@ function Report({ data }: { data: Analysis }) {
           <p className="mt-2 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-border bg-card/40 p-5">
+        <div className="glass-card flex items-center gap-4 p-5">
           <ConfidenceMeter value={conf} color={rec.ring} />
           <div className="min-w-0">
             <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Confidence</div>
@@ -269,7 +269,7 @@ function Report({ data }: { data: Analysis }) {
         <Section title="Quick Summary">
           <ul className="grid gap-2 sm:grid-cols-3">
             {data.quickSummary.slice(0, 3).map((s, i) => (
-              <li key={i} className="flex gap-2 rounded-xl border border-border bg-card/30 p-3 text-sm leading-relaxed text-foreground/85">
+              <li key={i} className="glass-card flex gap-2 p-3 text-sm leading-relaxed text-foreground/85">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                 {s}
               </li>
@@ -377,7 +377,7 @@ function Report({ data }: { data: Analysis }) {
 
       {/* 8 + 9 — Risk level + Market mood */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card/40 p-4">
+        <div className="glass-card p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
               <ShieldAlert className="h-3.5 w-3.5" /> Risk Level
@@ -390,7 +390,7 @@ function Report({ data }: { data: Analysis }) {
           <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.riskNote}</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/40 p-4">
+        <div className="glass-card p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Market Mood</span>
             <span className={`flex items-center gap-1.5 text-sm font-semibold ${moodTone(data.marketMood)}`}>
@@ -438,13 +438,13 @@ function Report({ data }: { data: Analysis }) {
       {/* Budget plans */}
       <Section title="What Should I Do With My Money?" icon={<Wallet className="h-3.5 w-3.5 text-accent" />}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="glass-card p-4">
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
               <Wallet className="h-3.5 w-3.5 text-pos" /> Small Budget
             </div>
             <p className="text-sm leading-relaxed text-foreground/85">{data.smallBudgetPlan}</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card/40 p-4">
+          <div className="glass-card p-4">
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
               <Wallet className="h-3.5 w-3.5 text-primary" /> Larger Budget
             </div>
@@ -476,7 +476,7 @@ function Report({ data }: { data: Analysis }) {
       </div>
 
       {/* 11 — Pro investor view */}
-      <details className="group rounded-2xl border border-border bg-card/40 p-4">
+        <details className="group glass-card p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <LineChart className="h-3.5 w-3.5" /> Pro Investor View
@@ -546,7 +546,7 @@ function ProbBar({
   const bar = tone === "pos" ? "bg-pos" : "bg-neg"
   const text = tone === "pos" ? "text-pos" : "text-neg"
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4">
+    <div className="glass-card p-4">
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {icon}
@@ -563,7 +563,7 @@ function ProbBar({
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card/40 p-3">
+    <div className="glass-card p-3">
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
         {icon}
         {label}
@@ -599,7 +599,7 @@ function ListCard({
   const color = tone === "pos" ? "text-pos" : "text-neg"
   const dot = tone === "pos" ? "bg-pos" : "bg-neg"
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4">
+    <div className="glass-card p-4">
       <h4 className={`mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${color}`}>
         {icon}
         {title}
@@ -637,7 +637,7 @@ function ScenarioCard({ label, value, tone }: { label: string; value: string; to
 function PositionCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
   const color = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4 text-center">
+    <div className="glass-card p-4 text-center">
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`mt-1 text-2xl font-semibold ${color}`}>{value}</div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">of your capital</div>
@@ -648,7 +648,7 @@ function PositionCard({ label, value, tone }: { label: string; value: string; to
 function QaCard({ q, a, tone }: { q: string; a: string; tone?: "warn" | "safe" }) {
   const accent = tone === "warn" ? "text-neg" : tone === "safe" ? "text-pos" : "text-accent"
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4">
+    <div className="glass-card p-4">
       <p className={`mb-1 text-xs font-semibold ${accent}`}>{q}</p>
       <p className="text-sm leading-relaxed text-foreground/85">{a}</p>
     </div>
@@ -657,7 +657,7 @@ function QaCard({ q, a, tone }: { q: string; a: string; tone?: "warn" | "safe" }
 
 function StepCard({ step, value }: { step: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4">
+    <div className="glass-card p-4">
       <div className="mb-1.5 inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
         {step}
       </div>
@@ -678,7 +678,7 @@ function LevelCard({
   note: string
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/40 p-4">
+    <div className="glass-card p-4">
       <div className="mb-1 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
           {icon}

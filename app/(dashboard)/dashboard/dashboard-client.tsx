@@ -74,7 +74,7 @@ export function DashboardClient() {
           <p className="mt-1 text-sm text-muted-foreground">Here&apos;s your portfolio overview and market intelligence.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <button className="glass-card flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
           </button>
@@ -99,7 +99,7 @@ export function DashboardClient() {
           >
             <div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
               <div className="flex items-center gap-2"><Star className="h-4 w-4 text-gold" /><h2 className="font-heading text-sm font-medium">Watchlist</h2></div>
-              <button className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <button className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
                 <Plus className="h-3 w-3" />Add
               </button>
             </div>

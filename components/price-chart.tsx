@@ -39,7 +39,7 @@ export function PriceChart({
   if (!candles.length) {
     return (
       <div
-        className="flex items-center justify-center rounded-[1.75rem] glass text-sm text-muted-foreground"
+        className="glass-card flex items-center justify-center text-sm text-muted-foreground"
         style={{ height }}
       >
         No chart data available
@@ -53,7 +53,7 @@ export function PriceChart({
   const hc = hover != null ? candles[hover] : null
 
   return (
-    <div className="edge-light relative w-full overflow-hidden rounded-[1.75rem] glass-panel">
+    <div className="edge-light glass-card relative w-full overflow-hidden">
       {/* soft directional glow */}
       <div
         className="pointer-events-none absolute inset-0 opacity-60"
@@ -141,7 +141,7 @@ export function PriceChart({
       </svg>
 
       {hc && (
-        <div className="pointer-events-none absolute left-4 top-4 rounded-xl glass-strong px-3 py-2 text-xs">
+        <div className="pointer-events-none absolute left-4 top-4 rounded-xl glass-card px-3 py-2 text-xs">
           <div className="font-mono text-sm text-foreground tabular-nums">
             {hc.c.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>

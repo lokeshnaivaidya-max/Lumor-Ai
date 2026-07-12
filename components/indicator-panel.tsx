@@ -25,9 +25,9 @@ function Panel({ title, children, delay = 0 }: { title: string; children: React.
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="edge-light rounded-[1.5rem] glass-panel p-5"
+      className="edge-light glass-card p-5"
     >
-      <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
+      <h3 className="mb-3 font-heading text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
       {children}
     </motion.div>
   )

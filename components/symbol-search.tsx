@@ -55,8 +55,8 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
   return (
     <div ref={boxRef} className="relative w-full max-w-2xl">
       <div
-        className={`flex items-center gap-3 rounded-2xl px-5 py-3.5 backdrop-blur transition-all duration-300 ${
-          focused ? "glass-strong shadow-2xl shadow-black/30 ring-1 ring-accent/40" : "glass"
+        className={`flex items-center gap-3 rounded-2xl px-5 py-3.5 glass-card transition-all duration-300 ${
+          focused ? "ring-1 ring-accent/50 shadow-2xl shadow-black/40" : ""
         }`}
       >
         {loading ? (
@@ -94,7 +94,7 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl glass-strong shadow-2xl shadow-black/50"
+            className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl glass-card shadow-2xl shadow-black/50"
           >
             {results.map((r, i) => (
               <li key={r.symbol}>

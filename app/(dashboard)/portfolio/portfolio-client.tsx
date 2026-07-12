@@ -64,7 +64,7 @@ export function PortfolioClient() {
           </button>
         ))}
         <div className="ml-auto flex gap-2">
-          <button className="glass flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+          <button className="glass-card flex items-center gap-1.5 rounded-full px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
             <Brain className="h-3.5 w-3.5" />AI Review
           </button>
           <button className="premium-btn premium-btn-primary px-3 py-2 text-xs">
@@ -105,7 +105,7 @@ export function PortfolioClient() {
                       </td>
                       <td className="px-5 py-4 text-right text-sm tabular-nums">{h.allocation}%</td>
                       <td className="px-5 py-4 text-right">
-                        <button className="glass rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground">Edit</button>
+                        <button className="glass-card rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground">Edit</button>
                       </td>
                     </tr>
                   )

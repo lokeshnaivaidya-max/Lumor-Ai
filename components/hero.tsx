@@ -37,7 +37,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease, delay: 0.15 }}
-          className="mx-auto mb-10 flex w-fit items-center gap-2 rounded-full glass px-4 py-1.5 text-xs tracking-wide text-muted-foreground"
+          className="mx-auto mb-10 flex w-fit items-center gap-2 rounded-full glass-card px-4 py-1.5 text-xs tracking-wide text-muted-foreground"
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-75" />

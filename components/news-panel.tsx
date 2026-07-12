@@ -44,14 +44,14 @@ function NewsPanelBase({ symbol }: { symbol: string }) {
   const OverallIcon = SENTIMENT[overall].Icon
 
   return (
-    <div className="edge-light rounded-[1.5rem] glass-panel p-5 sm:p-6">
+    <div className="edge-light glass-card p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5 text-accent">
             <Newspaper className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="text-sm font-medium text-foreground">News & AI Sentiment</h3>
+            <h3 className="font-heading text-sm font-medium text-foreground">News & AI Sentiment</h3>
             <p className="text-xs text-muted-foreground">Real headlines, classified by Lumora AI</p>
           </div>
         </div>

@@ -40,7 +40,7 @@ export function CompareClient() {
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         {[inputA, inputB].map((val, i) => (
-          <div key={i} className="glass relative rounded-2xl">
+          <div key={i} className="glass-card relative rounded-2xl">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input value={val} onChange={(e) => i === 0 ? setInputA(e.target.value) : setInputB(e.target.value)}
               placeholder={`Search symbol ${i + 1}...`} className="w-full rounded-2xl bg-transparent py-3 pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground/60"

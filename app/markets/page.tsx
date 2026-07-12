@@ -25,7 +25,7 @@ export default async function MarketsPage({ searchParams }: { searchParams?: Pro
           <LumoraMark className="h-7 w-7" />
           <span className="font-heading font-semibold tracking-tight">Lumora</span>
         </Link>
-        <Link href="/" className="glass flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <Link href="/" className="glass-card flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft className="h-3.5 w-3.5" />
           Home
         </Link>

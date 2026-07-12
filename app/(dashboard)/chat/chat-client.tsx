@@ -35,7 +35,7 @@ export function ChatClient() {
           <div><h1 className="font-heading text-sm font-medium">AI Assistant</h1><p className="text-xs text-muted-foreground">Ask anything about markets</p></div>
         </div>
         {messages.length > 0 && (
-          <button onClick={() => setMessages([])} className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
+          <button onClick={() => setMessages([])} className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
             <Trash2 className="h-3 w-3" />Clear
           </button>
         )}
@@ -50,7 +50,7 @@ export function ChatClient() {
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
                 <button key={s} onClick={() => setInput(s)}
-                  className="glass rounded-full px-4 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  className="glass-card rounded-full px-4 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {s}
                 </button>
@@ -64,7 +64,7 @@ export function ChatClient() {
                 className={`flex gap-3 ${m.role === "user" ? "justify-end" : ""}`}
               >
                 {m.role === "assistant" && <div className="mt-0.5 shrink-0 rounded-xl bg-violet/10 p-2"><Bot className="h-4 w-4 text-violet" /></div>}
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-primary/10 text-foreground" : "glass"}`}>
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-primary/10 text-foreground" : "glass-card"}`}>
                   <p className="text-sm leading-relaxed">{m.content}</p>
                 </div>
                 {m.role === "user" && <div className="mt-0.5 shrink-0 rounded-xl bg-primary/10 p-2"><User className="h-4 w-4 text-primary" /></div>}
@@ -73,7 +73,7 @@ export function ChatClient() {
             {loading && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
                 <div className="rounded-xl bg-violet/10 p-2"><Bot className="h-4 w-4 text-violet" /></div>
-                <div className="glass max-w-[80%] rounded-2xl px-4 py-3">
+                <div className="glass-card max-w-[80%] rounded-2xl px-4 py-3">
                   <div className="flex gap-1">
                     <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "150ms" }} />
@@ -89,7 +89,7 @@ export function ChatClient() {
 
       <div className="border-t border-border/40 px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <div className="glass relative flex-1 rounded-2xl">
+          <div className="glass-card relative flex-1 rounded-2xl">
             <input value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Ask Lumora anything..."
