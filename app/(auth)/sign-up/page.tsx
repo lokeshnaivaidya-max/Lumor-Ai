@@ -11,7 +11,12 @@ export const metadata = {
 type Provider = "google" | "microsoft" | "apple"
 
 export default async function SignUpPage() {
-  const user = await getCurrentUser()
+  let user = null
+  try {
+    user = await getCurrentUser()
+  } catch {
+    // Auth not configured — render form anyway
+  }
   if (user) redirect("/dashboard")
 
   return (

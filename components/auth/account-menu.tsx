@@ -52,7 +52,7 @@ export function AccountMenu() {
   }
 
   if (isPending) {
-    return <div className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
+    return <div className="h-9 w-9 animate-pulse rounded-full bg-bg/60" />
   }
 
   if (!session?.user) {
@@ -122,7 +122,7 @@ export function AccountMenu() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-bg/60 hover:text-foreground"
               >
                 <l.icon className="h-4 w-4" />
                 {l.label}
