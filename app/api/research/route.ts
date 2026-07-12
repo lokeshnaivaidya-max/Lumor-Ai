@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
-import { generateInvestmentResearch, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateInvestmentResearch, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         : err instanceof AiConfigError
           ? "Research is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
           : "Research is temporarily unavailable — the model provider returned an error."
-    console.log("[v0] research error:", err instanceof Error ? err.message : String(err))
+    console.error("[Lumora AI] Gemini research failed", getAiErrorDiagnostic(err))
     return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
   }
 }

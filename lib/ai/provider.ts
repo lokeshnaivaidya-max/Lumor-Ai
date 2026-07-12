@@ -14,16 +14,36 @@ import { GoogleGenAI, Type } from "@google/genai"
 
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash"
-const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-2.5-flash-lite"
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash"
+const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-3.1-flash-lite"
 
-export class AiConfigError extends Error {}
-export class AiBillingError extends Error {}
+type ErrorWithDetails = Error & {
+  status?: unknown
+  statusCode?: unknown
+  code?: unknown
+  response?: unknown
+  body?: unknown
+  error?: unknown
+}
+
+export class AiConfigError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = "AiConfigError"
+  }
+}
+
+export class AiBillingError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = "AiBillingError"
+  }
+}
 
 let client: GoogleGenAI | null = null
 
 function getClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY?.trim()
   if (!apiKey) {
     throw new AiConfigError("GEMINI_API_KEY is not configured.")
   }
@@ -51,15 +71,65 @@ async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Prom
   return value
 }
 
+const SECRET_PATTERN = /(AIza[\w-]{20,}|(?:api[_-]?key|authorization|token)\s*[=:]\s*["']?[^\s,"'}]+)/gi
+
+function redact(value: unknown, seen = new WeakSet<object>()): unknown {
+  if (typeof value === "string") return value.replace(SECRET_PATTERN, "[REDACTED]")
+  if (value === null || typeof value !== "object") return value
+  if (seen.has(value)) return "[Circular]"
+  seen.add(value)
+
+  if (Array.isArray(value)) return value.map((item) => redact(item, seen))
+
+  const output: Record<string, unknown> = {}
+  for (const [key, item] of Object.entries(value)) {
+    output[key] = /api.?key|authorization|token|credential|secret/i.test(key)
+      ? "[REDACTED]"
+      : redact(item, seen)
+  }
+  return output
+}
+
+export function getAiErrorDiagnostic(err: unknown): Record<string, unknown> {
+  if (!(err instanceof Error)) {
+    return { thrownValue: redact(err) }
+  }
+
+  const detailed = err as ErrorWithDetails
+  const diagnostic: Record<string, unknown> = {
+    name: err.name,
+    message: redact(err.message),
+    stack: redact(err.stack),
+  }
+
+  for (const key of ["status", "statusCode", "code", "response", "body", "error"] as const) {
+    if (detailed[key] !== undefined) diagnostic[key] = redact(detailed[key])
+  }
+  if (err.cause !== undefined) diagnostic.cause = getAiErrorDiagnostic(err.cause)
+
+  return diagnostic
+}
+
 function classify(err: unknown): Error {
   const msg = err instanceof Error ? err.message : String(err)
-  if (/quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(msg)) {
-    return new AiBillingError(msg)
+  const diagnostic = JSON.stringify(getAiErrorDiagnostic(err))
+  if (/quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(`${msg} ${diagnostic}`)) {
+    return new AiBillingError(msg, { cause: err })
   }
-  if (/API key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID/i.test(msg)) {
-    return new AiConfigError(msg)
+  if (/API key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID/i.test(`${msg} ${diagnostic}`)) {
+    return new AiConfigError(msg, { cause: err })
   }
-  return err instanceof Error ? err : new Error(msg)
+  return err instanceof Error ? err : new Error(msg, { cause: err })
+}
+
+function parseJsonResponse<T>(text: string | undefined, operation: string): T {
+  const value = text?.trim()
+  if (!value) throw new Error(`Gemini returned an empty response for ${operation}.`)
+  try {
+    return JSON.parse(value) as T
+  } catch (cause) {
+    throw new Error(`Gemini returned invalid JSON for ${operation}.`, { cause })
+  }
 }
 
 /* --------------------------------- Types --------------------------------- */
@@ -217,7 +287,7 @@ export async function generateAnalysis(input: { name: string; horizon: string; c
         temperature: 0.35,
       },
     })
-    const parsed = JSON.parse((res.text ?? "").trim()) as Omit<Analysis, "disclaimer">
+    const parsed = parseJsonResponse<Omit<Analysis, "disclaimer">>(res.text, "instrument analysis")
     return { ...parsed, disclaimer: DISCLAIMER }
   } catch (err) {
     throw classify(err)
@@ -239,7 +309,7 @@ export async function generateNewsSentiment(input: { name: string; headlines: st
         temperature: 0.2,
       },
     })
-    return JSON.parse((res.text ?? "").trim()) as NewsSentiment
+    return parseJsonResponse<NewsSentiment>(res.text, "news sentiment")
   } catch (err) {
     throw classify(err)
   }
@@ -258,7 +328,9 @@ export async function generateMarketSummary(input: { region: string; movers: str
           temperature: 0.4,
         },
       })
-      return (res.text ?? "").trim()
+      const summary = res.text?.trim()
+      if (!summary) throw new Error("Gemini returned an empty response for market summary.")
+      return summary
     } catch (err) {
       throw classify(err)
     }
@@ -282,7 +354,7 @@ export async function generateInvestmentResearch(input: {
         temperature: 0.4,
       },
     })
-    const parsed = JSON.parse((res.text ?? "").trim()) as Omit<InvestmentResearch, "disclaimer">
+    const parsed = parseJsonResponse<Omit<InvestmentResearch, "disclaimer">>(res.text, "investment research")
     return { ...parsed, disclaimer: DISCLAIMER }
   } catch (err) {
     throw classify(err)
