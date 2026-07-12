@@ -189,7 +189,7 @@ const QuoteHeader = memo(function QuoteHeader({
   positive: boolean
 }) {
   return (
-    <div className="glass-card relative overflow-hidden p-6 sm:p-8">
+    <div className="glass-blue edge-light relative overflow-hidden rounded-[28px] p-6 sm:p-8">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl"
@@ -289,7 +289,7 @@ const StatsGrid = memo(function StatsGrid({ quote, ccy }: { quote: Quote | null;
   return (
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {stats.map((s) => (
-        <div key={s.label} className="glass-card px-4 py-3.5 transition-colors hover:border-foreground/20">
+        <div key={s.label} className="glass-card edge-light px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:shadow-xl">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
           <div className="mt-1 font-mono text-sm text-foreground">{s.value}</div>
         </div>

@@ -66,7 +66,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="glass-card edge-light relative w-full max-w-md overflow-hidden rounded-[28px] p-8 sm:p-10"
     >
-      <div className="grain absolute inset-0" aria-hidden />
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")" }} aria-hidden />
 
       <div className="relative">
         <Link href="/" className="inline-flex items-center gap-2.5">

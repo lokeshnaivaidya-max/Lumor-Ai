@@ -1,43 +1,84 @@
 "use client"
 
-import { useRef } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
-import { ArrowUpRight, Sparkles, TrendingUp } from "lucide-react"
-import { MagneticButton } from "./magnetic-button"
-import { HeroOrb } from "./hero-orb"
+import Link from "next/link"
+import { ArrowRight, TrendingUp, BarChart3, Globe2, Sparkles } from "lucide-react"
 
-const ease = [0.16, 1, 0.3, 1] as const
+const words = ["Every", "Market.", "Every", "Move.", "One", "Intelligence."]
 
-function Word({ children, delay }: { children: React.ReactNode; delay: number }) {
-  return (
-    <span className="inline-block overflow-hidden pb-[0.06em] align-bottom">
-      <motion.span
-        initial={{ y: "115%" }}
-        animate={{ y: 0 }}
-        transition={{ duration: 1, ease, delay }}
-        className="inline-block"
-      >
-        {children}
-      </motion.span>
-    </span>
-  )
-}
+const stats = [
+  { icon: Globe2, label: "Global Exchanges", value: "60+", accent: "border-blue/30 bg-blue/[0.08]" },
+  { icon: TrendingUp, label: "AI Accuracy", value: "94.2%", accent: "border-emerald/30 bg-emerald/[0.08]" },
+  { icon: BarChart3, label: "Instruments", value: "12K+", accent: "border-violet/30 bg-violet/[0.08]" },
+]
 
 export function Hero() {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] })
-  const y = useTransform(scrollYProgress, [0, 1], [0, 160])
-  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
-  const orbY = useTransform(scrollYProgress, [0, 1], [0, 80])
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 500], [0, 120])
+  const opacity = useTransform(scrollY, [0, 400], [1, 0.3])
+  const scale = useTransform(scrollY, [0, 400], [1, 0.95])
 
   return (
-    <section ref={ref} className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-32 pb-16">
-      <motion.div style={{ y, opacity }} className="relative z-10 w-full max-w-6xl">
+    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-28 pb-20">
+      {/* Hero orb */}
+      <motion.div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{ y, opacity }}
+      >
+        <div className="relative h-[75vh] w-[75vh] min-h-[500px] min-w-[500px]">
+          <div className="absolute inset-0 rounded-full bg-gradient-radial from-blue/20 via-emerald/10 to-transparent blur-[100px] animate-breathe" />
+          <div className="absolute inset-[10%] rounded-full bg-gradient-radial from-violet/15 via-blue/10 to-transparent blur-[80px] animate-aurora" />
+          <div className="absolute inset-[25%] rounded-full bg-gradient-radial from-cyan/10 via-transparent to-transparent blur-[60px] animate-aurora-reverse" />
+        </div>
+      </motion.div>
+
+      {/* Floating stat cards */}
+      <motion.div
+        className="pointer-events-none absolute right-[5%] top-[20%] hidden lg:block"
+        style={{ opacity }}
+      >
+        <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          className="glass-blue rounded-2xl px-4 py-3 shadow-2xl"
+        >
+          <p className="text-xs text-blue font-medium">S&P 500</p>
+          <p className="text-lg font-semibold tabular-nums text-white">5,612.80</p>
+          <p className="text-xs text-emerald">+1.24% today</p>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        className="pointer-events-none absolute left-[5%] top-[35%] hidden lg:block"
+        style={{ opacity }}
+      >
+        <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="glass-emerald rounded-2xl px-4 py-3 shadow-2xl"
+        >
+          <p className="text-xs text-emerald font-medium">NASDAQ</p>
+          <p className="text-lg font-semibold tabular-nums text-white">18,423.45</p>
+          <p className="text-xs text-emerald">+0.87% today</p>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        className="pointer-events-none absolute right-[8%] bottom-[25%] hidden lg:block"
+        style={{ opacity }}
+      >
+        <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="glass-gold rounded-2xl px-4 py-3 shadow-2xl"
+        >
+          <p className="text-xs text-gold font-medium">BTC/USD</p>
+          <p className="text-lg font-semibold tabular-nums text-white">67,842.10</p>
+          <p className="text-xs text-gold">+3.42% today</p>
+        </motion.div>
+      </motion.div>
+
+      <motion.div style={{ y, scale }} className="relative z-10 w-full max-w-5xl">
+        {/* Live badge */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease, delay: 0.15 }}
-          className="mx-auto mb-10 flex w-fit items-center gap-2 rounded-full glass-card px-4 py-1.5 text-xs tracking-wide text-muted-foreground"
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+          className="mx-auto mb-10 flex w-fit items-center gap-2 rounded-full glass-blue px-4 py-1.5 text-xs tracking-wide"
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-75" />
@@ -46,119 +87,79 @@ export function Hero() {
           Live across 60+ global exchanges
         </motion.div>
 
-        <h1 className="font-heading text-center text-[3rem] font-semibold leading-[0.9] tracking-[-0.03em] text-balance sm:text-6xl lg:text-[7rem]">
-          <span className="block">
-            <Word delay={0.12}>The market,</Word>
-          </span>
-          <span className="mt-1 block">
-            <Word delay={0.24}>
-              <span className="text-gradient-aurora">illuminated</span>
-            </Word>{" "}
-            <Word delay={0.32}>
-              <span className="font-serif text-[0.9em] italic font-normal text-foreground/85">by AI.</span>
-            </Word>
-          </span>
-        </h1>
+        {/* Animated headline */}
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="font-heading text-center text-[3rem] font-semibold leading-[0.9] tracking-[-0.03em] text-balance sm:text-6xl lg:text-[7rem]"
+        >
+          {words.map((word, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 40, rotateX: -20 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 0.7, delay: 0.5 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className={`inline-block mr-[0.08em] ${
+                i % 2 === 1 ? "text-gradient-aurora" : "text-white"
+              }`}
+            >
+              {word}
+            </motion.span>
+          ))}
+        </motion.h1>
 
+        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease, delay: 0.55 }}
-          className="mx-auto mt-8 max-w-2xl text-center text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg"
+          transition={{ duration: 0.7, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto mt-8 max-w-2xl text-center text-lg leading-relaxed text-white/60 sm:text-xl"
         >
-          Lumora turns real-time global market data into cinematic, AI-authored
-          intelligence — bull cases, bear cases, technicals, and price targets
-          in seconds.
+          AI-powered global stock intelligence. Real-time data, deep analysis, and
+          cinematic clarity across every major exchange.
         </motion.p>
 
+        {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease, delay: 0.65 }}
-          className="mt-11 flex flex-wrap items-center justify-center gap-3"
+          transition={{ duration: 0.7, delay: 1.3, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
-          <MagneticButton href="/markets">
-            Launch the terminal
-            <ArrowUpRight className="h-4 w-4" />
-          </MagneticButton>
-          <MagneticButton href="#intelligence" variant="ghost">
-            <Sparkles className="h-4 w-4 text-emerald" />
-            See the AI in action
-          </MagneticButton>
+          <Link
+            href="/markets"
+            className="premium-btn premium-btn-primary group px-8 py-3.5 text-sm"
+          >
+            <Sparkles className="h-4 w-4" />
+            Launch Terminal
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link
+            href="/sign-up"
+            className="premium-btn premium-btn-ghost px-8 py-3.5 text-sm"
+          >
+            Get Started Free
+          </Link>
         </motion.div>
-      </motion.div>
 
-      <motion.div
-        style={{ y: orbY }}
-        initial={{ opacity: 0, scale: 0.92, y: 40 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 1.2, ease, delay: 0.5 }}
-        className="relative z-0 mt-16 w-full max-w-5xl"
-      >
-        <HeroOrb />
-
+        {/* Stats row */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease, delay: 1 }}
-          className="animate-float absolute -left-3 top-6 hidden w-60 rounded-2xl glass-card p-4 sm:block"
+          transition={{ duration: 0.7, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 flex flex-wrap items-center justify-center gap-4"
         >
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <TrendingUp className="h-4 w-4 text-emerald" />
-            AI Recommendation
-          </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="font-heading text-2xl font-semibold tracking-tight">NVDA</span>
-            <span className="rounded-full bg-emerald/15 px-2 py-0.5 text-xs font-medium text-emerald">Buy · 87%</span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-emerald"
-              initial={{ width: 0 }}
-              animate={{ width: "87%" }}
-              transition={{ duration: 1.2, delay: 1.3, ease }}
-            />
-          </div>
+          {stats.map((s) => (
+            <div key={s.label} className={`flex items-center gap-3 rounded-2xl border px-5 py-3 ${s.accent}`}>
+              <s.icon className="h-5 w-5 text-white/70" />
+              <div>
+                <p className="text-xs text-white/50">{s.label}</p>
+                <p className="text-lg font-semibold tabular-nums text-white">{s.value}</p>
+              </div>
+            </div>
+          ))}
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease, delay: 1.2 }}
-          className="animate-float absolute -right-3 bottom-10 hidden w-56 rounded-2xl glass-card p-4 md:block"
-          style={{ animationDelay: "-3.5s" }}
-        >
-          <div className="text-xs text-muted-foreground">Confidence signal</div>
-          <div className="mt-2 flex items-end gap-1">
-            {[38, 52, 46, 68, 60, 82, 74, 91].map((h, i) => (
-              <motion.div
-                key={i}
-                className="flex-1 rounded-sm"
-                initial={{ height: 4 }}
-                animate={{ height: h * 0.35 }}
-                transition={{ duration: 0.8, delay: 1.4 + i * 0.04, ease }}
-                style={{ background: "linear-gradient(to top, oklch(0.65 0.2 255 / 0.35), oklch(0.72 0.16 168))" }}
-              />
-            ))}
-          </div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            Momentum <span className="text-foreground">Strong</span>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 0.8 }}
-        className="mt-16 flex flex-col items-center gap-2 text-[11px] tracking-[0.3em] text-muted-foreground uppercase"
-      >
-        <span>Scroll to explore</span>
-        <motion.span
-          animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="h-10 w-px origin-top bg-gradient-to-b from-foreground/60 to-transparent"
-        />
       </motion.div>
     </section>
   )

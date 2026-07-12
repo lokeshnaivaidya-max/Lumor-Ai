@@ -1,68 +1,105 @@
 "use client"
 
 import { motion } from "motion/react"
+import { Globe2, Building2, Landmark, Banknote, Orbit } from "lucide-react"
 import { CountUp } from "./count-up"
 
-const EXCHANGES = [
-  "NYSE", "NASDAQ", "NSE", "BSE", "LSE", "TSE", "HKEX", "ASX", "FWB", "SIX", "TSX", "KRX", "SSE", "B3", "JSE", "MOEX",
+const exchanges = [
+  { name: "NYSE", icon: Building2 },
+  { name: "NASDAQ", icon: Building2 },
+  { name: "NSE", icon: Landmark },
+  { name: "BSE", icon: Landmark },
+  { name: "LSE", icon: Banknote },
+  { name: "TSE", icon: Banknote },
+  { name: "FSE", icon: Banknote },
+  { name: "HKEX", icon: Banknote },
+  { name: "ASX", icon: Building2 },
+  { name: "SSE", icon: Banknote },
+  { name: "TSX", icon: Building2 },
+  { name: "Euronext", icon: Globe2 },
 ]
 
 const stats = [
-  { label: "Exchanges", value: 60, suffix: "+" },
-  { label: "Symbols", value: 40, suffix: "K+" },
-  { label: "Latency", value: 2, prefix: "<", suffix: "s" },
-  { label: "Uptime", value: 99.9, suffix: "%" },
+  { value: 60, suffix: "+", label: "Exchanges", icon: Globe2, accent: "border-blue/30 bg-blue/[0.08]" },
+  { value: 12000, suffix: "+", label: "Instruments", icon: Orbit, accent: "border-emerald/30 bg-emerald/[0.08]" },
+  { value: 40, suffix: "+", label: "Countries", icon: Building2, accent: "border-violet/30 bg-violet/[0.08]" },
+  { value: 99.9, suffix: "%", label: "Uptime", icon: Landmark, accent: "border-gold/30 bg-gold/[0.08]" },
 ]
 
 export function Coverage() {
   return (
-    <section id="coverage" className="relative px-6 py-28">
+    <section id="coverage" className="section-violet relative overflow-hidden px-4 py-28">
       <div className="mx-auto max-w-6xl">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 text-center"
         >
-          <span className="inline-block rounded-full bg-emerald/10 px-4 py-1.5 text-xs font-medium text-emerald tracking-wide uppercase">Global Coverage</span>
-          <h2 className="font-heading mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Every market. <span className="text-gradient-emerald">One terminal.</span>
+          <span className="inline-block rounded-full badge-violet px-3 py-1 text-xs font-medium mb-4">
+            Coverage
+          </span>
+          <h2 className="font-heading text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            Global{" "}
+            <span className="text-gradient-violet">Market</span>{" "}
+            Coverage
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground text-pretty">
-            From Wall Street to Dalal Street — Lumora tracks the world&apos;s most
-            important exchanges in real time.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/50">
+            Every major exchange, every asset class. One unified intelligence layer.
           </p>
         </motion.div>
 
-        <div className="mb-16 flex flex-wrap justify-center gap-2">
-          {EXCHANGES.map((ex, i) => (
-            <motion.span
-              key={ex}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: i * 0.04 }}
-              className="rounded-full border border-border/50 px-4 py-1.5 text-xs font-medium text-muted-foreground bg-white/[0.02] hover:border-primary/30 hover:text-foreground transition-colors"
-            >
-              {ex}
-            </motion.span>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          {stats.map((s, i) => (
+        {/* Stats */}
+        <div className="mb-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((s) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="glass-card rounded-2xl p-6 text-center"
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className={`flex items-center gap-4 rounded-2xl border p-5 ${s.accent}`}
             >
-              <p className="font-heading text-4xl font-semibold tracking-tight text-gradient">
-                {s.prefix || ""}<CountUp to={s.value} duration={2} />{s.suffix || ""}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">{s.label}</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
+                <s.icon className="h-5 w-5 text-white/70" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="font-heading text-3xl font-semibold tabular-nums text-white">
+                    <CountUp to={s.value} />
+                  </span>
+                  <span className="font-heading text-xl font-semibold text-white">{s.suffix}</span>
+                </div>
+                <p className="text-xs text-white/50">{s.label}</p>
+              </div>
             </motion.div>
           ))}
         </div>
+
+        {/* Exchange grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap justify-center gap-3"
+        >
+          {exchanges.map((ex, i) => (
+            <motion.div
+              key={ex.name}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -4, scale: 1.05 }}
+              transition={{ duration: 0.3, delay: i * 0.03 }}
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 backdrop-blur-xl transition-all hover:border-blue/30 hover:bg-blue/[0.08] hover:shadow-lg"
+            >
+              <ex.icon className="h-3.5 w-3.5 text-white/50" />
+              <span className="text-sm font-medium text-white/70">{ex.name}</span>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   )

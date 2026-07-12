@@ -164,7 +164,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="edge-light grain glass-card relative overflow-hidden p-5 sm:p-6">
+    <div className="edge-light glass-card relative overflow-hidden p-5 sm:p-6">
       <div
         className="animate-pulse-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
         style={{ background: "oklch(0.62 0.16 168 / 0.4)" }}

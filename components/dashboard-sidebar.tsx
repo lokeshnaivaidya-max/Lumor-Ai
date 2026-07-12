@@ -26,7 +26,7 @@ export function DashboardSidebar() {
   return (
     <motion.aside
       layout
-      className={`relative z-30 flex h-screen flex-col border-r border-border/40 bg-background/80 backdrop-blur-2xl transition-all duration-300 ${collapsed ? "w-[68px]" : "w-[240px]"}`}
+      className={`relative z-30 flex h-screen flex-col border-r border-white/[0.06] bg-gradient-to-b from-background via-blue/[0.02] to-violet/[0.02] backdrop-blur-2xl transition-all duration-300 ${collapsed ? "w-[68px]" : "w-[240px]"}`}
     >
       <div className="flex items-center gap-2.5 border-b border-border/30 px-4 py-4">
         <Link href="/" className="shrink-0">
@@ -47,11 +47,11 @@ export function DashboardSidebar() {
           return (
             <Link key={link.href} href={link.href}
               className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
-                isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                isActive ? "text-primary font-medium" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
               }`}
             >
               {isActive && (
-                <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-xl bg-primary/10"
+                <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue/[0.15] to-violet/[0.1] border border-blue/20"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               )}
