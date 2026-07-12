@@ -550,15 +550,6 @@
       radial-gradient(ellipse 50% 50% at 70% 90%, oklch(0.75 0.1 85 / 0.03), transparent 50%);
   }
 
-  /* ── Aurora mesh gradient (enhanced) ── */
-  .aurora-gradient {
-    background:
-      radial-gradient(ellipse 85% 65% at 50% -15%, oklch(0.55 0.18 255 / 0.08), transparent 70%),
-      radial-gradient(ellipse 65% 50% at 85% 30%, oklch(0.6 0.16 168 / 0.05), transparent 65%),
-      radial-gradient(ellipse 60% 60% at 15% 75%, oklch(0.48 0.16 280 / 0.05), transparent 60%),
-      radial-gradient(ellipse 55% 55% at 70% 85%, oklch(0.75 0.1 85 / 0.03), transparent 55%);
-  }
-
   /* ── Skeleton ── */
   .skeleton {
     background: linear-gradient(90deg, oklch(0.85 0.01 85 / 0.3) 25%, oklch(0.85 0.01 85 / 0.5) 50%, oklch(0.85 0.01 85 / 0.3) 75%);

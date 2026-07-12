@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/session"
 import { getNotifications } from "@/app/actions/notifications"
 import { NotificationsClient } from "./notifications-client"
@@ -11,10 +12,11 @@ export const metadata = {
 
 export default async function NotificationsPage() {
   const user = await getCurrentUser()
-  const notifications = await getNotifications()
+  if (!user) redirect("/sign-in")
+  const notifications = await getNotifications().catch(() => [])
   return (
     <NotificationsClient
-      notifications={notifications.map((n) => ({
+      notifications={notifications.map((n: any) => ({
         id: n.id,
         type: n.type,
         title: n.title,

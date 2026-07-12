@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next"
 import { cookies } from "next/headers"
 import { Sora, Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
+import type { ReactNode } from "react"
 import "./globals.css"
 
 function themeClass(theme: string): string {
@@ -66,7 +68,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   const theme = (await cookies()).get("lumora-theme")?.value ?? "system"
   return (
@@ -75,7 +77,11 @@ export default async function RootLayout({
       className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} ${themeClass(theme)} bg-background`}
       suppressHydrationWarning
     >
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

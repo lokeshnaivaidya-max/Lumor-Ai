@@ -7,7 +7,7 @@ import { motion, useMotionValue, useSpring, AnimatePresence } from "motion/react
 import { SymbolSearch } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, type Quote, type Region, type Candle } from "@/lib/market"
-import { TrendingUp, TrendingDown, Clock, Globe, Sparkles, ChevronLeft, ChevronRight, Gauge, Activity, BarChart3, TrendingUpDown } from "lucide-react"
+import { TrendingUp, TrendingDown, Clock, Globe, Gauge, Activity, BarChart3, TrendingUpDown, AlertCircle } from "lucide-react"
 
 const PriceChart = dynamic(() => import("@/components/price-chart").then((m) => m.PriceChart), {
   ssr: false,
@@ -17,7 +17,11 @@ const IndicatorPanel = dynamic(() => import("@/components/indicator-panel").then
 const AiAnalysis = dynamic(() => import("@/components/ai-analysis").then((m) => m.AiAnalysis), { ssr: false })
 const NewsPanel = dynamic(() => import("@/components/news-panel").then((m) => m.NewsPanel), { ssr: false })
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`API ${res.status}`)
+  return res.json()
+}
 
 const RANGES = ["1d", "5d", "1mo", "6mo", "1y", "5y"] as const
 const REGIONS: Region[] = ["US", "IN", "GB", "JP", "GLOBAL"]
@@ -157,16 +161,16 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
     }
   }, [])
 
-  const { data: quoteData } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${encodeURIComponent(symbol)}`, fetcher, {
+  const { data: quoteData, error: quoteError } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${encodeURIComponent(symbol)}`, fetcher, {
     refreshInterval: 15000,
     keepPreviousData: true,
   })
-  const { data: chartData, isLoading: chartLoading } = useSWR<{ candles: Candle[] }>(
+  const { data: chartData, isLoading: chartLoading, error: chartError } = useSWR<{ candles: Candle[] }>(
     `/api/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`,
     fetcher,
     { keepPreviousData: true },
   )
-  const { data: tickerData } = useSWR<{ quotes: Quote[] }>(
+  const { data: tickerData, error: tickerError } = useSWR<{ quotes: Quote[] }>(
     "/api/quote?symbols=^GSPC,^IXIC,^DJI,BTC-USD,ETH-USD,GC=F,CL=F,INR=X",
     fetcher,
     { refreshInterval: 30000, keepPreviousData: true },
@@ -229,6 +233,12 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       {/* Quote Header */}
+      {quoteError && !quote ? (
+        <div className="flex items-center gap-3 rounded-[32px] border border-neg/20 bg-neg/5 px-6 py-4 text-sm text-neg">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Unable to load quote data. Retrying…</span>
+        </div>
+      ) : null}
       <QuoteHeader quote={quote} symbol={symbol} positive={positive} />
 
       {/* Range Selector */}
@@ -250,7 +260,12 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
       {/* Chart */}
       <BentoCard className="mt-4 min-h-80" spotlight={false}>
-        {chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} />}
+        {chartError && !candles.length ? (
+          <div className="flex h-80 items-center justify-center gap-3 text-sm text-muted-foreground">
+            <AlertCircle className="h-4 w-4 shrink-0 text-neg" />
+            Chart data unavailable
+          </div>
+        ) : chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} />}
       </BentoCard>
 
       {/* Bento Stats Grid */}

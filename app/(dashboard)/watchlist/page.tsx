@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/session"
 import { getWatchlistView, type WatchlistView } from "@/lib/portfolio"
 import { WatchlistClient } from "./watchlist-client"
@@ -11,6 +12,7 @@ export const metadata = {
 
 export default async function WatchlistPage() {
   const user = await getCurrentUser()
-  const items = (await getWatchlistView(user!.id)) as WatchlistView[]
+  if (!user) redirect("/sign-in")
+  const items = (await getWatchlistView(user.id).catch(() => [])) as WatchlistView[]
   return <WatchlistClient items={items} />
 }

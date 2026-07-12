@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/session"
 import { getPortfolioSummary, getWatchlistView, type PortfolioSummary, type WatchlistView } from "@/lib/portfolio"
 import { getNotifications } from "@/app/actions/notifications"
@@ -16,17 +17,19 @@ const INDEX_SYMBOLS = ["^GSPC", "^IXIC", "^DJI", "BTC-USD"]
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
-  const userId = user!.id
+  if (!user) redirect("/sign-in")
+
+  const userId = user.id
 
   const [portfolio, watchlist, notifications, analyses, indexQuotes] = await Promise.all([
-    getPortfolioSummary(userId),
-    getWatchlistView(userId),
-    getNotifications(),
-    getSavedAnalyses(),
-    getQuotes(INDEX_SYMBOLS),
+    getPortfolioSummary(userId).catch(() => null),
+    getWatchlistView(userId).catch(() => []),
+    getNotifications().catch(() => []),
+    getSavedAnalyses().catch(() => []),
+    getQuotes(INDEX_SYMBOLS).catch(() => []),
   ])
 
-  const indices = indexQuotes.map((q) => ({
+  const indices = (indexQuotes || []).map((q: any) => ({
     symbol: q.symbol,
     name: displayName(q.symbol, q.name),
     price: q.price,
@@ -35,10 +38,10 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      name={user!.name || "there"}
-      portfolio={portfolio as PortfolioSummary}
-      watchlist={watchlist as WatchlistView[]}
-      notifications={notifications.map((n) => ({
+      name={user.name || "there"}
+      portfolio={(portfolio || {}) as PortfolioSummary}
+      watchlist={(watchlist || []) as WatchlistView[]}
+      notifications={(notifications || []).map((n: any) => ({
         id: n.id,
         type: n.type,
         title: n.title,
@@ -46,7 +49,7 @@ export default async function DashboardPage() {
         read: n.read,
         createdAt: n.createdAt.toISOString(),
       }))}
-      analyses={analyses.map((a) => ({
+      analyses={(analyses || []).map((a: any) => ({
         id: a.id,
         symbol: a.symbol,
         kind: a.kind,
