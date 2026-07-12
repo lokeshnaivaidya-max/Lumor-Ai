@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
-import { generateAnalysis, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         : err instanceof AiConfigError
           ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it. Live market data and technicals remain fully functional."
           : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
-    console.log("[v0] analyze error:", err instanceof Error ? err.message : String(err))
+    console.error("[Lumora AI] Gemini analysis failed", getAiErrorDiagnostic(err))
     return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
   }
 }

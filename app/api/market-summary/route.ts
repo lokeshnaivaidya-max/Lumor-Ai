@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getQuotes, REGION_CONFIG, displayName, type Region } from "@/lib/market"
-import { generateMarketSummary, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateMarketSummary, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
         : err instanceof AiConfigError
           ? "Market summary is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
           : "Market summary is temporarily unavailable — the model provider returned an error."
-    console.log("[v0] market-summary error:", err instanceof Error ? err.message : String(err))
+    console.error("[Lumora AI] Gemini market summary failed", getAiErrorDiagnostic(err))
     return NextResponse.json({ summary: "", movers, region, error: message }, { status: 200 })
   }
 }

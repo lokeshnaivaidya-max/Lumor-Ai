@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getNews } from "@/lib/news"
 import { displayName } from "@/lib/market"
-import { generateNewsSentiment } from "@/lib/ai/provider"
+import { generateNewsSentiment, getAiErrorDiagnostic } from "@/lib/ai/provider"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -56,7 +56,7 @@ export async function GET(req: Request) {
       }
     }
   } catch (err) {
-    console.log("[v0] news sentiment error:", err instanceof Error ? err.message : String(err))
+    console.error("[Lumora AI] Gemini news sentiment failed", getAiErrorDiagnostic(err))
     // Graceful degradation: return real headlines with neutral sentiment.
   }
 
