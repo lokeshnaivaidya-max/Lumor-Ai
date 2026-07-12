@@ -32,6 +32,14 @@ export function MicrosoftIcon({ className }: { className?: string }) {
   )
 }
 
+export function YahooIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+      <path d="M13.84 2.97c-.35 0-.64.23-.75.56l-3.1 9.37-.04.14-2.2-7.43a.78.78 0 0 0-.74-.55H3.07a.44.44 0 0 0-.43.44v.06c0 .24.18.44.42.44h2.87c.2 0 .37.12.43.31l2.52 8.5c.06.2-.05.42-.25.48l-.03.01H7.12c-.24 0-.43.2-.43.45v.05c0 .24.19.44.43.44h5.29c.24 0 .44-.2.44-.44v-.05c0-.25-.2-.45-.44-.45h-.78c-.2 0-.37-.12-.43-.31l-1.1-3.73c-.06-.2.05-.42.25-.48l.01-.01 4.19-5.14c.16-.2.45-.24.66-.09.08.06.13.15.13.25v8.74c0 .45.16.88.44 1.18a1.67 1.67 0 0 0 1.17.55c.45 0 .87-.2 1.17-.55.28-.3.44-.73.44-1.18V4.57c0-.88-.7-1.6-1.56-1.6h-3.24Z" />
+    </svg>
+  )
+}
+
 export function AppleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">

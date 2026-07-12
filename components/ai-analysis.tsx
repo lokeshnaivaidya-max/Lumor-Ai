@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
+import { authClient, useSession } from "@/lib/auth-client"
 import {
   Sparkles,
   Loader2,
@@ -162,6 +164,36 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const { data: session } = useSession()
+
+  if (!session?.user) {
+    return (
+      <div className="edge-light glass-card relative overflow-hidden p-6 sm:p-8 text-center">
+        <div className="mx-auto max-w-sm">
+          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground/40" />
+          <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">Sign in to analyze</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Lumora AI analysis is available for authenticated users. Sign in to get AI-powered insights.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Link
+              href="/sign-in"
+              className="premium-btn premium-btn-primary rounded-full px-6 py-2.5 text-sm"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="premium-btn premium-btn-ghost rounded-full px-6 py-2.5 text-sm"
+            >
+              Create account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

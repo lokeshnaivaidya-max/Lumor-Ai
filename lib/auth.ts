@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth"
+import { emailOTP } from "better-auth/plugins"
 import { pool } from "@/lib/db"
 
 // Only enable an OAuth provider when both its client id and secret are present.
@@ -13,11 +14,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   }
 }
 
-if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
-  socialProviders.microsoft = {
-    clientId: process.env.MICROSOFT_CLIENT_ID,
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-    tenantId: process.env.MICROSOFT_TENANT_ID ?? "common",
+if (process.env.YAHOO_CLIENT_ID && process.env.YAHOO_CLIENT_SECRET) {
+  socialProviders.yahoo = {
+    clientId: process.env.YAHOO_CLIENT_ID,
+    clientSecret: process.env.YAHOO_CLIENT_SECRET,
   }
 }
 
@@ -35,6 +35,9 @@ export const enabledProviders = Object.keys(socialProviders)
 
 export const auth = betterAuth({
   database: pool,
+  secret:
+    process.env.BETTER_AUTH_SECRET ||
+    "lumora-dev-secret-change-in-production-abcdef123456",
   baseURL:
     process.env.BETTER_AUTH_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -47,6 +50,16 @@ export const auth = betterAuth({
     autoSignIn: true,
   },
   socialProviders,
+  plugins: [
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 300, // 5 minutes
+      async sendVerificationOTP({ email, otp }) {
+        // In production, send via SendGrid / Resend / etc.
+        console.log(`OTP for ${email}: ${otp}`)
+      },
+    }),
+  ],
   trustedOrigins: [
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
