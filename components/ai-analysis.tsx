@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
-import { authClient, useSession } from "@/lib/auth-client"
+import { authClient, useSession } from "@/lib/auth-client";
 import {
   Sparkles,
   Loader2,
@@ -17,24 +17,18 @@ import {
   Clock,
   Scale,
   CheckCircle2,
-  AlertTriangle,
   Heart,
   LineChart,
   Gauge,
   ArrowUpRight,
   ArrowDownRight,
-  Users,
-  CalendarClock,
-  HelpCircle,
-  Wallet,
-  ListChecks,
   UserCheck,
   Flag,
   GitBranch,
-  PieChart,
   ChevronDown,
   Brain,
   Zap,
+  RefreshCw,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -101,6 +95,12 @@ type Analysis = {
   disclaimer: string
 }
 
+type StreamEvent =
+  | { type: "started"; symbol: string }
+  | { type: "loading"; message: string }
+  | { type: "complete"; analysis: Analysis; meta: unknown }
+  | { type: "error"; message: string; disclaimer?: string }
+
 function recTone(rec: Recommendation): { text: string; bg: string; border: string; ring: string } {
   switch (rec) {
     case "Strong Buy":
@@ -138,34 +138,130 @@ function riskTone(level: RiskLevel) {
   return { text: "text-gold", bar: "bg-gold", pct: 66 }
 }
 
+function SkeletonCard({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-2xl bg-white/10 ${className}`} />
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="mt-5 space-y-4 border-t border-white/10 pt-6">
+      <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
+        <SkeletonCard className="h-48" />
+        <SkeletonCard className="h-48" />
+      </div>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonCard key={i} className="h-24" />
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <SkeletonCard className="h-8 w-32" />
+        <SkeletonCard className="h-8 w-32" />
+        <SkeletonCard className="h-8 w-32" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SkeletonCard className="h-32" />
+        <SkeletonCard className="h-32" />
+      </div>
+    </div>
+  )
+}
+
 export function AiAnalysis({ symbol }: { symbol: string }) {
   const [data, setData] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [horizon, setHorizon] = useState<string>("swing")
   const [error, setError] = useState<string | null>(null)
+  const [progressMsg, setProgressMsg] = useState("")
+  const [retryCount, setRetryCount] = useState(0)
+  const abortRef = useRef<AbortController | null>(null)
 
-  async function run() {
+  const doStream = useCallback(async (sym: string, hz: string, attempt = 0) => {
     setLoading(true)
     setError(null)
     setData(null)
+    setProgressMsg("Initializing…")
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symbol, horizon }),
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+        body: JSON.stringify({ symbol: sym, horizon: hz }),
+        signal: controller.signal,
       })
-      const json = await res.json()
-      if (json.error) {
-        setError(json.error)
-      } else {
-        setData(json.analysis as Analysis)
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Request failed" }))
+        throw new Error(err.error || `HTTP ${res.status}`)
       }
-    } catch {
-      setError("Analysis failed. Please try again.")
-    } finally {
+
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error("No response body")
+
+      const decoder = new TextDecoder()
+      let buffer = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() ?? ""
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue
+          try {
+            const event: StreamEvent = JSON.parse(line.slice(6))
+            if (event.type === "started") {
+              setProgressMsg(`Analyzing ${event.symbol}…`)
+            } else if (event.type === "loading") {
+              setProgressMsg(event.message)
+            } else if (event.type === "complete") {
+              setData(event.analysis)
+              setProgressMsg("")
+              setLoading(false)
+              setRetryCount(0)
+              return
+            } else if (event.type === "error") {
+              setError(event.message)
+              setProgressMsg("")
+              setLoading(false)
+              return
+            }
+          } catch {
+            continue
+          }
+        }
+      }
       setLoading(false)
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return
+      const msg = err instanceof Error ? err.message : "Analysis failed. Retrying…"
+      if (attempt < 2) {
+        setProgressMsg(`Retrying… (${attempt + 1}/3)`)
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+        return doStream(sym, hz, attempt + 1)
+      }
+      setError(msg)
+      setLoading(false)
+      setProgressMsg("")
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
+
+  const run = useCallback(() => {
+    doStream(symbol, horizon)
+  }, [doStream, symbol, horizon])
 
   const { data: session } = useSession()
 
@@ -246,21 +342,29 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
 
       {error && (
         <div className="relative mt-5 border-t border-white/10 pt-5">
-          <p className="text-sm text-neg">{error}</p>
+          <div className="flex items-start gap-3 rounded-[28px] border border-gold/30 bg-gold/[0.07] p-4 backdrop-blur-sm">
+            <div className="flex-1 text-sm text-foreground/90">{error}</div>
+            <button
+              onClick={run}
+              className="premium-btn premium-btn-soft shrink-0 rounded-full px-3 py-1 text-xs"
+            >
+              <RefreshCw className="mr-1 h-3 w-3" /> Retry
+            </button>
+          </div>
         </div>
       )}
 
       {loading && !data && (
-        <div className="relative mt-5 flex items-center gap-2 border-t border-white/10 pt-5 text-sm text-muted-foreground">
-          <div className="flex h-6 w-6 items-center justify-center">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <Brain className="h-4 w-4 text-blue" />
-            </motion.div>
+        <div className="relative mt-5 border-t border-white/10 pt-5">
+          <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+            <div className="flex h-6 w-6 items-center justify-center">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+                <Brain className="h-4 w-4 text-blue" />
+              </motion.div>
+            </div>
+            {progressMsg || "Reading the tape…"}
           </div>
-          Reading the tape…
+          <LoadingSkeleton />
         </div>
       )}
 
@@ -285,9 +389,7 @@ function Report({ data }: { data: Analysis }) {
 
   return (
     <div className="relative mt-5 space-y-6 border-t border-white/10 pt-6">
-
       <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
-
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -333,7 +435,7 @@ function Report({ data }: { data: Analysis }) {
         <CockpitMetric icon={<Ban />} label="Stop Loss" value={data.stopLoss} accent="rose" />
         <CockpitMetric icon={<Clock />} label="Hold" value={data.holdingPeriod} accent="violet" />
         <CockpitMetric icon={<Scale />} label="R:R" value={data.riskReward} accent="gold" />
-        <CockpitMetric icon={<CalendarClock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
+        <CockpitMetric icon={<Clock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
       </motion.div>
 
       {data.quickSummary?.length > 0 && (
@@ -573,17 +675,7 @@ function ConfidenceMeter({ value, color, size = "sm" }: { value: number; color: 
   )
 }
 
-function ProbBar({
-  label,
-  value,
-  tone,
-  icon,
-}: {
-  label: string
-  value: number
-  tone: "pos" | "neg"
-  icon: React.ReactNode
-}) {
+function ProbBar({ label, value, tone, icon }: { label: string; value: number; tone: "pos" | "neg"; icon: React.ReactNode }) {
   const bar = tone === "pos" ? "bg-pos" : "bg-neg"
   const text = tone === "pos" ? "text-pos" : "text-neg"
   return (
@@ -698,48 +790,12 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
 }
 
 function ScenarioCard({ label, value, tone }: { label: string; value: string; tone: "pos" | "mid" | "neg" }) {
-  const box =
-    tone === "pos"
-      ? "border-emerald/30 bg-emerald/[0.06]"
-      : tone === "neg"
-        ? "border-rose/30 bg-rose/[0.06]"
-        : "border-gold/30 bg-gold/[0.06]"
+  const box = tone === "pos" ? "border-emerald/30 bg-emerald/[0.06]" : tone === "neg" ? "border-rose/30 bg-rose/[0.06]" : "border-gold/30 bg-gold/[0.06]"
   const text = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-gold"
   return (
     <div className={`rounded-[28px] border ${box} p-4 backdrop-blur-sm`}>
       <div className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${text}`}>{label}</div>
       <p className="text-sm leading-relaxed text-foreground/85">{value}</p>
-    </div>
-  )
-}
-
-function ListCard({
-  title,
-  tone,
-  icon,
-  points,
-}: {
-  title: string
-  tone: "pos" | "neg"
-  icon: React.ReactNode
-  points: string[]
-}) {
-  const color = tone === "pos" ? "text-pos" : "text-neg"
-  const dot = tone === "pos" ? "bg-pos" : "bg-neg"
-  return (
-    <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
-      <h4 className={`mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${color}`}>
-        {icon}
-        {title}
-      </h4>
-      <ul className="space-y-1.5">
-        {points?.slice(0, 4).map((p, i) => (
-          <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground/80">
-            <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${dot}`} />
-            {p}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }

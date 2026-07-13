@@ -4,7 +4,7 @@ import { generateAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBi
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
-export const maxDuration = 60
+export const maxDuration = 30
 
 export async function POST(req: Request) {
   const limit = rateLimit(`analyze:${clientIp(req)}`, 15, 60_000)
@@ -25,6 +25,56 @@ export async function POST(req: Request) {
   const horizon = body.horizon?.trim() || "swing"
   if (!symbol) return NextResponse.json({ error: "Missing symbol" }, { status: 400 })
   if (symbol.length > 24) return NextResponse.json({ error: "Invalid symbol" }, { status: 400 })
+
+  const accept = req.headers.get("accept") ?? ""
+
+  if (accept.includes("text/event-stream")) {
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "started", symbol })}\n\n`))
+
+          const built = await buildInstrumentContext(symbol, { horizon })
+          if (!built) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "error", message: "Unable to load market data for this symbol." })}\n\n`),
+            )
+            controller.close()
+            return
+          }
+
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "loading", message: `Analyzing ${built.name}…` })}\n\n`))
+
+          const analysis = await generateAnalysis({ name: built.name, horizon, context: built.context })
+
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "complete",
+                analysis,
+                meta: { symbol: built.quote.symbol, name: built.name, horizon },
+              })}\n\n`,
+            ),
+          )
+        } catch (err) {
+          const msg =
+            err instanceof AiBillingError
+              ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
+              : err instanceof AiConfigError
+                ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
+                : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
+          console.error("[Lumora AI] Gemini analysis failed", getAiErrorDiagnostic(err))
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", message: msg, disclaimer: DISCLAIMER })}\n\n`))
+        } finally {
+          controller.close()
+        }
+      },
+    })
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-store", "X-Accel-Buffering": "no" },
+    })
+  }
 
   const built = await buildInstrumentContext(symbol, { horizon })
   if (!built) {
