@@ -3,6 +3,8 @@ import { buildInstrumentContext } from "@/lib/context"
 import { generateAnalysis, generateFallbackAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
+console.log("ANALYZE ROUTE MODULE LOADED")
+
 export const runtime = "nodejs"
 export const maxDuration = 30
 
@@ -11,6 +13,7 @@ function log(...args: unknown[]) {
 }
 
 export async function POST(req: Request) {
+  console.log("ANALYZE POST HANDLER CALLED")
   log("=== AI ANALYSIS REQUEST ===")
 
   const limit = rateLimit(`analyze:${clientIp(req)}`, 15, 60_000)
@@ -40,6 +43,7 @@ export async function POST(req: Request) {
   log("Accept header:", accept)
 
   async function tryAnalyze(name: string, context: string) {
+    console.log("TRYZ CALLED:", name)
     log("=== TRY GEMINI ===")
     try {
       const analysis = await generateAnalysis({ name, horizon, context })
@@ -54,6 +58,11 @@ export async function POST(req: Request) {
         log("Error cause:", (err as Error).cause)
       }
       log("Diagnostic:", JSON.stringify(getAiErrorDiagnostic(err)))
+      // Surface quota/billing/config errors to the frontend — do NOT fall back silently
+      if (err instanceof AiBillingError || err instanceof AiConfigError) {
+        log("Surface error to UI — no fallback")
+        throw err
+      }
       log("=== USING FALLBACK ===")
       const fallback = generateFallbackAnalysis({ name, horizon, context })
       log("Fallback recommendation:", fallback.recommendation, "Confidence:", fallback.confidenceScore)
@@ -101,10 +110,17 @@ export async function POST(req: Request) {
           )
           log("=== STREAM COMPLETE ===")
         } catch (err) {
-          log("=== STREAM ERROR ===", (err as Error).message)
+          const errorMessage = err instanceof AiBillingError
+            ? "AI unavailable: Gemini quota exceeded."
+            : err instanceof AiConfigError
+            ? "AI unavailable: Gemini API key error."
+            : err instanceof Error
+            ? err.message
+            : "Analysis failed due to an unexpected error."
+          log("=== STREAM ERROR ===", errorMessage)
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: "error", message: "Analysis failed due to an unexpected error." })}\n\n`,
+              `data: ${JSON.stringify({ type: "error", message: errorMessage })}\n\n`,
             ),
           )
         } finally {

@@ -12,6 +12,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai"
 
+console.log("PROVIDER FILE LOADED")
+
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
 const SECRET_PATTERN = /(api[_-]?key|secret|token|password|authorization|bearer)/i
@@ -557,6 +559,7 @@ const GROUNDING = `You must analyze ONLY the real data provided in the prompt (Y
 
 /** Deep, structured instrument analysis grounded strictly in the supplied data. */
 export async function generateAnalysis(input: { name: string; horizon: string; context: string }): Promise<Analysis> {
+  console.log("GA_ENTERED:" + input.name)
   const system = `You are Lumora, a trusted, warm market guide who explains stocks like a caring elder brother talking to a family member who has NEVER studied finance and has never heard words like RSI, MACD, EMA, P/E, Fibonacci, momentum, support, resistance, or volatility.
 
 STYLE RULES (apply to every field EXCEPT "proInvestorView"):
@@ -591,7 +594,17 @@ GROUNDING: ${GROUNDING}`
   try {
     const apiKey = process.env.GEMINI_API_KEY?.trim()
     const effectiveModel = process.env.GEMINI_MODEL || "gemini-2.0-flash"
-    console.log("[Provider] generateAnalysis called:", { name: input.name, horizon: input.horizon, contextLength: input.context.length, model: effectiveModel, hasApiKey: !!apiKey })
+    console.log("[Provider] generateAnalysis called:", {
+      name: input.name,
+      horizon: input.horizon,
+      contextLength: input.context.length,
+      model: effectiveModel,
+      modelSource: process.env.GEMINI_MODEL ? "GEMINI_MODEL" : "default",
+      hasApiKey: !!apiKey,
+      keyPreview: apiKey ? apiKey.slice(0, 8) + "********" : "(none)",
+      keySource: "GEMINI_API_KEY",
+      keyLength: apiKey ? apiKey.length : 0,
+    })
 
     const client = getClient()
     const contents = `Analyze the following instrument for a ${input.horizon} trader. Ground every statement in these figures.\n\n${input.context}\n\nRespond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON. The JSON must follow this structure exactly: {\n  "recommendation": "Strong Buy" | "Buy" | "Hold" | "Wait" | "Sell" | "Strong Sell",\n  "recommendationReason": "string",\n  "confidenceScore": 0-100,\n  "confidenceNote": "string",\n  "quickSummary": ["string", "string", "string"],\n  "entry": "string",\n  "target": "string",\n  "stopLoss": "string",\n  "holdingPeriod": "string",\n  "riskReward": "string",\n  "probabilityOfProfit": 0-100,\n  "probabilityOfLoss": 0-100,\n  "probabilityReason": "string",\n  "bestTimeframe": "string",\n  "suitableFor": ["string"],\n  "scenarioBest": "string",\n  "scenarioLikely": "string",\n  "scenarioWorst": "string",\n  "maxDownside": "string",\n  "expectedUpside": "string",\n  "riskRewardNote": "string",\n  "positionVerySafe": "string",\n  "positionModerate": "string",\n  "positionAggressive": "string",\n  "positionNote": "string",\n  "bestHoldingTime": "Intraday" | "1 Week" | "1 Month" | "3 Months" | "Long Term",\n  "holdingReason": "string",\n  "whyBuy": ["string"],\n  "whatCouldGoWrong": ["string"],\n  "support": "string",\n  "supportNote": "string",\n  "resistance": "string",\n  "resistanceNote": "string",\n  "riskLevel": "Low" | "Medium" | "High",\n  "riskNote": "string",\n  "marketMood": "Bullish" | "Bearish" | "Neutral",\n  "marketMoodNote": "string",\n  "beginnerExplanation": "string",\n  "isGoodToday": "string",\n  "biggestRisk": "string",\n  "safestWay": "string",\n  "waitOrBuyNow": "string",\n  "smallBudgetPlan": "string",\n  "largeBudgetPlan": "string",\n  "actionToday": "string",\n  "actionNext3Days": "string",\n  "actionNextWeek": "string",\n  "investmentStyle": "Intraday" | "Swing" | "Positional" | "Long Term",\n  "investmentStyleReason": "string",\n  "dataUsed": ["string"],\n  "aiCannotKnow": ["string"],\n  "whoCanConsider": ["string"],\n  "whoShouldAvoid": ["string"],\n  "worstMistake": "string",\n  "simpleExample": "string",\n  "ownMoneyView": "string",\n  "proInvestorView": "string",\n  "aiVerdict": "string"\n}`
