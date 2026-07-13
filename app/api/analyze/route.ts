@@ -28,9 +28,9 @@ export async function POST(req: Request) {
 
   const accept = req.headers.get("accept") ?? ""
 
-  function tryAnalyze(name: string, context: string) {
+  async function tryAnalyze(name: string, context: string) {
     try {
-      return generateAnalysis({ name, horizon, context })
+      return await generateAnalysis({ name, horizon, context })
     } catch {
       console.warn("[Lumora AI] Gemini unavailable, using fallback analysis")
       return generateFallbackAnalysis({ name, horizon, context })
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "loading", message: `Analyzing ${built.name}…` })}\n\n`))
 
-          const analysis = tryAnalyze(built.name, built.context)
+          const analysis = await tryAnalyze(built.name, built.context)
 
           controller.enqueue(
             encoder.encode(
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unable to load market data for this symbol." }, { status: 404 })
   }
 
-  const analysis = tryAnalyze(built.name, built.context)
+  const analysis = await tryAnalyze(built.name, built.context)
   return NextResponse.json(
     { analysis, meta: { symbol: built.quote.symbol, name: built.name, horizon } },
     { headers: { "Cache-Control": "no-store" } },

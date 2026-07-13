@@ -756,7 +756,7 @@ export function generateFallbackAnalysis(input: {
     const parts = get("Support / Resistance:").split("/")
     return parts.length > 1 ? findNum(parts[1]) : null
   })() : null
-  const trend = get("Trend regime:")
+  const trend = get("Trend regime:").split("(")[0]?.trim() || "neutral"
   const mCap = get("Market cap:")
   const pe = get("Trailing P/E:")
   const eps = get("EPS (TTM):")
@@ -855,7 +855,7 @@ export function generateFallbackAnalysis(input: {
     beginnerExplanation: `${name} is currently trading at ${priceStr}. Think of it like a popular product — when many people want to buy, the price tends to go up. Right now, the trend is ${trend.toLowerCase()}, which means the price has been ${trend.toLowerCase() === "bearish" ? "moving down" : "moving up"} recently. Before investing, consider spreading your purchase over time instead of buying all at once — this reduces the risk of buying at a high point. Remember, all investments carry risk and prices can go down as well as up.`,
     isGoodToday: confidence >= 60 ? `${name} looks reasonably positioned based on current data, but consider waiting for a better entry if you are risk-averse.` : `The setup for ${name} is not yet clear — consider waiting for a better entry point.`,
     biggestRisk: `The biggest risk is that the price could drop below support at ${sl}, which might lead to further declines. No one can predict exactly where the bottom is, so it's important to only invest what you can afford to hold during temporary downturns.`,
-    safestWay: `The safest approach is to buy in smaller amounts over time (like ₹5,000 or $50 every week) instead of all at once — this way you don't risk buying at the highest price.`,
+    safestWay: `The safest approach is to buy in smaller amounts over time (like Rs.5,000 or $50 every week) instead of all at once — this way you don't risk buying at the highest price.`,
     waitOrBuyNow: confidence >= 60 && isBuy(recommendation) ? `You can consider starting a small position now, but keep some cash ready in case the price dips.` : `It's better to wait for a clearer signal — the data isn't pointing strongly in one direction yet.`,
     smallBudgetPlan: `With a small budget, buy a small amount now and add the same amount if the price drops near ${sl}.`,
     largeBudgetPlan: `With a larger budget, spread your purchase across 3-4 smaller buys over the next few weeks to average your entry price.`,
