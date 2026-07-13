@@ -36,14 +36,14 @@ const STATE_LABEL: Record<string, string> = {
 }
 
 function money(n: number | undefined, ccySym: string) {
-  if (n == null) return "—"
+  if (n == null) return "Not Available"
   const formatted = n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   if (ccySym) return `${ccySym}${formatted}`
   return formatted
 }
 
 function bigNum(n?: number) {
-  if (n == null) return "—"
+  if (n == null) return "Not Available"
   if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
@@ -391,31 +391,50 @@ const QuoteHeader = memo(function QuoteHeader({
   )
 })
 
+const NOT_AVAILABLE = "Not Available"
+
+function fieldVal<T>(val: T | null | undefined, fmt?: (v: T) => string): string {
+  if (val == null) return NOT_AVAILABLE
+  return fmt ? fmt(val) : String(val)
+}
+
+function naField<T>(val: T | null | undefined, fmt?: (v: T) => string): string {
+  if (val == null) return NOT_AVAILABLE
+  return fmt ? fmt(val) : String(val)
+}
+
+function notApplicableIf(condition: boolean, val: string | null | undefined): string {
+  if (condition) return val ?? "N/A"
+  return val ?? NOT_AVAILABLE
+}
+
 const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | null; ccySym: string }) {
+  const isIndex = quote?.assetType === "INDEX"
+  const isCrypto = quote?.assetType === "CRYPTOCURRENCY"
   const stats = useMemo(() => [
-    { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : "—" },
+    { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : fieldVal(null) },
     { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"] },
-    { label: "Exchange", value: quote?.exchange || "—" },
+    { label: "Exchange", value: naField(quote?.exchange) },
     { label: "Previous Close", value: money(quote?.previousClose, ccySym) },
     { label: "Open", value: money(quote?.open, ccySym) },
     { label: "Day High", value: money(quote?.dayHigh, ccySym) },
     { label: "Day Low", value: money(quote?.dayLow, ccySym) },
     { label: "Volume", value: bigNum(quote?.volume) },
     { label: "Market Cap", value: bigNum(quote?.marketCap) },
-    { label: "P/E (TTM)", value: quote?.trailingPE != null ? quote.trailingPE.toFixed(2) : "—" },
-    { label: "EPS (TTM)", value: quote?.eps != null ? quote.eps.toFixed(2) : "—" },
-    { label: "Dividend Yield", value: quote?.dividendYield != null ? `${quote.dividendYield.toFixed(2)}%` : "—" },
-    { label: "Beta", value: quote?.beta != null ? quote.beta.toFixed(2) : "—" },
-    { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : "—", span: "md" as const },
+    { label: "P/E (TTM)", value: naField(quote?.trailingPE, (v) => v.toFixed(2)) },
+    { label: "EPS (TTM)", value: naField(quote?.eps, (v) => v.toFixed(2)) },
+    { label: "Dividend Yield", value: naField(quote?.dividendYield, (v) => `${v.toFixed(2)}%`) },
+    { label: "Beta", value: naField(quote?.beta, (v) => v.toFixed(2)) },
+    { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : NOT_AVAILABLE, span: "md" as const },
     { label: "52W High", value: money(quote?.fiftyTwoWeekHigh, ccySym) },
     { label: "52W Low", value: money(quote?.fiftyTwoWeekLow, ccySym) },
-    { label: "Sector", value: quote?.sector || "—" },
-    { label: "Industry", value: quote?.industry || "—" },
-    { label: "CEO", value: quote?.ceo || "—" },
-    { label: "Employees", value: quote?.employees ? quote.employees.toLocaleString() : "—" },
-    { label: "Founded", value: quote?.founded ? String(quote.founded) : "—" },
-    { label: "Updated", value: quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "—", span: "md" as const },
-  ], [quote, ccySym])
+    { label: "Sector", value: notApplicableIf(isIndex, quote?.sector) },
+    { label: "Industry", value: notApplicableIf(isIndex, quote?.industry) },
+    { label: "CEO", value: notApplicableIf(isIndex || isCrypto, quote?.ceo) },
+    { label: "Employees", value: notApplicableIf(isIndex, quote?.employees ? quote.employees.toLocaleString() : null) },
+    { label: "Founded", value: notApplicableIf(isIndex, quote?.founded ? String(quote.founded) : null) },
+    { label: "Updated", value: naField(quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : null), span: "md" as const },
+  ], [quote, ccySym, isIndex, isCrypto])
 
   const spanMap = { sm: "col-span-1", md: "col-span-2", lg: "col-span-3" }
 

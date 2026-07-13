@@ -16,12 +16,16 @@ function fmt(n: number | null | undefined, d = 2) {
   return n == null ? "—" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
+function fmtNA(n: number | null | undefined, d = 2) {
+  return n == null ? "Not Available" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
+}
+
 function isIndianSymbol(s: string) {
   return /\.(NS|BO)$/.test(s) || ["^NSEI", "^NSEBANK", "^BSESN", "NIFTY_FIN_SERVICE.NS", "^NSMIDCP", "^CNXIT"].includes(s)
 }
 
 function bigNum(n: number | undefined | null) {
-  if (n == null) return "—"
+  if (n == null) return "Not Available"
   if (n >= 1e7) return `${(n / 1e7).toFixed(1)}Cr`
   if (n >= 1e5) return `${(n / 1e5).toFixed(1)}L`
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
@@ -161,6 +165,47 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
   }
 
   if (error || (!available && !isLoading)) {
+    if (isIndianSymbol(symbol)) {
+      const providers = [
+        { name: "NSE (Official)", type: "Free", desc: "National Stock Exchange direct feed", url: "https://www.nseindia.com", api: "NSE API" },
+        { name: "Zerodha", type: "Broker", desc: "Kite Connect API — real-time F&O chains", url: "https://kite.trade", api: "Kite Connect" },
+        { name: "Upstox", type: "Broker", desc: "Upstox API — options chain data", url: "https://upstox.com", api: "Upstox API" },
+        { name: "Angel One", type: "Broker", desc: "Angel One SmartAPI — live F&O data", url: "https://www.angelone.in", api: "SmartAPI" },
+        { name: "Fyers", type: "Broker", desc: "Fyers API — options and market feed", url: "https://fyers.in", api: "Fyers API" },
+      ]
+      return (
+        <div className="rounded-[28px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gold/20 text-gold">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-heading text-sm font-medium text-foreground">Indian F&O requires a data provider</h4>
+              <p className="text-xs text-muted-foreground">Yahoo Finance does not provide Indian options data. Connect one of the supported providers below.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {providers.map((p) => (
+              <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
+                className="group relative overflow-hidden rounded-2xl border border-white/20 bg-white/[0.06] p-4 transition-all duration-300 hover:border-white/40 hover:bg-white/[0.12] hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-heading text-sm font-semibold text-foreground group-hover:text-blue transition-colors">{p.name}</div>
+                    <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{p.type}</div>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-blue/15 px-2 py-0.5 text-[9px] font-semibold text-blue">{p.api}</span>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80">{p.desc}</p>
+              </a>
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground/60">
+            After connecting a provider, configure it in your project environment variables and restart the server. The option chain will appear here automatically.
+          </p>
+        </div>
+      )
+    }
     return (
       <div className="rounded-[28px] border border-gold/30 bg-gold/[0.07] p-6 text-center backdrop-blur-sm">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/20">
@@ -168,9 +213,7 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
         </div>
         <h4 className="font-heading text-sm font-medium text-foreground">Options data unavailable</h4>
         <p className="mt-1 text-xs text-muted-foreground">
-          {isIndianSymbol(symbol)
-            ? "Indian F&O data is unavailable from the current data provider. Yahoo Finance does not provide Indian options data. Connect a broker provider (Zerodha, Angel One, etc.) for live F&O chains."
-            : `${symbol} options are not available from the current data provider. Options from Yahoo Finance are available for US equities and ETFs with listed option chains.`}
+          {symbol} options are not available from the current data provider. Options from Yahoo Finance are available for US equities and ETFs with listed option chains.
         </p>
       </div>
     )
@@ -193,9 +236,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Underlying" value={fmt(chain.underlyingPrice)} change={`${chain.underlyingChangePercent >= 0 ? "+" : ""}${chain.underlyingChangePercent.toFixed(2)}%`} positive={chain.underlyingChangePercent >= 0} />
-        <StatCard label="Put/Call Ratio" value={chain.pcr != null ? chain.pcr.toFixed(3) : "—"} />
-        <StatCard label="Max Pain" value={chain.maxPain != null ? fmt(chain.maxPain, 0) : "—"} />
+        <StatCard label="Underlying" value={fmtNA(chain.underlyingPrice)} change={chain.underlyingChangePercent != null ? `${chain.underlyingChangePercent >= 0 ? "+" : ""}${chain.underlyingChangePercent.toFixed(2)}%` : undefined} positive={chain.underlyingChangePercent != null ? chain.underlyingChangePercent >= 0 : undefined} />
+        <StatCard label="Put/Call Ratio" value={chain.pcr != null ? chain.pcr.toFixed(3) : "Not Available"} />
+        <StatCard label="Max Pain" value={chain.maxPain != null ? chain.maxPain.toFixed(0) : "Not Available"} />
         <StatCard label="Total OI" value={bigNum(chain.contracts.reduce((s, c) => s + c.openInterest, 0))} />
         <StatCard label="Provider" value={chain.provider} />
       </div>
