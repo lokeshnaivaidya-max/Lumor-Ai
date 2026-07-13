@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "motion/react"
 import { authClient } from "@/lib/auth-client"
 import { LumoraMark } from "@/components/lumora-mark"
 import { GoogleIcon, YahooIcon, AppleIcon } from "./provider-icons"
-import { Loader2, Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react"
+import { Loader2, Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from "lucide-react"
+import { recordAgreement } from "@/app/actions/agreement"
 
 type Provider = "google" | "yahoo" | "apple"
 
@@ -27,6 +28,8 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -49,6 +52,14 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       return
     }
 
+    if (isSignUp) {
+      if (!agreedToTerms || !agreedToPrivacy) {
+        setError("You must agree to the Terms & Conditions and Privacy Policy to create an account.")
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       if (isSignUp) {
         const result = await authClient.signUp.email({ email, password, name })
@@ -57,6 +68,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           const isDuplicate = (result.error as Record<string, unknown>).status === 409 || String(errMsg).toLowerCase().includes("already exists")
           throw new Error(isDuplicate ? "An account with this email already exists" : String(errMsg))
         }
+        try { await recordAgreement() } catch { /* agreement recorded best-effort */ }
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
       } else {
         const result = await authClient.signIn.email({ email, password })
@@ -200,6 +212,55 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {isSignUp && (
+              <div className="mt-5 flex flex-col gap-3">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={agreedToTerms}
+                    onClick={() => setAgreedToTerms((s) => !s)}
+                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                      agreedToTerms
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-white/20 bg-white/[0.04] hover:border-white/40"
+                    }`}
+                  >
+                    {agreedToTerms && <Check className="h-3 w-3" />}
+                  </button>
+                  <span className="text-xs leading-relaxed text-muted-foreground/80">
+                    I agree to the{" "}
+                    <Link href="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
+                      Terms & Conditions
+                    </Link>{" "}
+                    and understand the financial risk disclaimer.
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-3">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={agreedToPrivacy}
+                    onClick={() => setAgreedToPrivacy((s) => !s)}
+                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                      agreedToPrivacy
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-white/20 bg-white/[0.04] hover:border-white/40"
+                    }`}
+                  >
+                    {agreedToPrivacy && <Check className="h-3 w-3" />}
+                  </button>
+                  <span className="text-xs leading-relaxed text-muted-foreground/80">
+                    I agree to the{" "}
+                    <Link href="/privacy" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
+                      Privacy Policy
+                    </Link>{" "}
+                    and consent to the processing of my personal data as described.
+                  </span>
+                </label>
+              </div>
+            )}
 
             <motion.button
               type="submit"

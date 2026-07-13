@@ -3,8 +3,6 @@ import { buildInstrumentContext } from "@/lib/context"
 import { generateAnalysis, generateFallbackAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
-console.log("ANALYZE ROUTE MODULE LOADED")
-
 export const runtime = "nodejs"
 export const maxDuration = 30
 
@@ -13,7 +11,6 @@ function log(...args: unknown[]) {
 }
 
 export async function POST(req: Request) {
-  console.log("ANALYZE POST HANDLER CALLED")
   log("=== AI ANALYSIS REQUEST ===")
 
   const limit = rateLimit(`analyze:${clientIp(req)}`, 15, 60_000)
@@ -43,7 +40,6 @@ export async function POST(req: Request) {
   log("Accept header:", accept)
 
   async function tryAnalyze(name: string, context: string) {
-    console.log("TRYZ CALLED:", name)
     log("=== TRY GEMINI ===")
     try {
       const analysis = await generateAnalysis({ name, horizon, context })

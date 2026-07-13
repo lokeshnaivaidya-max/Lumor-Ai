@@ -139,3 +139,15 @@ export const chatMessage = pgTable("chat_message", {
   tokens: integer("tokens").notNull().default(0),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
+
+export const userAgreement = pgTable("user_agreement", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  agreedToTerms: boolean("agreed_to_terms").notNull().default(false),
+  agreedToPrivacy: boolean("agreed_to_privacy").notNull().default(false),
+  agreedAt: timestamp("agreed_at").notNull().defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+})

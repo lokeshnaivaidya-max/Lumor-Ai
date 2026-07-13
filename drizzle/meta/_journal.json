@@ -8,6 +8,13 @@
       "when": 1783865375660,
       "tag": "0000_milky_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784050000000,
+      "tag": "0001_legal_agreements",
+      "breakpoints": true
     }
   ]
 }
