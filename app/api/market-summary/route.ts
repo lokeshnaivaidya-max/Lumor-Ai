@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       err instanceof AiBillingError
         ? "Market summary is temporarily unavailable — the Gemini API quota has been exhausted."
         : err instanceof AiConfigError
-          ? "Market summary is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
+          ? "Market summary is not configured. Add an OPENROUTER_API_KEY in Project Settings to enable it."
           : "Market summary is temporarily unavailable — the model provider returned an error."
     console.error("[Lumora AI] Gemini market summary failed", getAiErrorDiagnostic(err))
     return NextResponse.json({ summary: "", movers, region, error: message }, { status: 200 })
