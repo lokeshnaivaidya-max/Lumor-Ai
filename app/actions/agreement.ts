@@ -1,20 +1,22 @@
 "use server"
 
-import { headers } from "next/headers"
 import { db } from "@/lib/db"
-import { userAgreement } from "@/lib/db/schema"
-import { auth } from "@/lib/auth"
+import { user, userAgreement } from "@/lib/db/schema"
+import { eq } from "drizzle-orm"
 
-export async function recordAgreement() {
-  const h = await headers()
-  const session = await auth.api.getSession({ headers: h })
-  if (!session?.user) throw new Error("Unauthorized")
-
+export async function recordAgreement(userId: string) {
   await db.insert(userAgreement).values({
-    userId: session.user.id,
+    userId,
     agreedToTerms: true,
     agreedToPrivacy: true,
-    ipAddress: h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? null,
-    userAgent: h.get("user-agent") ?? null,
   })
+
+  await db.update(user)
+    .set({
+      acceptedTerms: true,
+      acceptedPrivacyPolicy: true,
+      acceptedLegalVersion: "1.0",
+      acceptedAt: new Date(),
+    })
+    .where(eq(user.id, userId))
 }

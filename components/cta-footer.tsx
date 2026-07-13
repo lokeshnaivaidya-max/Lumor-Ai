@@ -17,8 +17,9 @@ const footerLinks = [
   {
     heading: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Contact", href: "mailto:support@lumora.app" },
     ],
   },
 ]
@@ -108,7 +109,6 @@ export function CtaFooter() {
                     key={link.label}
                     href={link.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={link.href === "#" ? (e) => e.preventDefault() : undefined}
                   >
                     {link.label}
                   </Link>

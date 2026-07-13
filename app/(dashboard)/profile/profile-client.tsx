@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Type, Monitor, Moon, Sun, Loader2, Trash2, KeyRound } from "lucide-react"
+import Link from "next/link"
+import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Type, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
 import { useRouter } from "next/navigation"
 
@@ -22,6 +23,7 @@ const TABS = [
   { key: "notifications" as const, label: "Notifications", icon: Bell },
   { key: "appearance" as const, label: "Appearance", icon: Palette },
   { key: "privacy" as const, label: "Privacy", icon: Shield },
+  { key: "legal" as const, label: "Legal", icon: FileText },
 ]
 
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -69,7 +71,7 @@ export function ProfileClient({ user }: {
   }
 }) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<"profile" | "notifications" | "appearance" | "privacy">("profile")
+  const [activeTab, setActiveTab] = useState<"profile" | "notifications" | "appearance" | "privacy" | "legal">("profile")
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -300,6 +302,43 @@ export function ProfileClient({ user }: {
                 <button onClick={handleDelete} disabled={busy} className="premium-btn flex items-center gap-2 bg-neg/15 px-4 py-2.5 text-xs text-neg hover:bg-neg/25 disabled:opacity-60">
                   <Trash2 className="h-3.5 w-3.5" />Delete account
                 </button>
+              </div>
+            </GlowCard>
+          </motion.div>
+        )}
+
+        {activeTab === "legal" && (
+          <motion.div key="legal" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+            <GlowCard>
+              <div className="space-y-4 p-6">
+                <p className="flex items-center gap-1.5 text-sm font-medium"><FileText className="h-4 w-4 text-muted-foreground" />Legal</p>
+                <p className="text-xs text-muted-foreground">
+                  Review the legal agreements that govern your use of Lumora.
+                </p>
+                <div className="space-y-3">
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 transition-colors hover:bg-white/[0.06]"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Terms &amp; Conditions</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">Acceptable use, disclaimers, and legal agreements</p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground/50" />
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 transition-colors hover:bg-white/[0.06]"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Privacy Policy</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">How we collect, use, and protect your data</p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground/50" />
+                  </Link>
+                </div>
               </div>
             </GlowCard>
           </motion.div>

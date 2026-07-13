@@ -28,8 +28,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
+  const [agreedToLegal, setAgreedToLegal] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -53,7 +52,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
     }
 
     if (isSignUp) {
-      if (!agreedToTerms || !agreedToPrivacy) {
+      if (!agreedToLegal) {
         setError("You must agree to the Terms & Conditions and Privacy Policy to create an account.")
         setLoading(false)
         return
@@ -62,13 +61,25 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
     try {
       if (isSignUp) {
-        const result = await authClient.signUp.email({ email, password, name })
+        const result = await (authClient.signUp.email as any)({
+          email,
+          password,
+          name,
+          agreedToLegal: true,
+          acceptedTerms: true,
+          acceptedPrivacyPolicy: true,
+          acceptedLegalVersion: "1.0",
+        })
         if (result.error) {
           const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Could not create account."
           const isDuplicate = (result.error as Record<string, unknown>).status === 409 || String(errMsg).toLowerCase().includes("already exists")
-          throw new Error(isDuplicate ? "An account with this email already exists" : String(errMsg))
+          const isLegal = (result.error as Record<string, unknown>).status === 400
+          throw new Error(isDuplicate ? "An account with this email already exists" : isLegal ? String(errMsg) : String(errMsg))
         }
-        try { await recordAgreement() } catch { /* agreement recorded best-effort */ }
+        const userId = (result.data as any)?.user?.id
+        if (userId) {
+          try { await recordAgreement(userId) } catch { /* best-effort */ }
+        }
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
       } else {
         const result = await authClient.signIn.email({ email, password })
@@ -214,49 +225,32 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
             </AnimatePresence>
 
             {isSignUp && (
-              <div className="mt-5 flex flex-col gap-3">
+              <div className="mt-5">
                 <label className="flex cursor-pointer items-start gap-3">
                   <button
                     type="button"
                     role="checkbox"
-                    aria-checked={agreedToTerms}
-                    onClick={() => setAgreedToTerms((s) => !s)}
+                    aria-checked={agreedToLegal}
+                    onClick={() => setAgreedToLegal((s) => !s)}
+                    disabled={loading}
                     className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-                      agreedToTerms
+                      agreedToLegal
                         ? "border-foreground bg-foreground text-background"
                         : "border-white/20 bg-white/[0.04] hover:border-white/40"
                     }`}
                   >
-                    {agreedToTerms && <Check className="h-3 w-3" />}
+                    {agreedToLegal && <Check className="h-3 w-3" />}
                   </button>
                   <span className="text-xs leading-relaxed text-muted-foreground/80">
-                    I agree to the{" "}
+                    By creating an account, you agree to our{" "}
                     <Link href="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
                       Terms & Conditions
                     </Link>{" "}
-                    and understand the financial risk disclaimer.
-                  </span>
-                </label>
-                <label className="flex cursor-pointer items-start gap-3">
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={agreedToPrivacy}
-                    onClick={() => setAgreedToPrivacy((s) => !s)}
-                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-                      agreedToPrivacy
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-white/20 bg-white/[0.04] hover:border-white/40"
-                    }`}
-                  >
-                    {agreedToPrivacy && <Check className="h-3 w-3" />}
-                  </button>
-                  <span className="text-xs leading-relaxed text-muted-foreground/80">
-                    I agree to the{" "}
+                    and{" "}
                     <Link href="/privacy" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
                       Privacy Policy
-                    </Link>{" "}
-                    and consent to the processing of my personal data as described.
+                    </Link>
+                    .
                   </span>
                 </label>
               </div>
@@ -264,7 +258,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
             <motion.button
               type="submit"
-              disabled={loading || oauthLoading !== null}
+              disabled={loading || oauthLoading !== null || (isSignUp && !agreedToLegal)}
               whileHover={{ scale: loading ? 1 : 1.01 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
               className="relative mt-5 w-full overflow-hidden rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"

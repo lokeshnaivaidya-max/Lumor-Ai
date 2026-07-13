@@ -28,6 +28,11 @@ export const user = pgTable("user", {
   theme: themeEnum("theme").notNull().default("system"),
   bio: text("bio"),
   notificationPrefs: jsonb("notification_prefs"),
+  // Legal consent
+  acceptedTerms: boolean("accepted_terms").notNull().default(false),
+  acceptedPrivacyPolicy: boolean("accepted_privacy_policy").notNull().default(false),
+  acceptedLegalVersion: text("accepted_legal_version").notNull().default("1.0"),
+  acceptedAt: timestamp("accepted_at"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })

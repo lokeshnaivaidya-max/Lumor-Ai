@@ -15,6 +15,13 @@
       "when": 1784050000000,
       "tag": "0001_legal_agreements",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784050000001,
+      "tag": "0002_legal_consent_fields",
+      "breakpoints": true
     }
   ]
 }
