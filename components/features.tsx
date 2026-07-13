@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef, useCallback } from "react"
-import { motion, useMotionValue, useSpring } from "motion/react"
+import { motion } from "motion/react"
 import { BarChart3, Brain, PieChart, Shield, Sparkles, ArrowUpRight } from "lucide-react"
 
 const features = [
@@ -44,31 +43,6 @@ const features = [
 ]
 
 function FeatureCard({ f, i }: { f: (typeof features)[number]; i: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const rawX = useMotionValue(-500)
-  const rawY = useMotionValue(-500)
-  const x = useSpring(rawX, { stiffness: 65, damping: 25, mass: 0.8 })
-  const y = useSpring(rawY, { stiffness: 65, damping: 25, mass: 0.8 })
-
-  const handleMove = useCallback((e: React.MouseEvent) => {
-    const r = ref.current?.getBoundingClientRect()
-    if (r) { rawX.set(e.clientX - r.left); rawY.set(e.clientY - r.top) }
-  }, [rawX, rawY])
-
-  const handleTilt = (e: React.MouseEvent) => {
-    const r = ref.current?.getBoundingClientRect()
-    if (!r) return
-    const px = (e.clientX - r.left) / r.width
-    const py = (e.clientY - r.top) / r.height
-    ref.current?.style.setProperty("--rotateX", `${(py - 0.5) * -6}deg`)
-    ref.current?.style.setProperty("--rotateY", `${(px - 0.5) * 6}deg`)
-  }
-
-  const resetTilt = () => {
-    ref.current?.style.setProperty("--rotateX", "0deg")
-    ref.current?.style.setProperty("--rotateY", "0deg")
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -77,23 +51,10 @@ function FeatureCard({ f, i }: { f: (typeof features)[number]; i: number }) {
       transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
     >
       <motion.div
-        ref={ref}
-        onMouseMove={(e) => { handleMove(e); handleTilt(e) }}
-        onMouseLeave={resetTilt}
         whileHover={{ y: -6, scale: 1.01 }}
         transition={{ type: "spring", stiffness: 200, damping: 15, mass: 0.6 }}
         className="group relative cursor-default overflow-hidden rounded-[28px] border border-white/20 bg-white/15 p-7 backdrop-blur-xl transition-all duration-500 hover:border-white/40 hover:shadow-2xl hover:shadow-black/10"
-        style={{
-          transform: "perspective(800px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg))",
-          transformStyle: "preserve-3d",
-        }}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[28px]">
-          <motion.div
-            className="absolute left-0 top-0 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ x, y, background: `radial-gradient(circle at center, ${f.glow}, transparent 60%)` }}
-          />
-        </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[28px]" />
         <div className="relative" style={{ transform: "translateZ(20px)" }}>
           <motion.div

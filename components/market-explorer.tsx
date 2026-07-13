@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import dynamic from "next/dynamic"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { motion, useMotionValue, useSpring, AnimatePresence } from "motion/react"
+import { motion } from "motion/react"
 import { SymbolSearch } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, type Quote, type Region, type Candle } from "@/lib/market"
@@ -60,45 +60,20 @@ function ChartSkeleton() {
   )
 }
 
-function BentoCard({ children, className = "", spotlight = true }: { children: React.ReactNode; className?: string; spotlight?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const rawX = useMotionValue(-500)
-  const rawY = useMotionValue(-500)
-  const x = useSpring(rawX, { stiffness: 65, damping: 25, mass: 0.8 })
-  const y = useSpring(rawY, { stiffness: 65, damping: 25, mass: 0.8 })
-
-  const handleMove = useCallback((e: React.MouseEvent) => {
-    const r = ref.current?.getBoundingClientRect()
-    if (r) { rawX.set(e.clientX - r.left); rawY.set(e.clientY - r.top) }
-  }, [rawX, rawY])
-
+const BentoCard = memo(function BentoCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.div
-      ref={ref}
-      onMouseMove={spotlight ? handleMove : undefined}
       whileHover={{ y: -3, scale: 1.005 }}
       transition={{ type: "spring", stiffness: 200, damping: 15, mass: 0.6 }}
       className={`group relative overflow-hidden rounded-[32px] border border-white/20 bg-white/20 backdrop-blur-xl transition-all duration-500 hover:border-white/40 hover:shadow-2xl hover:shadow-black/10 ${className}`}
     >
-      {spotlight && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]" aria-hidden>
-          <motion.div
-            className="absolute left-0 top-0 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ x, y, background: "radial-gradient(circle at center, oklch(0.55 0.18 255 / 0.06), transparent 60%)" }}
-          />
-          <motion.div
-            className="absolute left-0 top-0 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ x, y, background: "radial-gradient(circle at center, oklch(0.62 0.16 168 / 0.04), transparent 60%)" }}
-          />
-        </div>
-      )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[32px]" />
       {children}
     </motion.div>
   )
-}
+})
 
-function TickerTape({ quotes }: { quotes: Quote[] }) {
+const TickerTape = memo(function TickerTape({ quotes }: { quotes: Quote[] }) {
   const tickerSymbols = ["^GSPC", "^IXIC", "^DJI", "BTC-USD", "ETH-USD", "GC=F", "CL=F", "INR=X"]
 
   return (
@@ -145,7 +120,7 @@ function TickerTape({ quotes }: { quotes: Quote[] }) {
       </div>
     </div>
   )
-}
+})
 
 export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const [symbol, setSymbol] = useState(initialSymbol)
@@ -160,30 +135,29 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         if (active && d?.region) setRegion(d.region as Region)
       })
       .catch(() => {})
-    return () => {
-      active = false
-    }
+    return () => { active = false }
   }, [])
 
   const { data: quoteData, error: quoteError } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${encodeURIComponent(symbol)}`, fetcher, {
-    refreshInterval: 15000,
+    refreshInterval: 60000,
     keepPreviousData: true,
+    revalidateOnFocus: false,
   })
   const { data: chartData, isLoading: chartLoading, error: chartError } = useSWR<{ candles: Candle[] }>(
     `/api/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`,
     fetcher,
-    { keepPreviousData: true },
+    { keepPreviousData: true, revalidateOnFocus: false },
   )
-  const { data: tickerData, error: tickerError } = useSWR<{ quotes: Quote[] }>(
+  const { data: tickerData } = useSWR<{ quotes: Quote[] }>(
     "/api/quote?symbols=^GSPC,^IXIC,^DJI,BTC-USD,ETH-USD,GC=F,CL=F,INR=X",
     fetcher,
-    { refreshInterval: 30000, keepPreviousData: true },
+    { refreshInterval: 120000, keepPreviousData: true, revalidateOnFocus: false },
   )
 
-  const quote = quoteData?.quotes?.[0] ?? null
+  const quote: Quote | null = useMemo(() => quoteData?.quotes?.[0] ?? null, [quoteData])
   const candles = useMemo(() => chartData?.candles ?? [], [chartData])
-  const positive = (quote?.changePercent ?? 0) >= 0
-  const ccySym = currencySymbol(quote?.currency)
+  const positive = useMemo(() => (quote?.changePercent ?? 0) >= 0, [quote?.changePercent])
+  const ccySym = useMemo(() => currencySymbol(quote?.currency), [quote?.currency])
 
   const indicators = useMemo(() => computeIndicators(candles), [candles])
 
@@ -258,7 +232,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         ))}
       </div>
 
-      <BentoCard className="mt-4 min-h-80" spotlight={false}>
+      <BentoCard className="mt-4 min-h-80">
         {chartError && !candles.length ? (
           <div className="flex h-80 items-center justify-center gap-3 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 shrink-0 text-neg" />
@@ -273,19 +247,19 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           Options Chain
         </h2>
-        <BentoCard spotlight={false} className="!p-0">
+        <BentoCard className="!p-0">
           <OptionChain symbol={symbol} />
         </BentoCard>
       </div>
 
       <div className="mt-6">
-        <BentoCard spotlight={false} className="!p-0">
+        <BentoCard className="!p-0">
           <AiAnalysis symbol={symbol} />
         </BentoCard>
       </div>
 
       <div className="mt-6">
-        <BentoCard spotlight={false} className="!p-0">
+        <BentoCard className="!p-0">
           <NewsPanel symbol={symbol} />
         </BentoCard>
       </div>
@@ -309,7 +283,7 @@ const QuoteHeader = memo(function QuoteHeader({
   positive: boolean
   ccySym: string
 }) {
-  const logoSrc = quote ? logoUrl(quote.symbol, quote.name, quote.website, quote.exchange) : ""
+  const logoSrc = useMemo(() => quote ? logoUrl(quote.symbol, quote.name, quote.website, quote.exchange) : "", [quote?.symbol, quote?.name, quote?.website, quote?.exchange])
 
   return (
     <BentoCard className="relative overflow-hidden p-6 sm:p-8">
@@ -394,52 +368,30 @@ const QuoteHeader = memo(function QuoteHeader({
 })
 
 const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | null; ccySym: string }) {
-  const stats: { label: string; value: string; icon: React.ReactNode; span?: "sm" | "md" | "lg" }[] = [
-    { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : "—", icon: <DollarSign className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"], icon: <Activity className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Exchange", value: quote?.exchange || "—", icon: <Building2 className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Previous Close", value: money(quote?.previousClose, ccySym), icon: <BarChart3 className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Open", value: money(quote?.open, ccySym), icon: <Activity className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Day High", value: money(quote?.dayHigh, ccySym), icon: <TrendingUp className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Day Low", value: money(quote?.dayLow, ccySym), icon: <TrendingDown className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Volume", value: bigNum(quote?.volume), icon: <Layers className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Market Cap", value: bigNum(quote?.marketCap), icon: <Hash className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "P/E (TTM)", value: quote?.trailingPE != null ? quote.trailingPE.toFixed(2) : "—", icon: <Percent className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "EPS (TTM)", value: quote?.eps != null ? quote.eps.toFixed(2) : "—", icon: <BarChart3 className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Dividend Yield", value: quote?.dividendYield != null ? `${quote.dividendYield.toFixed(2)}%` : "—", icon: <Percent className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Beta", value: quote?.beta != null ? quote.beta.toFixed(2) : "—", icon: <Activity className="h-3.5 w-3.5" />, span: "sm" },
-    {
-      label: "52W Range",
-      value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null
-        ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}`
-        : "—",
-      icon: <TrendingUpDown className="h-3.5 w-3.5" />,
-      span: "md",
-    },
-    {
-      label: "52W High",
-      value: money(quote?.fiftyTwoWeekHigh, ccySym),
-      icon: <TrendingUp className="h-3.5 w-3.5" />,
-      span: "sm",
-    },
-    {
-      label: "52W Low",
-      value: money(quote?.fiftyTwoWeekLow, ccySym),
-      icon: <TrendingDown className="h-3.5 w-3.5" />,
-      span: "sm",
-    },
-    { label: "Sector", value: quote?.sector || "—", icon: <Building2 className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Industry", value: quote?.industry || "—", icon: <Layers className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "CEO", value: quote?.ceo || "—", icon: <Building2 className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Employees", value: quote?.employees ? quote.employees.toLocaleString() : "—", icon: <Hash className="h-3.5 w-3.5" />, span: "sm" },
-    { label: "Founded", value: quote?.founded ? String(quote.founded) : "—", icon: <Clock className="h-3.5 w-3.5" />, span: "sm" },
-    {
-      label: "Updated",
-      value: quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "—",
-      icon: <Clock className="h-3.5 w-3.5" />,
-      span: "md",
-    },
-  ]
+  const stats = useMemo(() => [
+    { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : "—" },
+    { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"] },
+    { label: "Exchange", value: quote?.exchange || "—" },
+    { label: "Previous Close", value: money(quote?.previousClose, ccySym) },
+    { label: "Open", value: money(quote?.open, ccySym) },
+    { label: "Day High", value: money(quote?.dayHigh, ccySym) },
+    { label: "Day Low", value: money(quote?.dayLow, ccySym) },
+    { label: "Volume", value: bigNum(quote?.volume) },
+    { label: "Market Cap", value: bigNum(quote?.marketCap) },
+    { label: "P/E (TTM)", value: quote?.trailingPE != null ? quote.trailingPE.toFixed(2) : "—" },
+    { label: "EPS (TTM)", value: quote?.eps != null ? quote.eps.toFixed(2) : "—" },
+    { label: "Dividend Yield", value: quote?.dividendYield != null ? `${quote.dividendYield.toFixed(2)}%` : "—" },
+    { label: "Beta", value: quote?.beta != null ? quote.beta.toFixed(2) : "—" },
+    { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : "—", span: "md" as const },
+    { label: "52W High", value: money(quote?.fiftyTwoWeekHigh, ccySym) },
+    { label: "52W Low", value: money(quote?.fiftyTwoWeekLow, ccySym) },
+    { label: "Sector", value: quote?.sector || "—" },
+    { label: "Industry", value: quote?.industry || "—" },
+    { label: "CEO", value: quote?.ceo || "—" },
+    { label: "Employees", value: quote?.employees ? quote.employees.toLocaleString() : "—" },
+    { label: "Founded", value: quote?.founded ? String(quote.founded) : "—" },
+    { label: "Updated", value: quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "—", span: "md" as const },
+  ], [quote, ccySym])
 
   const spanMap = { sm: "col-span-1", md: "col-span-2", lg: "col-span-3" }
 
@@ -449,14 +401,15 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
         <motion.div
           key={s.label}
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.4, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative group overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl px-4 py-3.5 transition-all duration-300 hover:border-white/40 hover:shadow-xl hover:bg-white/25 ${spanMap[s.span || "sm"]}`}
+          className={`relative group overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl px-4 py-3.5 transition-all duration-300 hover:border-white/40 hover:shadow-xl hover:bg-white/25 ${spanMap[(s as Record<string, unknown>).span as "sm" | "md" | "lg" ?? "sm"]}`}
         >
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-[28px]" />
           <div className="relative">
             <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-              <span className="text-blue/60">{s.icon}</span>
+              <IconFor label={s.label} />
               {s.label}
             </div>
             <div className="mt-1 font-mono text-sm font-semibold text-foreground tabular-nums">{s.value}</div>
@@ -466,3 +419,31 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
     </div>
   )
 })
+
+function IconFor({ label }: { label: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    "Currency": <DollarSign className="h-3.5 w-3.5 text-blue/60" />,
+    "Market Status": <Activity className="h-3.5 w-3.5 text-blue/60" />,
+    "Exchange": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
+    "Previous Close": <BarChart3 className="h-3.5 w-3.5 text-blue/60" />,
+    "Open": <Activity className="h-3.5 w-3.5 text-blue/60" />,
+    "Day High": <TrendingUp className="h-3.5 w-3.5 text-blue/60" />,
+    "Day Low": <TrendingDown className="h-3.5 w-3.5 text-blue/60" />,
+    "Volume": <Layers className="h-3.5 w-3.5 text-blue/60" />,
+    "Market Cap": <Hash className="h-3.5 w-3.5 text-blue/60" />,
+    "P/E (TTM)": <Percent className="h-3.5 w-3.5 text-blue/60" />,
+    "EPS (TTM)": <BarChart3 className="h-3.5 w-3.5 text-blue/60" />,
+    "Dividend Yield": <Percent className="h-3.5 w-3.5 text-blue/60" />,
+    "Beta": <Activity className="h-3.5 w-3.5 text-blue/60" />,
+    "52W Range": <TrendingUpDown className="h-3.5 w-3.5 text-blue/60" />,
+    "52W High": <TrendingUp className="h-3.5 w-3.5 text-blue/60" />,
+    "52W Low": <TrendingDown className="h-3.5 w-3.5 text-blue/60" />,
+    "Sector": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
+    "Industry": <Layers className="h-3.5 w-3.5 text-blue/60" />,
+    "CEO": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
+    "Employees": <Hash className="h-3.5 w-3.5 text-blue/60" />,
+    "Founded": <Clock className="h-3.5 w-3.5 text-blue/60" />,
+    "Updated": <Clock className="h-3.5 w-3.5 text-blue/60" />,
+  }
+  return <>{icons[label] ?? null}</>
+}

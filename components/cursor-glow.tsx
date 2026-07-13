@@ -1,35 +1,44 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { motion, useMotionValue, useSpring } from "motion/react"
+import { useEffect, useRef } from "react"
 
 export function CursorGlow() {
-  const x = useMotionValue(-500)
-  const y = useMotionValue(-500)
-  const gx = useSpring(x, { stiffness: 100, damping: 18, mass: 0.5 })
-  const gy = useSpring(y, { stiffness: 100, damping: 18, mass: 0.5 })
-  const rx = useSpring(x, { stiffness: 450, damping: 28, mass: 0.25 })
-  const ry = useSpring(y, { stiffness: 450, damping: 28, mass: 0.25 })
-  const [enabled, setEnabled] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return
-    setEnabled(true)
-    const move = (e: MouseEvent) => { x.set(e.clientX); y.set(e.clientY) }
-    window.addEventListener("mousemove", move, { passive: true })
-    return () => window.removeEventListener("mousemove", move)
-  }, [x, y])
+    const el = ref.current
+    if (!el) return
 
-  if (!enabled) return null
+    const raf = (cb: () => void) => {
+      let id: number | undefined
+      const loop = () => { id = requestAnimationFrame(loop); cb() }
+      id = requestAnimationFrame(loop)
+      return () => cancelAnimationFrame(id!)
+    }
+
+    let mx = -500
+    let my = -500
+    const update = () => {
+      el!.style.transform = `translate(${mx}px, ${my}px)`
+    }
+    const cleanup = raf(update)
+    const move = (e: MouseEvent) => { mx = e.clientX - 250; my = e.clientY - 250 }
+    window.addEventListener("mousemove", move, { passive: true })
+    return () => {
+      window.removeEventListener("mousemove", move)
+      cleanup()
+    }
+  }, [])
 
   return (
-    <>
-      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-20 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ x: gx, y: gy, background: "radial-gradient(circle, oklch(0.65 0.2 255 / 0.1), oklch(0.6 0.18 275 / 0.05) 40%, transparent 60%)", willChange: "transform" }}
-      />
-      <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-20 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ x: rx, y: ry, willChange: "transform", background: "oklch(0.99 0 0 / 0.04)", border: "1px solid oklch(0.99 0 0 / 0.2)", boxShadow: "0 0 20px oklch(0.65 0.2 255 / 0.15), inset 0 0 20px oklch(0.99 0 0 / 0.05)" }}
-      />
-    </>
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none fixed left-0 top-0 z-20 h-[500px] w-[500px] will-change-transform"
+      style={{
+        background: "radial-gradient(circle at center, oklch(0.65 0.2 255 / 0.1), oklch(0.6 0.18 275 / 0.04) 40%, transparent 60%)",
+      }}
+    />
   )
 }
