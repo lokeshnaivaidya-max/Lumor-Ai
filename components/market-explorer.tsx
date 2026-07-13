@@ -4,7 +4,7 @@ import useSWR from "swr"
 import dynamic from "next/dynamic"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { SymbolSearch } from "@/components/symbol-search"
+import { SymbolSearch, type SearchResult } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
 import { currencySymbol, logoUrl } from "@/lib/utils"
@@ -126,6 +126,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const [symbol, setSymbol] = useState(initialSymbol)
   const [range, setRange] = useState<(typeof RANGES)[number]>("6mo")
   const [region, setRegion] = useState<Region>("US")
+  const [optionParams, setOptionParams] = useState<{ strike?: number; expiry?: string }>({})
 
   useEffect(() => {
     let active = true
@@ -174,7 +175,10 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const indicators = useMemo(() => computeIndicators(candles), [candles])
   const tickerQuotes = useMemo(() => tickerData?.quotes ?? [], [tickerData])
 
-  const handleSelect = useCallback((s: string) => setSymbol(s), [])
+  const handleSelect = useCallback((r: SearchResult) => {
+    setSymbol(r.symbol)
+    setOptionParams({ strike: r.strike, expiry: r.expiry })
+  }, [])
   const handleRegion = useCallback((r: Region) => setRegion(r), [])
 
   const watchlist = REGION_CONFIG[region].watchlist
@@ -207,7 +211,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
             {watchlist.slice(0, 7).map((w) => (
               <button
                 key={w}
-                onClick={() => handleSelect(w)}
+                onClick={() => handleSelect({ symbol: w, name: w, exchange: "", type: "equity" })}
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
                   symbol === w
                     ? "border-accent/50 bg-accent/10 text-accent"
@@ -262,7 +266,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
             Options Chain
           </h2>
           <BentoCard className="!p-0">
-            <OptionChain symbol={symbol} />
+            <OptionChain symbol={symbol} defaultStrike={optionParams.strike} defaultExpiry={optionParams.expiry} />
           </BentoCard>
         </div>
       )}

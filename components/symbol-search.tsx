@@ -4,11 +4,20 @@ import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Search, Loader2, TrendingUp, TrendingDown } from "lucide-react"
 
-type Result = { symbol: string; name: string; exchange: string; type: string }
+export type SearchResult = {
+  symbol: string
+  name: string
+  exchange: string
+  type: string
+  strike?: number
+  optionType?: "CE" | "PE"
+  expiry?: string
+  underlying?: string
+}
 
-export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void }) {
+export function SymbolSearch({ onSelect }: { onSelect: (result: SearchResult) => void }) {
   const [q, setQ] = useState("")
-  const [results, setResults] = useState<Result[]>([])
+  const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [active, setActive] = useState(0)
@@ -45,11 +54,23 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
     return () => document.removeEventListener("mousedown", onClick)
   }, [])
 
-  function choose(r: Result) {
-    onSelect(r.symbol)
+  function choose(r: SearchResult) {
+    onSelect(r)
     setQ("")
     setResults([])
     setOpen(false)
+  }
+
+  function typeColor(t: string): string {
+    switch (t) {
+      case "OPTION": return "bg-violet/10 text-violet"
+      case "FUTURE": case "COMMODITY": return "bg-gold/10 text-gold"
+      case "INDEX": return "bg-blue/10 text-blue"
+      case "EQUITY": return "bg-emerald/10 text-emerald"
+      case "CRYPTO": return "bg-cyan/10 text-cyan"
+      case "FOREX": return "bg-purple/10 text-purple"
+      default: return "bg-white/10 text-muted-foreground"
+    }
   }
 
   return (
@@ -80,7 +101,7 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
             else if (e.key === "ArrowUp") setActive((a) => Math.max(a - 1, 0))
             else if (e.key === "Enter" && results[active]) choose(results[active])
           }}
-          placeholder="Search any stock, ETF, or index worldwide…"
+          placeholder="Search stocks, indices, options, futures, crypto, forex…"
           className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
           aria-label="Search symbols"
         />
@@ -101,7 +122,7 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
             <div className="px-2 py-1">
               {results.map((r, i) => (
                 <motion.button
-                  key={r.symbol}
+                  key={`${r.symbol}-${r.type}-${r.strike ?? ""}-${r.optionType ?? ""}-${i}`}
                   onClick={() => choose(r)}
                   onMouseEnter={() => setActive(i)}
                   initial={{ opacity: 0, x: -8 }}
@@ -113,17 +134,16 @@ export function SymbolSearch({ onSelect }: { onSelect: (symbol: string) => void 
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-foreground">{r.symbol}</span>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
-                        r.type === "INDEX" ? "bg-blue/10 text-blue" :
-                        r.type === "EQUITY" ? "bg-emerald/10 text-emerald" :
-                        r.type === "CRYPTO" ? "bg-gold/10 text-gold" :
-                        "bg-violet/10 text-violet"
-                      }`}>
-                        {r.type}
+                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${typeColor(r.type)}`}>
+                        {r.type === "OPTION" ? `${r.optionType ?? ""}` : r.type}
+                      </span>
+                      <span className="font-mono text-sm font-semibold text-foreground">
+                        {r.type === "OPTION" ? r.name : r.symbol}
                       </span>
                     </div>
-                    <div className="truncate text-xs text-muted-foreground mt-0.5">{r.name}</div>
+                    <div className="truncate text-xs text-muted-foreground mt-0.5">
+                      {r.type === "OPTION" ? `${r.underlying ?? r.symbol} · ${r.exchange}` : r.name}
+                    </div>
                   </div>
                   <span className="shrink-0 rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] text-muted-foreground">
                     {r.exchange || r.type}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import useSWR from "swr"
 import {
@@ -16,6 +16,10 @@ function fmt(n: number | null | undefined, d = 2) {
   return n == null ? "—" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
+function isIndianSymbol(s: string) {
+  return /\.(NS|BO)$/.test(s) || ["^NSEI", "^NSEBANK", "^BSESN", "NIFTY_FIN_SERVICE.NS", "^NSMIDCP", "^CNXIT"].includes(s)
+}
+
 function bigNum(n: number | undefined | null) {
   if (n == null) return "—"
   if (n >= 1e7) return `${(n / 1e7).toFixed(1)}Cr`
@@ -24,13 +28,14 @@ function bigNum(n: number | undefined | null) {
   return n.toLocaleString()
 }
 
-function OptionRow({ contract, atmStrike }: { contract: OptionContract; atmStrike: number }) {
+function OptionRow({ contract, atmStrike, defaultStrike }: { contract: OptionContract; atmStrike: number; defaultStrike?: number }) {
+  const isDefault = defaultStrike !== undefined && Math.abs(contract.strike - defaultStrike) < 0.01
   const isCall = contract.type === "CE"
   const isATM = Math.abs(contract.strike - atmStrike) < 0.01
   const premiumPct = contract.premium > 0 && atmStrike > 0 ? (contract.premium / atmStrike) * 100 : 0
 
   return (
-    <tr className={`border-b border-white/10 transition-colors hover:bg-white/[0.04] ${isATM ? "bg-blue/[0.06]" : ""}`}>
+    <tr data-strike={contract.strike} className={`border-b border-white/10 transition-colors hover:bg-white/[0.04] ${isATM ? "bg-blue/[0.06]" : ""} ${isDefault ? "ring-1 ring-blue/40 bg-blue/[0.08]" : ""}`}>
       <td className="px-3 py-2.5 font-mono text-sm text-foreground tabular-nums">
         {contract.strike.toFixed(0)}
       </td>
@@ -93,7 +98,7 @@ function OIHeatmapBar({ value, max }: { value: number; max: number }) {
   )
 }
 
-export function OptionChain({ symbol }: { symbol: string }) {
+export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: string; defaultStrike?: number; defaultExpiry?: string }) {
   const { data, isLoading, error, mutate } = useSWR(
     `/api/options?symbol=${encodeURIComponent(symbol)}`,
     fetcher,
@@ -101,21 +106,29 @@ export function OptionChain({ symbol }: { symbol: string }) {
   )
   const [expiry, setExpiry] = useState("")
   const [expiries, setExpiries] = useState<string[]>([])
+  const tableRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (data?.data?.expiries) {
       setExpiries(data.data.expiries)
       if (!expiry && data.data.expiries.length > 0) {
-        setExpiry(data.data.expiries[0])
+        setExpiry(defaultExpiry ?? data.data.expiries[0])
       }
     }
-  }, [data, expiry])
+  }, [data, expiry, defaultExpiry])
 
   useEffect(() => {
     if (expiry && expiries.includes(expiry)) {
       mutate(`/api/options?symbol=${encodeURIComponent(symbol)}&expiry=${encodeURIComponent(expiry)}`)
     }
   }, [expiry, symbol, mutate, expiries])
+
+  useEffect(() => {
+    if (defaultStrike && tableRef.current) {
+      const row = tableRef.current.querySelector(`[data-strike="${defaultStrike}"]`)
+      if (row) row.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [defaultStrike, data])
 
   const chain: OptionChainData | null = data?.data ?? null
   const available = data?.available ?? false
@@ -155,8 +168,9 @@ export function OptionChain({ symbol }: { symbol: string }) {
         </div>
         <h4 className="font-heading text-sm font-medium text-foreground">Options data unavailable</h4>
         <p className="mt-1 text-xs text-muted-foreground">
-          {symbol} options are not available from the current data provider. Options from Yahoo Finance are available
-          for US equities and ETFs with listed option chains. For Indian F&O, connect a supported broker provider.
+          {isIndianSymbol(symbol)
+            ? "Indian F&O data is unavailable from the current data provider. Yahoo Finance does not provide Indian options data. Connect a broker provider (Zerodha, Angel One, etc.) for live F&O chains."
+            : `${symbol} options are not available from the current data provider. Options from Yahoo Finance are available for US equities and ETFs with listed option chains.`}
         </p>
       </div>
     )
@@ -207,7 +221,7 @@ export function OptionChain({ symbol }: { symbol: string }) {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[28px] border border-white/20 bg-white/[0.04] backdrop-blur-sm">
+      <div ref={tableRef} className="overflow-x-auto rounded-[28px] border border-white/20 bg-white/[0.04] backdrop-blur-sm">
         <table className="w-full min-w-[800px]">
           <thead>
             <tr className="border-b border-white/20 bg-white/[0.04]">
@@ -234,6 +248,7 @@ export function OptionChain({ symbol }: { symbol: string }) {
                   key={strike}
                   contract={call ?? put!}
                   atmStrike={atmStrike}
+                  defaultStrike={defaultStrike}
                 />
               )
             })}

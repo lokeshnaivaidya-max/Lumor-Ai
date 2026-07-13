@@ -415,7 +415,7 @@ export function TradePlannerClient() {
                   <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     Symbol
                   </label>
-                  <SymbolSearch onSelect={(sym) => setSymbol(sym)} />
+                  <SymbolSearch onSelect={(r) => setSymbol(r.symbol)} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
