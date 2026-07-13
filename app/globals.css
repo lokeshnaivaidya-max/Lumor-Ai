@@ -100,8 +100,8 @@
   --popover: oklch(0.15 0.025 265);
   --popover-foreground: oklch(0.97 0.005 260);
   --muted: oklch(0.18 0.02 265);
-  --muted-foreground: oklch(0.6 0.02 258);
-  --border: oklch(0.28 0.03 262 / 0.5);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --border: oklch(0.35 0.03 262 / 0.5);
   --input: oklch(0.22 0.025 262);
   --ring: oklch(0.62 0.2 255);
   --primary: oklch(0.62 0.2 255);
@@ -127,8 +127,8 @@
     --popover: oklch(0.15 0.025 265);
     --popover-foreground: oklch(0.97 0.005 260);
     --muted: oklch(0.18 0.02 265);
-    --muted-foreground: oklch(0.6 0.02 258);
-    --border: oklch(0.28 0.03 262 / 0.5);
+    --muted-foreground: oklch(0.72 0.02 258);
+    --border: oklch(0.35 0.03 262 / 0.5);
     --input: oklch(0.22 0.025 262);
     --ring: oklch(0.62 0.2 255);
     --primary: oklch(0.62 0.2 255);
@@ -569,7 +569,7 @@
   .table-glass th {
     padding: 0.75rem 1.25rem;
     font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.12em; color: oklch(0.5 0.02 265);
+    letter-spacing: 0.12em; color: var(--muted-foreground);
     text-align: left; white-space: nowrap;
   }
   .table-glass th:first-child { border-top-left-radius: 1rem; }

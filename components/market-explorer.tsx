@@ -6,7 +6,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
 import { SymbolSearch } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
-import { REGION_CONFIG, type Quote, type Region, type Candle } from "@/lib/market"
+import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
 import { currencySymbol, logoUrl } from "@/lib/utils"
 import { TrendingUp, TrendingDown, Clock, Globe, Gauge, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers } from "lucide-react"
 
@@ -256,14 +256,16 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
       <StatsGrid quote={quote} ccySym={ccySym} />
 
-      <div className="mt-6">
-        <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-          Options Chain
-        </h2>
-        <BentoCard className="!p-0">
-          <OptionChain symbol={symbol} />
-        </BentoCard>
-      </div>
+      {(!quote || quote.assetType !== "EQUITY") && (
+        <div className="mt-6">
+          <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Options Chain
+          </h2>
+          <BentoCard className="!p-0">
+            <OptionChain symbol={symbol} />
+          </BentoCard>
+        </div>
+      )}
 
       <div className="mt-6">
         <BentoCard className="!p-0">
@@ -322,12 +324,17 @@ const QuoteHeader = memo(function QuoteHeader({
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
               />
             )}
-            <h1 className="font-heading text-3xl tracking-tight text-foreground">{quote?.symbol ?? symbol}</h1>
-            <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+            <div className="flex flex-col">
+              <h1 className="font-heading text-3xl tracking-tight text-foreground">{quote?.name || displaySymbol(symbol)}</h1>
+              <span className="font-mono text-sm text-muted-foreground/80">
+                {displaySymbol(quote?.symbol ?? symbol)}
+              </span>
+            </div>
+            <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-foreground/80">
               {quote?.exchange || "—"}
             </span>
             {quote?.assetType && (
-              <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+              <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-foreground/80">
                 {quote.assetType === "CRYPTOCURRENCY" ? "CRYPTO" : quote.assetType}
               </span>
             )}

@@ -52,6 +52,14 @@ export function logoUrl(symbol: string, name?: string, website?: string, exchang
   const domainMap: Record<string, string> = {
     aapl: "apple.com",
     msft: "microsoft.com",
+    tcs: "tcs.com",
+    infy: "infosys.com",
+    reliance: "ril.com",
+    hdfcbank: "hdfcbank.com",
+    icicibank: "icicibank.com",
+    sbin: "bank.sbi",
+    wipro: "wipro.com",
+    lt: "larsentoubro.com",
     googl: "google.com",
     goog: "google.com",
     amzn: "amazon.com",
@@ -201,9 +209,22 @@ export function logoUrl(symbol: string, name?: string, website?: string, exchang
     }
   }
 
-  const gen = `https://logo.clearbit.com/${encodeURIComponent(name ?? cleanSymbol)}.com`
-  LOGO_CACHE.set(key, gen)
-  return gen
+  const fallback = initialsLogo(name ?? cleanSymbol)
+  LOGO_CACHE.set(key, fallback)
+  return fallback
+}
+
+// fallback — branded SVG initials
+function initialsLogo(name: string): string {
+  const s = name
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 2) || "?"
+  return `data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 rx=%228%22 fill=%22%23333%22/%3E%3Ctext x=%2220%22 y=%2220%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-family=%22system-ui,sans-serif%22 font-size=%2218%22 font-weight=%22600%22 fill=%22%23fff%22%3E${encodeURIComponent(s)}%3C/text%3E%3C/svg%3E`
 }
 
 const SPARKLINE_CACHE = new Map<string, { values: number[]; change: number; changePercent: number }>()

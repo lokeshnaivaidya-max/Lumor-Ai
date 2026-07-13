@@ -583,7 +583,7 @@ QUALITY RULES:
 - RISK VS REWARD: give maximum likely downside %, expected upside %, and a risk-reward ratio, then explain it in one plain sentence.
 - POSITION SIZE: recommend a percentage of capital for very safe / moderate / aggressive approaches. NEVER recommend more than 30% into a single purchase, and never tell the user to invest everything.
 - HOLDING TIME: choose the single best holding time (Intraday, 1 Week, 1 Month, 3 Months, or Long Term) and explain why.
-- CONFIDENCE RULE: if confidenceScore is below 60, do NOT push a Buy. The recommendation must be "Wait" or "Hold", and waitOrBuyNow, ownMoneyView and aiVerdict must clearly advise waiting for a better/confirmed opportunity.
+- CONFIDENCE SCORE: derive it dynamically from the supplied technical indicators, fundamentals, and news. Every instrument must get a different confidenceScore based on its own data. Never default to 55 or any fixed number. If confidenceScore is below 60, do NOT push a Buy. The recommendation must be "Wait" or "Hold", and waitOrBuyNow, ownMoneyView and aiVerdict must clearly advise waiting for a better/confirmed opportunity.
 - ONE-LINE DECISION: aiVerdict must be a single honest sentence in first person, e.g. "If I were investing today, I would wait for a small price drop before buying."
 - Answer the reader's real questions clearly across the fields: Is it good today? Why? What is the biggest risk? What is the safest way in? Wait or buy now? What to do with a small budget vs a larger budget?
 
@@ -770,18 +770,97 @@ export function generateFallbackAnalysis(input: {
   const isBearishTrend = trend.toLowerCase().includes("bearish")
   const trendUp = ema20 !== null && ema50 !== null && ema20 > ema50
 
-  let recommendation: Recommendation = "Hold"
-  let confidence = 55
-  if (isBullishTrend && rsiSignal === "neutral" && trendUp) {
-    recommendation = trend.toLowerCase().includes("strong") ? "Strong Buy" : "Buy"
-    confidence = 65
-  } else if (isBearishTrend || rsiSignal === "overbought") {
-    recommendation = trend.toLowerCase().includes("strong") ? "Sell" : "Wait"
-    confidence = 55
-  } else if (rsiSignal === "oversold" && trendUp) {
-    recommendation = "Buy"
-    confidence = 60
+  // Dynamic confidence from multiple factors
+  let confidence = 50
+
+  // 1. RSI factor (±8)
+  if (rsiVal !== null) {
+    if (rsiVal >= 40 && rsiVal <= 60) confidence += 4     // balanced zone
+    else if (rsiVal > 70 || rsiVal < 30) confidence -= 4   // extreme zone
+    else if (rsiVal > 60 || rsiVal < 40) confidence += 2   // mild zone
   }
+
+  // 2. Trend alignment (±10)
+  if (isBullishTrend && trendUp) confidence += 8
+  else if (isBearishTrend && !trendUp) confidence += 4
+  else if (isBullishTrend !== isBearishTrend) confidence += 2
+  else confidence -= 4
+
+  // 3. MACD momentum (±5)
+  if (macdHist !== null) {
+    if (macdHist > 0) confidence += 4
+    else if (macdHist < 0) confidence -= 3
+  }
+
+  // 4. ADX trend strength (±5)
+  const adxVal = findNum(get("ADX"))
+  if (adxVal !== null) {
+    if (adxVal >= 25) confidence += 4
+    else if (adxVal >= 20) confidence += 2
+    else if (adxVal < 15) confidence -= 2
+  }
+
+  // 5. EMA alignment with price (±4)
+  if (ema20 !== null && ema50 !== null && ema200 !== null && price > 0) {
+    const aligned = price > ema20 && ema20 > ema50 && ema50 > ema200
+    if (aligned) confidence += 4
+    else if (price < ema20 && ema20 < ema50) confidence -= 3
+  }
+
+  // 6. Volume confirmation (±3)
+  const volStr = get("Volume:")
+  const avgVolStr = get("avg")
+  const vol = findNum(volStr)
+  const avgVol = findNum(avgVolStr)
+  if (vol !== null && avgVol !== null && avgVol > 0) {
+    if (vol > avgVol * 1.5) confidence += 3
+    else if (vol < avgVol * 0.5) confidence -= 2
+  }
+
+  // 7. Beta/volatility (±3)
+  const betaStr = get("Beta:")
+  const betaVal = betaStr !== "n/a" ? findNum(betaStr) : null
+  if (betaVal !== null) {
+    if (betaVal >= 0.8 && betaVal <= 1.3) confidence += 2
+    else if (betaVal > 2) confidence -= 3
+    else if (betaVal < 0.5) confidence -= 1
+  }
+
+  // 8. P/E sanity (±2)
+  const peVal = pe !== "n/a" ? findNum(pe) : null
+  if (peVal !== null) {
+    if (peVal > 0 && peVal <= 25) confidence += 2
+    else if (peVal > 50) confidence -= 2
+  }
+
+  // 9. Market cap stability (±2)
+  const mCapVal = mCap !== "n/a" ? mCap : null
+  if (mCapVal !== null) {
+    const capNum = findNum(mCapVal.replace(/[TBM]/g, (m: string) => ({ T: "e12", B: "e9", M: "e6" })[m] ?? ""))
+    if (capNum !== null) {
+      if (capNum > 10e9) confidence += 2  // large cap
+      else if (capNum < 1e9) confidence -= 1  // small cap
+    }
+  }
+
+  // 10. Dividend stability (±2)
+  const divYield = div !== "n/a" ? findNum(div) : null
+  if (divYield !== null) {
+    if (divYield > 0 && divYield <= 5) confidence += 2
+    else if (divYield > 8) confidence -= 1
+  }
+
+  // Clamp to 0-100
+  confidence = Math.max(10, Math.min(95, confidence))
+
+  // Derive recommendation from confidence
+  let recommendation: Recommendation = "Hold"
+  if (confidence >= 80) recommendation = "Strong Buy"
+  else if (confidence >= 68) recommendation = "Buy"
+  else if (confidence >= 55) recommendation = "Hold"
+  else if (confidence >= 40) recommendation = "Wait"
+  else if (confidence >= 25) recommendation = "Sell"
+  else recommendation = "Strong Sell"
 
   let mood: Bias = "Neutral"
   if (isBullishTrend && rsiSignal !== "overbought") mood = "Bullish"

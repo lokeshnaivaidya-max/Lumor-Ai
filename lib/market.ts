@@ -854,3 +854,8 @@ export function displayName(symbol: string, fallback?: string): string {
   }
   return map[symbol] ?? fallback ?? symbol
 }
+
+// Strip internal suffixes for clean user-facing ticker display
+export function displaySymbol(symbol: string): string {
+  return symbol.replace(/\.NS$|\.BO$|=X|-USD$|\^/g, "")
+}
