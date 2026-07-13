@@ -154,12 +154,25 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
     { refreshInterval: 120000, keepPreviousData: true, revalidateOnFocus: false },
   )
 
-  const quote: Quote | null = useMemo(() => quoteData?.quotes?.[0] ?? null, [quoteData])
+  const rawQuote: Quote | null = quoteData?.quotes?.[0] ?? null
+  const quoteRef = useRef(rawQuote)
+  if (
+    rawQuote?.price !== quoteRef.current?.price ||
+    rawQuote?.change !== quoteRef.current?.change ||
+    rawQuote?.changePercent !== quoteRef.current?.changePercent ||
+    rawQuote?.marketState !== quoteRef.current?.marketState ||
+    rawQuote?.volume !== quoteRef.current?.volume ||
+    rawQuote?.marketCap !== quoteRef.current?.marketCap
+  ) {
+    quoteRef.current = rawQuote
+  }
+  const quote = quoteRef.current
   const candles = useMemo(() => chartData?.candles ?? [], [chartData])
   const positive = useMemo(() => (quote?.changePercent ?? 0) >= 0, [quote?.changePercent])
   const ccySym = useMemo(() => currencySymbol(quote?.currency), [quote?.currency])
 
   const indicators = useMemo(() => computeIndicators(candles), [candles])
+  const tickerQuotes = useMemo(() => tickerData?.quotes ?? [], [tickerData])
 
   const handleSelect = useCallback((s: string) => setSymbol(s), [])
   const handleRegion = useCallback((r: Region) => setRegion(r), [])
@@ -169,7 +182,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-32">
       <div className="mb-6">
-        <TickerTape quotes={tickerData?.quotes ?? []} />
+        <TickerTape quotes={tickerQuotes} />
       </div>
 
       <div className="flex flex-col items-start gap-4 pb-6 pt-4">
