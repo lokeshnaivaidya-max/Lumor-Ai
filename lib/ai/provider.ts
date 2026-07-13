@@ -174,10 +174,15 @@ export function getAiErrorDiagnostic(err: unknown): Record<string, unknown> {
 function classify(err: unknown): Error {
   const msg = err instanceof Error ? err.message : String(err)
   const diagnostic = JSON.stringify(getAiErrorDiagnostic(err))
-  if (/quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(`${msg} ${diagnostic}`)) {
+  const combined = `${msg} ${diagnostic}`
+  console.log("[classify] combined string:", combined.slice(0, 500))
+  const matchQuota = /quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(combined)
+  const matchConfig = /api[_-]?key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID|not.configured/i.test(combined)
+  console.log("[classify] matchQuota:", matchQuota, "matchConfig:", matchConfig)
+  if (matchQuota) {
     return new AiBillingError(msg, { cause: err })
   }
-  if (/API key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID/i.test(`${msg} ${diagnostic}`)) {
+  if (matchConfig) {
     return new AiConfigError(msg, { cause: err })
   }
   return err instanceof Error ? err : new Error(msg, { cause: err })
