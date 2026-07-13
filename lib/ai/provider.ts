@@ -183,11 +183,6 @@ function classify(err: unknown): Error {
   }
   return err instanceof Error ? err : new Error(msg, { cause: err })
 }
-  if (matchConfig) {
-    return new AiConfigError(msg, { cause: err })
-  }
-  return err instanceof Error ? err : new Error(msg, { cause: err })
-}
 
 function parseJsonResponse<T>(text: string | undefined, operation: string): T {
   const value = text?.trim()
