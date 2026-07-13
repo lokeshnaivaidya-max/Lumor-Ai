@@ -175,10 +175,11 @@ function classify(err: unknown): Error {
   const msg = err instanceof Error ? err.message : String(err)
   const diagnostic = JSON.stringify(getAiErrorDiagnostic(err))
   const combined = `${msg} ${diagnostic}`
-  console.log("[classify] combined string:", combined.slice(0, 500))
-  const matchQuota = /quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.test(combined)
-  const matchConfig = /api[_-]?key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID|not.configured/i.test(combined)
-  console.log("[classify] matchQuota:", matchQuota, "matchConfig:", matchConfig)
+  const matchQuota = /quota|billing|payment|exceeded|RESOURCE_EXHAUSTED|429/i.exec(combined)
+  const matchConfig = /api[_-]?key|permission|unauthenticated|unauthorized|403|401|API_KEY_INVALID|not.configured/i.exec(combined)
+  console.log("[classify] combined full:", combined)
+  console.log("[classify] matchQuota:", matchQuota?.[0], "at index", matchQuota?.index)
+  console.log("[classify] matchConfig:", matchConfig?.[0], "at index", matchConfig?.index)
   if (matchQuota) {
     return new AiBillingError(msg, { cause: err })
   }
