@@ -119,7 +119,7 @@ export async function getNews(symbol: string, count = 10): Promise<NewsItem[]> {
       return false
     })
 
-    return filtered.slice(0, count).length > 0 ? filtered.slice(0, count) : raw.slice(0, count)
+    return filtered.length > 0 ? filtered.slice(0, count) : []
   } catch {
     return []
   }

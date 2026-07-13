@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
-import { generateAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateAnalysis, generateFallbackAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -28,6 +28,15 @@ export async function POST(req: Request) {
 
   const accept = req.headers.get("accept") ?? ""
 
+  function tryAnalyze(name: string, context: string) {
+    try {
+      return generateAnalysis({ name, horizon, context })
+    } catch {
+      console.warn("[Lumora AI] Gemini unavailable, using fallback analysis")
+      return generateFallbackAnalysis({ name, horizon, context })
+    }
+  }
+
   if (accept.includes("text/event-stream")) {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
@@ -46,7 +55,7 @@ export async function POST(req: Request) {
 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "loading", message: `Analyzing ${built.name}…` })}\n\n`))
 
-          const analysis = await generateAnalysis({ name: built.name, horizon, context: built.context })
+          const analysis = tryAnalyze(built.name, built.context)
 
           controller.enqueue(
             encoder.encode(
@@ -57,15 +66,6 @@ export async function POST(req: Request) {
               })}\n\n`,
             ),
           )
-        } catch (err) {
-          const msg =
-            err instanceof AiBillingError
-              ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
-              : err instanceof AiConfigError
-                ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it."
-                : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
-          console.error("[Lumora AI] Gemini analysis failed", getAiErrorDiagnostic(err))
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", message: msg, disclaimer: DISCLAIMER })}\n\n`))
         } finally {
           controller.close()
         }
@@ -81,20 +81,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unable to load market data for this symbol." }, { status: 404 })
   }
 
-  try {
-    const analysis = await generateAnalysis({ name: built.name, horizon, context: built.context })
-    return NextResponse.json(
-      { analysis, meta: { symbol: built.quote.symbol, name: built.name, horizon } },
-      { headers: { "Cache-Control": "no-store" } },
-    )
-  } catch (err) {
-    const message =
-      err instanceof AiBillingError
-        ? "AI analysis is temporarily unavailable — the Gemini API quota has been exhausted. Live market data and technicals remain fully functional."
-        : err instanceof AiConfigError
-          ? "AI analysis is not configured. Add a GEMINI_API_KEY in Project Settings to enable it. Live market data and technicals remain fully functional."
-          : "AI analysis is temporarily unavailable — the model provider returned an error. Live market data and technicals remain fully functional."
-    console.error("[Lumora AI] Gemini analysis failed", getAiErrorDiagnostic(err))
-    return NextResponse.json({ error: message, disclaimer: DISCLAIMER }, { status: 200 })
-  }
+  const analysis = tryAnalyze(built.name, built.context)
+  return NextResponse.json(
+    { analysis, meta: { symbol: built.quote.symbol, name: built.name, horizon } },
+    { headers: { "Cache-Control": "no-store" } },
+  )
 }

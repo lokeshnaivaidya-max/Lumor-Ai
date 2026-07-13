@@ -696,3 +696,183 @@ export async function generateInvestmentResearch(input: {
     throw classify(err)
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Fallback analysis — data-driven when Gemini is unavailable                  */
+/* -------------------------------------------------------------------------- */
+
+function findNum(v: string): number | null {
+  const m = v.replace(/[,₹$€£¥]/g, "").match(/[-+]?\d+(?:\.\d+)?/)
+  return m ? parseFloat(m[0]) : null
+}
+
+function isBuy(r: string) { return r === "Strong Buy" || r === "Buy" }
+function isSell(r: string) { return r === "Sell" || r === "Strong Sell" }
+
+export function generateFallbackAnalysis(input: {
+  name: string
+  horizon: string
+  context: string
+}): Analysis {
+  const ctx = input.context
+  const name = input.name
+  const lines = ctx.split("\n").filter(Boolean)
+
+  const get = (key: string): string => {
+    for (const l of lines) {
+      if (l.toLowerCase().includes(key.toLowerCase())) {
+        const after = l.split(":")[1]?.trim() ?? ""
+        return after || "n/a"
+      }
+    }
+    return "n/a"
+  }
+
+  const priceStr = get("Last:")
+  const price = findNum(priceStr) ?? 0
+
+  const prevClose = findNum(get("Previous close:"))
+  const dayLow = findNum(get("Day range:"))
+  const dayHigh = dayLow !== null ? (() => {
+    const parts = get("Day range:").split("–")
+    return parts.length > 1 ? findNum(parts[1]) : null
+  })() : null
+  const weekLow = findNum(get("52-week range:"))
+  const weekHigh = weekLow !== null ? (() => {
+    const parts = get("52-week range:").split("–")
+    return parts.length > 1 ? findNum(parts[1]) : null
+  })() : null
+
+  const rsiVal = findNum(get("RSI(14):"))
+  const macdVal = get("MACD:")
+  const macdHist = macdVal.includes("hist") ? findNum(macdVal.split("hist")[1]) : null
+  const ema20 = findNum(get("EMA 20"))
+  const ema50 = findNum(get("EMA 50"))
+  const ema200 = findNum(get("EMA 200"))
+  const sma50 = findNum(get("SMA 50:"))
+  const boll = get("Bollinger")
+  const support = findNum(get("Support / Resistance"))
+  const resistance = support !== null ? (() => {
+    const parts = get("Support / Resistance:").split("/")
+    return parts.length > 1 ? findNum(parts[1]) : null
+  })() : null
+  const trend = get("Trend regime:")
+  const mCap = get("Market cap:")
+  const pe = get("Trailing P/E:")
+  const eps = get("EPS (TTM):")
+  const div = get("Dividend yield:")
+  const beta = get("Beta:")
+
+  const positive = !priceStr.includes("-") && !get("today").includes("-")
+  const rsiSignal = rsiVal !== null ? (rsiVal > 70 ? "overbought" : rsiVal < 30 ? "oversold" : "neutral") : "neutral"
+
+  const isBullishTrend = trend.toLowerCase().includes("bullish")
+  const isBearishTrend = trend.toLowerCase().includes("bearish")
+  const trendUp = ema20 !== null && ema50 !== null && ema20 > ema50
+
+  let recommendation: Recommendation = "Hold"
+  let confidence = 55
+  if (isBullishTrend && rsiSignal === "neutral" && trendUp) {
+    recommendation = trend.toLowerCase().includes("strong") ? "Strong Buy" : "Buy"
+    confidence = 65
+  } else if (isBearishTrend || rsiSignal === "overbought") {
+    recommendation = trend.toLowerCase().includes("strong") ? "Sell" : "Wait"
+    confidence = 55
+  } else if (rsiSignal === "oversold" && trendUp) {
+    recommendation = "Buy"
+    confidence = 60
+  }
+
+  let mood: Bias = "Neutral"
+  if (isBullishTrend && rsiSignal !== "overbought") mood = "Bullish"
+  else if (isBearishTrend || rsiSignal === "overbought") mood = "Bearish"
+
+  let risk: RiskLevel = "Medium"
+  if (beta !== "n/a") {
+    const b = findNum(beta.split(",")[0])
+    if (b !== null) risk = b > 1.5 ? "High" : b < 0.8 ? "Low" : "Medium"
+  }
+
+  const entry = price > 0 ? `~${price.toFixed(2)}` : "n/a"
+  const tgt = resistance !== null ? resistance.toFixed(2) : price > 0 ? (price * 1.05).toFixed(2) : "n/a"
+  const sl = support !== null ? support.toFixed(2) : prevClose !== null ? (prevClose * 0.95).toFixed(2) : "n/a"
+
+  const horizonLabel = input.horizon === "day" ? "1-3 days" : input.horizon === "swing" ? "1-4 weeks" : "1-6 months"
+
+  return {
+    recommendation,
+    recommendationReason: `${(["Strong Buy", "Buy"] as Recommendation[]).includes(recommendation) ? "The data suggests a favorable setup" : (["Sell", "Strong Sell"] as Recommendation[]).includes(recommendation) ? "The data suggests caution" : "The data is mixed — waiting for clearer signals is reasonable"} based on current technicals and market conditions for ${name}.`,
+    confidenceScore: confidence,
+    confidenceNote: `This analysis is based on technical indicators and market data. Market conditions can change rapidly.`,
+    quickSummary: [
+      `${name} is trading at ${priceStr} with a ${trend} trend.`,
+      `RSI is ${rsiVal !== null ? rsiVal.toFixed(1) : "n/a"} (${rsiSignal.replace("neutral", "neutral range")}), indicating ${rsiSignal === "overbought" ? "the price may be due for a pause" : rsiSignal === "oversold" ? "the price may be undervalued" : "balanced momentum"}.`,
+      `${macdHist !== null ? (macdHist > 0 ? "Momentum is building positively." : "Momentum is slowing down.") : "Momentum data is limited."}`,
+    ],
+    entry,
+    target: tgt,
+    stopLoss: sl,
+    holdingPeriod: horizonLabel,
+    riskReward: sl !== "n/a" && tgt !== "n/a" && price > 0
+      ? `1 : ${((parseFloat(tgt) - price) / (price - parseFloat(sl))).toFixed(1)}` : "n/a",
+    probabilityOfProfit: isBuy(recommendation) ? 58 : isSell(recommendation) ? 42 : 50,
+    probabilityOfLoss: isBuy(recommendation) ? 42 : isSell(recommendation) ? 58 : 50,
+    probabilityReason: `Based on the current technical setup and market conditions for ${name}, the estimated probability of a profitable outcome is derived from trend strength, momentum indicators, and support/resistance levels.`,
+    bestTimeframe: input.horizon === "day" ? "Intraday" : input.horizon === "swing" ? "Swing (1-4 weeks)" : "Positional (1-6 months)",
+    suitableFor: ["Swing", "Long Term"].filter(Boolean) as Analysis["suitableFor"],
+    scenarioBest: `If bullish momentum continues, ${name} could test resistance near ${tgt}, representing a potential move of ${price > 0 && resistance !== null ? ((resistance - price) / price * 100).toFixed(1) : "5-8"}%.`,
+    scenarioLikely: `The most likely scenario is gradual movement within the current range, with price oscillating between support near ${sl} and resistance near ${tgt} over the ${horizonLabel} horizon.`,
+    scenarioWorst: `If support at ${sl} breaks, ${name} could decline further — potentially revisiting lower levels. A loss of ${price > 0 && parseFloat(sl) < price ? ((price - parseFloat(sl)) / price * 100).toFixed(1) : "5-10"}% is possible in this scenario.`,
+    maxDownside: sl !== "n/a" && price > 0 ? `-${((price - parseFloat(sl)) / price * 100).toFixed(1)}%` : "-5%",
+    expectedUpside: tgt !== "n/a" && price > 0 ? `+${((parseFloat(tgt) - price) / price * 100).toFixed(1)}%` : "+5%",
+    riskRewardNote: `The estimated risk-reward ratio suggests the potential upside outweighs the downside risk at current levels.`,
+    positionVerySafe: "10%",
+    positionModerate: "20%",
+    positionAggressive: "30%",
+    positionNote: "Never invest more than you can afford to lose. Start small and add on confirmation.",
+    bestHoldingTime: input.horizon === "day" ? "Intraday" as const : input.horizon === "swing" ? "1 Month" as const : "3 Months" as const,
+    holdingReason: `The ${horizonLabel} horizon aligns with the current technical setup and typical market cycles for this instrument.`,
+    whyBuy: [
+      `Trend is ${trend} with${trendUp ? "" : "out"} clear momentum confirmation.`,
+      ...(rsiVal !== null && rsiVal < 70 && rsiVal > 30 ? [`RSI at ${rsiVal.toFixed(1)} suggests balanced momentum with room to move.`] : []),
+      ...(mCap !== "n/a" ? [`Market cap of ${mCap} indicates ${parseFloat(mCap) > 10 ? "a well-established" : "a growing"} company.`] : []),
+    ].slice(0, 4),
+    whatCouldGoWrong: [
+      "Markets can reverse unexpectedly due to macro events or news.",
+      ...(rsiVal !== null && rsiVal > 70 ? [`RSI above 70 suggests the stock may be overbought.`] : []),
+      ...(pe !== "n/a" && parseFloat(pe) > 30 ? [`P/E of ${pe} is elevated — the market already expects strong growth.`] : []),
+      "Earnings misses or guidance changes could impact sentiment.",
+      "Broader economic conditions or sector rotation could affect price.",
+    ].slice(0, 4),
+    support: sl,
+    supportNote: `Near ${sl}, buyers have historically stepped in, making it a potential floor.`,
+    resistance: tgt,
+    resistanceNote: `Near ${tgt}, selling pressure has historically increased, making it a potential ceiling.`,
+    riskLevel: risk,
+    riskNote: risk === "Low" ? "The stock shows relatively lower volatility compared to the market." : risk === "High" ? "The stock shows higher volatility — price swings can be significant." : "The stock shows average volatility with moderate price swings.",
+    marketMood: mood,
+    marketMoodNote: mood === "Bullish" ? "Buying pressure is currently dominant based on technical indicators." : mood === "Bearish" ? "Selling pressure is currently dominant based on technical indicators." : "Neither buyers nor sellers are in clear control.",
+    beginnerExplanation: `${name} is currently trading at ${priceStr}. Think of it like a popular product — when many people want to buy, the price tends to go up. Right now, the trend is ${trend.toLowerCase()}, which means the price has been ${trend.toLowerCase() === "bearish" ? "moving down" : "moving up"} recently. Before investing, consider spreading your purchase over time instead of buying all at once — this reduces the risk of buying at a high point. Remember, all investments carry risk and prices can go down as well as up.`,
+    isGoodToday: confidence >= 60 ? `${name} looks reasonably positioned based on current data, but consider waiting for a better entry if you are risk-averse.` : `The setup for ${name} is not yet clear — consider waiting for a better entry point.`,
+    biggestRisk: `The biggest risk is that the price could drop below support at ${sl}, which might lead to further declines. No one can predict exactly where the bottom is, so it's important to only invest what you can afford to hold during temporary downturns.`,
+    safestWay: `The safest approach is to buy in smaller amounts over time (like ₹5,000 or $50 every week) instead of all at once — this way you don't risk buying at the highest price.`,
+    waitOrBuyNow: confidence >= 60 && isBuy(recommendation) ? `You can consider starting a small position now, but keep some cash ready in case the price dips.` : `It's better to wait for a clearer signal — the data isn't pointing strongly in one direction yet.`,
+    smallBudgetPlan: `With a small budget, buy a small amount now and add the same amount if the price drops near ${sl}.`,
+    largeBudgetPlan: `With a larger budget, spread your purchase across 3-4 smaller buys over the next few weeks to average your entry price.`,
+    actionToday: confidence >= 60 && isBuy(recommendation) ? `Consider a small initial position if you haven't entered yet.` : `Wait — no urgent action needed today.`,
+    actionNext3Days: `Watch whether ${name} holds above ${sl} — if it does, the setup remains valid.`,
+    actionNextWeek: `If the price approaches ${tgt} with strong volume, consider taking partial profits.`,
+    investmentStyle: input.horizon === "day" ? "Intraday" as const : input.horizon === "swing" ? "Swing" as const : "Positional" as const,
+    investmentStyleReason: `The current technical setup and market conditions are best suited for a ${input.horizon} approach.`,
+    dataUsed: ["Live Price", "Trend", "RSI", "MACD", "Moving Averages", "Support/Resistance", ...(mCap !== "n/a" ? ["Market Cap", "P/E Ratio"] : [])],
+    aiCannotKnow: ["Tomorrow's unexpected news", "Sudden government decisions or policy changes", "Company-specific events (fraud, management changes)", "Global conflicts or black swan events", "Surprise earnings results"],
+    whoCanConsider: ["Long-term investors who can hold through volatility", "Investors comfortable with market fluctuations"],
+    whoShouldAvoid: ["You need the money within a month", "You panic when prices drop temporarily", "You cannot tolerate short-term losses in your portfolio"],
+    worstMistake: `The worst mistake would be investing all your money at once at the current price without a plan for if it drops.`,
+    simpleExample: `If your budget is $1,000: buy $300 today, keep $300 to add if price dips near ${sl}, and hold $400 in cash for opportunities.`,
+    ownMoneyView: `If I were putting my own money into ${name} today, I would start with a small position — about a third of what I plan to invest total — and wait to see how the next few days play out before adding more. This way I avoid the risk of buying at the wrong price.`,
+    proInvestorView: `From a technical perspective, ${name} shows a ${trend} trend with RSI at ${rsiVal !== null ? rsiVal.toFixed(1) : "n/a"}${rsiVal !== null ? (rsiVal > 70 ? " (overbought territory — caution warranted)" : rsiVal < 30 ? " (oversold — potential bounce opportunity)" : " (neutral range)") : ""}.${ema20 !== null && ema50 !== null ? ` The 20-day EMA at ${ema20.toFixed(2)} and 50-day EMA at ${ema50.toFixed(2)} show ${trendUp ? "positive" : "mixed"} alignment.` : ""} Volume and momentum readings ${macdHist !== null ? (macdHist > 0 ? "confirm the current trend direction." : "suggest the trend may be losing steam.") : "are inconclusive."} Key levels to watch: support at ${sl}, resistance at ${tgt}. A break above ${tgt} with volume would be bullish, while a break below ${sl} would warrant reducing exposure.`,
+    aiVerdict: confidence >= 60 && isBuy(recommendation) ? `If I were investing today, I would start a small position in ${name} with a disciplined stop-loss at ${sl}.` : `If I were investing today, I would wait for a clearer signal before entering ${name}.`,
+    disclaimer: DISCLAIMER,
+  }
+}

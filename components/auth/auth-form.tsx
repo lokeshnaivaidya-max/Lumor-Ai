@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { authClient } from "@/lib/auth-client"
 import { LumoraMark } from "@/components/lumora-mark"
 import { GoogleIcon, YahooIcon, AppleIcon } from "./provider-icons"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+import { Loader2, Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react"
 
 type Provider = "google" | "yahoo" | "apple"
 
@@ -27,12 +27,12 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null)
   const [error, setError] = useState<string | null>(null)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    // Client-side validation
     if (isSignUp && name.trim().length < 2) {
       setError("Name must be at least 2 characters")
       setLoading(false)
@@ -52,29 +52,23 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
     try {
       if (isSignUp) {
         const result = await authClient.signUp.email({ email, password, name })
-
         if (result.error) {
-          const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Could not create account. Please try again."
+          const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Could not create account."
           const isDuplicate = (result.error as Record<string, unknown>).status === 409 || String(errMsg).toLowerCase().includes("already exists")
           throw new Error(isDuplicate ? "An account with this email already exists" : String(errMsg))
         }
-
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
       } else {
         const result = await authClient.signIn.email({ email, password })
-
         if (result.error) {
           const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Invalid email or password"
           throw new Error(String(errMsg))
         }
-
         router.push("/dashboard")
         router.refresh()
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong"
-      console.error("[AUTH] Error:", message, err)
-      setError(message)
+      setError(err instanceof Error ? err.message : "Something went wrong")
       setLoading(false)
     }
   }
@@ -92,177 +86,154 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.97 }}
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="glass-card edge-light relative w-full max-w-md overflow-hidden rounded-[32px] p-8 sm:p-10 shadow-2xl"
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full max-w-sm"
     >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.03] via-transparent to-violet/[0.03]" />
-      <div
-        className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full blur-[100px]"
-        style={{ background: "oklch(0.55 0.18 255 / 0.08)" }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full blur-[100px]"
-        style={{ background: "oklch(0.62 0.16 168 / 0.06)" }}
-      />
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.04] via-transparent to-violet/[0.04]" />
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.55 0.18 255 / 0.08)" }} />
 
-      <div className="relative">
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-8">
             <motion.span whileHover={{ rotate: 90, scale: 1.05 }} transition={{ type: "spring", stiffness: 300, damping: 18 }}>
-              <LumoraMark className="h-8 w-8" />
+              <LumoraMark className="h-7 w-7" />
             </motion.span>
-            <span className="font-heading text-lg font-semibold tracking-tight">Lumora</span>
-          </Link>
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-8 font-heading text-2xl font-medium tracking-tight text-foreground"
-        >
-          {isSignUp ? "Create your account" : "Welcome back"}
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          className="mt-2 text-sm text-muted-foreground"
-        >
-          {isSignUp
-            ? "Start tracking global markets with AI-grade intelligence."
-            : "Sign in to your Lumora terminal and portfolio."}
-        </motion.p>
-
-        {enabledProviders.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 flex flex-col gap-2.5"
-          >
-            {enabledProviders.map((p) => {
-              const { label, Icon } = PROVIDER_META[p]
-              return (
-                <motion.button
-                  key={p}
-                  type="button"
-                  onClick={() => handleOAuth(p)}
-                  disabled={oauthLoading !== null || loading}
-                  whileHover={{ scale: 1.01, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="glass-card flex items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-medium text-foreground transition-all disabled:opacity-60"
-                >
-                  {oauthLoading === p ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
-                  {label}
-                </motion.button>
-              )
-            })}
-          </motion.div>
-        )}
-
-        {enabledProviders.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="my-6 flex items-center gap-4"
-          >
-            <span className="h-px flex-1 bg-border" />
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground">or with email</span>
-            <span className="h-px flex-1 bg-border" />
-          </motion.div>
-        )}
-
-        <motion.form
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onSubmit={handleSubmit}
-          className={enabledProviders.length > 0 ? "" : "mt-8"}
-        >
-          <div className="flex flex-col gap-4">
-            {isSignUp && (
-              <Field label="Full name">
-                <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="premium-input" autoComplete="name" />
-              </Field>
-            )}
-            <Field label="Email">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="premium-input" autoComplete="email" />
-            </Field>
-            <Field label="Password">
-              <div className="relative">
-                <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="premium-input pr-11" autoComplete={isSignUp ? "new-password" : "current-password"} />
-                <motion.button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </motion.button>
-              </div>
-            </Field>
+            <span className="font-heading text-base font-semibold tracking-tight text-foreground">Lumora</span>
           </div>
 
-          {!isSignUp && (
-            <div className="mt-2 flex justify-end">
-              <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground">
-                Forgot password?
-              </Link>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            {isSignUp ? "Create your account" : "Welcome back"}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {isSignUp
+              ? "Start tracking global markets with AI-grade intelligence."
+              : "Sign in to your Lumora terminal and portfolio."}
+          </p>
+
+          {enabledProviders.length > 0 && (
+            <div className="mt-6 flex flex-col gap-2">
+              {enabledProviders.map((p) => {
+                const { label, Icon } = PROVIDER_META[p]
+                return (
+                  <motion.button
+                    key={p}
+                    type="button"
+                    onClick={() => handleOAuth(p)}
+                    disabled={oauthLoading !== null || loading}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50"
+                  >
+                    {oauthLoading === p ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+                    {label}
+                  </motion.button>
+                )
+              })}
             </div>
           )}
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-            >
-              {error}
-            </motion.p>
+          {enabledProviders.length > 0 && (
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-[#0a0a0f] px-3 text-[11px] uppercase tracking-widest text-muted-foreground">or</span>
+              </div>
+            </div>
           )}
 
-          <motion.button
-            type="submit"
-            disabled={loading || oauthLoading !== null}
-            whileHover={{ scale: loading ? 1 : 1.01 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
-            className="premium-btn premium-btn-primary mt-6 w-full py-3"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSignUp ? "Create account" : "Sign in"}
-          </motion.button>
-        </motion.form>
+          <form onSubmit={handleSubmit} className={enabledProviders.length > 0 ? "" : "mt-6"}>
+            <div className="flex flex-col gap-4">
+              {isSignUp && (
+                <Field label="Full name" icon={<User className="h-3.5 w-3.5" />}>
+                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="auth-input" autoComplete="name" />
+                </Field>
+              )}
+              <Field label="Email" icon={<Mail className="h-3.5 w-3.5" />}>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" autoComplete="email" />
+              </Field>
+              <Field label="Password" icon={<Lock className="h-3.5 w-3.5" />}>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    className="auth-input pr-10"
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors hover:text-foreground p-1"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </Field>
+            </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6 text-center text-sm text-muted-foreground"
-        >
-          {isSignUp ? "Already have an account? " : "New to Lumora? "}
-          <Link href={isSignUp ? "/sign-in" : "/sign-up"} className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
-            {isSignUp ? "Sign in" : "Create one"}
-          </Link>
-        </motion.p>
+            {!isSignUp && (
+              <div className="mt-2 flex justify-end">
+                <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground/70 hover:text-foreground transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, y: -4, height: 0 }}
+                  className="mt-4 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red"
+                >
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+              type="submit"
+              disabled={loading || oauthLoading !== null}
+              whileHover={{ scale: loading ? 1 : 1.01 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              className="relative mt-5 w-full overflow-hidden rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"
+            >
+              <span className="flex items-center justify-center gap-2">
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSignUp ? "Create account" : "Sign in"}
+              </span>
+            </motion.button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground/70">
+            {isSignUp ? "Already have an account? " : "New to Lumora? "}
+            <Link href={isSignUp ? "/sign-in" : "/sign-up"} className="font-medium text-foreground hover:text-foreground/80 transition-colors">
+              {isSignUp ? "Sign in" : "Create one"}
+            </Link>
+          </p>
+        </div>
       </div>
     </motion.div>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+    <label className="flex flex-col gap-1">
+      <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+        {icon}
+        {label}
+      </span>
       {children}
     </label>
   )

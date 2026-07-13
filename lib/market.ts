@@ -40,6 +40,11 @@ export type Quote = {
   beta?: number
   sector?: string
   industry?: string
+  headquarters?: string
+  ceo?: string
+  founded?: number
+  employees?: number
+  phone?: string
   assetType?: AssetType
   timezone?: string
   logoUrl?: string
@@ -532,11 +537,21 @@ async function fetchProfile(symbol: string): Promise<Partial<Quote> | null> {
     const profile = r.assetProfile ?? {}
     const stats = r.defaultKeyStatistics ?? {}
     const summary = r.summaryDetail ?? {}
+    const address = profile.address1 ?? ""
+    const city = profile.city ?? ""
+    const state = profile.state ?? ""
+    const country = profile.country ?? ""
+    const hq = [address, city, state, country].filter(Boolean).join(", ")
     return {
       sector: profile.sector || undefined,
       industry: profile.industry || undefined,
       website: profile.website || undefined,
       beta: stats.beta?.raw ?? summary.beta?.raw ?? undefined,
+      headquarters: hq || undefined,
+      ceo: profile.companyOfficers?.[0]?.name || undefined,
+      founded: profile.foundedYear ? Number(profile.foundedYear) : undefined,
+      employees: stats.fullTimeEmployees ? Number(stats.fullTimeEmployees) : undefined,
+      phone: profile.phone || undefined,
     }
   } catch {
     return null
@@ -593,6 +608,11 @@ export async function getQuote(symbol: string, opts?: { withFundamentals?: boole
     beta: profile?.beta,
     sector: profile?.sector,
     industry: profile?.industry,
+    headquarters: profile?.headquarters,
+    ceo: profile?.ceo,
+    founded: profile?.founded,
+    employees: profile?.employees,
+    phone: profile?.phone,
     assetType: v7?.assetType,
     timezone: base.timezone,
     website,
@@ -605,7 +625,7 @@ export async function getQuote(symbol: string, opts?: { withFundamentals?: boole
 
 export async function getQuotes(symbols: string[]): Promise<Quote[]> {
   if (symbols.length === 0) return []
-  const results = await Promise.all(symbols.map((s) => getQuote(s)))
+  const results = await Promise.all(symbols.map((s) => getQuote(s, { withFundamentals: true })))
   return results.filter((q): q is Quote => q !== null)
 }
 

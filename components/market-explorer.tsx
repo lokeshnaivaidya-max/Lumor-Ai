@@ -361,6 +361,17 @@ const QuoteHeader = memo(function QuoteHeader({
               {[quote?.sector, quote?.industry].filter(Boolean).join(" · ")}
             </p>
           )}
+          {(quote?.ceo || quote?.headquarters || quote?.founded) && (
+            <p className="mt-0.5 max-w-md truncate text-xs text-muted-foreground/50">
+              {[quote?.ceo ? `CEO: ${quote.ceo}` : "", quote?.founded ? `Founded: ${quote.founded}` : "", quote?.headquarters].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {quote?.website && (
+            <a href={quote.website} target="_blank" rel="noopener noreferrer"
+              className="mt-0.5 inline-block max-w-md truncate text-xs text-blue/60 hover:text-blue transition-colors">
+              {quote.website.replace(/^https?:\/\//, "")}
+            </a>
+          )}
         </div>
 
         <div className="text-right">
@@ -417,18 +428,11 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
       icon: <TrendingDown className="h-3.5 w-3.5" />,
       span: "sm",
     },
-    {
-      label: "Sector",
-      value: quote?.sector || "Not Available",
-      icon: <Building2 className="h-3.5 w-3.5" />,
-      span: "sm",
-    },
-    {
-      label: "Industry",
-      value: quote?.industry || "Not Available",
-      icon: <Layers className="h-3.5 w-3.5" />,
-      span: "sm",
-    },
+    { label: "Sector", value: quote?.sector || "—", icon: <Building2 className="h-3.5 w-3.5" />, span: "sm" },
+    { label: "Industry", value: quote?.industry || "—", icon: <Layers className="h-3.5 w-3.5" />, span: "sm" },
+    { label: "CEO", value: quote?.ceo || "—", icon: <Building2 className="h-3.5 w-3.5" />, span: "sm" },
+    { label: "Employees", value: quote?.employees ? quote.employees.toLocaleString() : "—", icon: <Hash className="h-3.5 w-3.5" />, span: "sm" },
+    { label: "Founded", value: quote?.founded ? String(quote.founded) : "—", icon: <Clock className="h-3.5 w-3.5" />, span: "sm" },
     {
       label: "Updated",
       value: quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "—",

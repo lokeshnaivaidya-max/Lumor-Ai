@@ -4,7 +4,7 @@ import { Suspense, useCallback, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, RefreshCw } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, RefreshCw, KeyRound, Lock, Mail } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 const RESEND_COOLDOWN = 60
@@ -34,10 +34,7 @@ function ResetPasswordInner() {
     setSendingOtp(true)
     setError(null)
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
-        email: targetEmail,
-        type: "forget-password",
-      })
+      const { error } = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "forget-password" })
       if (error) throw new Error(error.message || "Failed to send reset code")
       setResendCooldown(RESEND_COOLDOWN)
     } catch (err) {
@@ -86,13 +83,8 @@ function ResetPasswordInner() {
     if (password.length < 8) { setError("Password must be at least 8 characters"); return }
     setLoading(true)
     setError(null)
-
     try {
-      const { error } = await authClient.emailOtp.resetPassword({
-        email,
-        otp: code,
-        password,
-      })
+      const { error } = await authClient.emailOtp.resetPassword({ email, otp: code, password })
       if (error) {
         if (error.message?.toLowerCase().includes("expired")) throw new Error("Code expired. Request a new one.")
         throw new Error(error.message || "Invalid code")
@@ -108,181 +100,113 @@ function ResetPasswordInner() {
 
   if (success) {
     return (
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="flex flex-col items-center justify-center text-center"
-      >
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center text-center">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}>
-          <CheckCircle2 className="h-16 w-16 text-emerald" />
+          <CheckCircle2 className="h-14 w-14 text-emerald" />
         </motion.div>
-        <h2 className="mt-6 font-heading text-xl font-semibold text-foreground">Password reset!</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Redirecting to your dashboard…</p>
+        <h2 className="mt-5 font-heading text-lg font-semibold text-foreground">Password reset!</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">Redirecting to your dashboard…</p>
       </motion.div>
     )
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md"
-    >
-      <Link
-        href="/forgot-password"
-        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
+      <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground/60 hover:text-foreground transition-colors">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-
-      <div className="glass-card edge-light relative overflow-hidden rounded-[32px] p-8 sm:p-10 shadow-2xl">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.03] via-transparent to-violet/[0.03]" />
-        <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full blur-[100px]" style={{ background: "oklch(0.55 0.18 255 / 0.06)" }} />
-
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.55 0.18 255 / 0.06)" }} />
         <div className="relative">
-          <div className="flex items-center justify-center gap-2">
-            <span className="font-heading text-lg font-semibold tracking-tight text-foreground">✦ Lumora</span>
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
           </div>
 
           {needsEmail ? (
             <>
-              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Reset your password</h1>
-              <p className="mt-2 text-sm text-muted-foreground text-center">Enter your email to receive a reset code.</p>
-
+              <h1 className="text-xl font-semibold tracking-tight text-foreground text-center">Reset your password</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground text-center">Enter your email to receive a reset code.</p>
               <div className="mt-6">
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Email</span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="premium-input"
-                  />
+                <label className="flex flex-col gap-1">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                    <Mail className="h-3.5 w-3.5" /> Email
+                  </span>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" />
                 </label>
               </div>
-
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex items-center gap-2 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </motion.p>
-              )}
-
-              <motion.button
-                onClick={() => {
-                  if (!email) { setError("Please enter your email"); return }
-                  setNeedsEmail(false)
-                  handleSendOtp(email)
-                }}
-                disabled={sendingOtp || !email}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className="premium-btn premium-btn-primary mt-6 w-full py-3 text-sm"
-              >
-                {sendingOtp ? (
-                  <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Sending…</span>
-                ) : (
-                  "Send reset code"
+              <AnimatePresence>
+                {error && (
+                  <motion.div initial={{ opacity: 0, y: -4, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, y: -4, height: 0 }}
+                    className="mt-4 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
+                  </motion.div>
                 )}
+              </AnimatePresence>
+              <motion.button
+                onClick={() => { if (!email) { setError("Please enter your email"); return }; setNeedsEmail(false); handleSendOtp(email) }}
+                disabled={sendingOtp || !email}
+                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                className="mt-5 w-full rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                  {sendingOtp ? "Sending…" : "Send reset code"}
+                </span>
               </motion.button>
             </>
           ) : (
             <>
-              <h1 className="mt-6 font-heading text-xl font-medium text-foreground text-center">Reset your password</h1>
-              <p className="mt-2 text-sm text-muted-foreground text-center">
-                Enter the code sent to <strong className="text-foreground">{email}</strong> and set a new password.
+              <h1 className="text-xl font-semibold tracking-tight text-foreground text-center">Reset your password</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground text-center">
+                Code sent to <strong className="text-foreground">{email}</strong>
               </p>
 
-              <div className="mt-8 flex justify-center gap-2 sm:gap-3">
+              <div className="mt-6 flex justify-center gap-2">
                 {otp.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
+                  <input key={i} ref={(el) => { inputRefs.current[i] = el }}
+                    type="text" inputMode="numeric" maxLength={1} value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(i, e)}
-                    onFocus={() => setFocusedIdx(i)}
-                    className={`h-12 w-10 sm:h-14 sm:w-12 rounded-xl border-2 text-center font-mono text-xl font-semibold transition-all duration-150 outline-none ${
-                      focusedIdx === i
-                        ? "border-primary bg-primary/[0.06] shadow-sm"
-                        : digit
-                          ? "border-foreground/20 bg-white/50"
-                          : "border-border bg-white/30"
+                    onKeyDown={(e) => handleKeyDown(i, e)} onFocus={() => setFocusedIdx(i)}
+                    className={`h-11 w-9 sm:h-12 sm:w-10 rounded-xl border text-center font-mono text-lg font-semibold transition-all duration-150 outline-none ${
+                      focusedIdx === i ? "border-foreground/30 bg-foreground/[0.04]" : digit ? "border-white/15 bg-white/[0.04]" : "border-white/10 bg-transparent"
                     } text-foreground`}
-                    autoComplete="one-time-code"
-                    autoFocus={i === 0}
+                    autoComplete="one-time-code" autoFocus={i === 0}
                   />
                 ))}
               </div>
 
-              <div className="mt-6 flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">New password</span>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      minLength={8}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="At least 8 characters"
-                      className="premium-input pr-11"
-                      autoComplete="new-password"
-                    />
-                    <button type="button" onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Confirm password</span>
-                  <div className="relative">
-                    <input
-                      type={showConfirm ? "text" : "password"}
-                      required
-                      minLength={8}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Repeat password"
-                      className="premium-input pr-11"
-                      autoComplete="new-password"
-                    />
-                    <button type="button" onClick={() => setShowConfirm((s) => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label={showConfirm ? "Hide password" : "Show password"}
-                    >
-                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </label>
+              <div className="mt-5 flex flex-col gap-3">
+                <div className="relative">
+                  <input type={showPassword ? "text" : "password"} required minLength={8} value={password}
+                    onChange={(e) => setPassword(e.target.value)} placeholder="New password" className="auth-input pr-10"
+                    autoComplete="new-password" />
+                  <button type="button" onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors p-1"
+                    aria-label={showPassword ? "Hide password" : "Show password"}>
+                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input type={showConfirm ? "text" : "password"} required minLength={8} value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" className="auth-input pr-10"
+                    autoComplete="new-password" />
+                  <button type="button" onClick={() => setShowConfirm((s) => !s)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors p-1"
+                    aria-label={showConfirm ? "Hide password" : "Show password"}>
+                    {showConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
               </div>
 
               {password && confirmPassword && password !== confirmPassword && (
-                <p className="mt-2 text-xs text-neg">Passwords do not match</p>
+                <p className="mt-2 text-xs text-red/80">Passwords do not match</p>
               )}
 
               <AnimatePresence>
                 {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="mt-4 flex items-center gap-2 rounded-xl border border-neg/30 bg-neg/10 px-4 py-2.5 text-sm text-neg"
-                  >
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    {error}
+                  <motion.div initial={{ opacity: 0, y: -4, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, y: -4, height: 0 }}
+                    className="mt-4 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -290,34 +214,26 @@ function ResetPasswordInner() {
               <motion.button
                 onClick={handleSubmit}
                 disabled={loading || otp.some((d) => !d) || !password || !confirmPassword || password !== confirmPassword}
-                whileHover={{ scale: loading ? 1 : 1.01 }}
-                whileTap={{ scale: loading ? 1 : 0.98 }}
-                className="premium-btn premium-btn-primary mt-6 w-full py-3 text-sm"
+                whileHover={{ scale: loading ? 1 : 1.01 }} whileTap={{ scale: loading ? 1 : 0.98 }}
+                className="mt-5 w-full rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Resetting…
-                  </span>
-                ) : (
-                  "Reset password"
-                )}
+                <span className="flex items-center justify-center gap-2">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                  {loading ? "Resetting…" : "Reset password"}
+                </span>
               </motion.button>
 
-              <div className="mt-5 flex items-center justify-center gap-2 text-sm">
-                <button
-                  onClick={handleResend}
-                  disabled={resendCooldown > 0 || sendingOtp}
-                  className="flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-                >
-                  {sendingOtp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+                <button onClick={handleResend} disabled={resendCooldown > 0 || sendingOtp}
+                  className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors disabled:opacity-40 text-xs">
+                  {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                   {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : sendingOtp ? "Sending…" : "Resend code"}
                 </button>
               </div>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
                 Wrong email?{" "}
-                <button onClick={() => setNeedsEmail(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                <button onClick={() => setNeedsEmail(true)} className="font-medium text-foreground hover:text-foreground/80 transition-colors underline underline-offset-2">
                   Change email address
                 </button>
               </p>
@@ -331,7 +247,7 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="h-64 w-full max-w-md animate-pulse rounded-[32px] bg-white/20" />}>
+    <Suspense fallback={<div className="h-64 w-full max-w-sm animate-pulse rounded-3xl bg-white/5 backdrop-blur-2xl" />}>
       <ResetPasswordInner />
     </Suspense>
   )
