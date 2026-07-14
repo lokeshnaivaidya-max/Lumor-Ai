@@ -298,7 +298,7 @@ function parseJsonResponse<T>(text: string | undefined, operation: string): T {
 export type Bias = "Bullish" | "Bearish" | "Neutral"
 export type SentimentLabel = "Positive" | "Negative" | "Neutral"
 export type RiskLevel = "Low" | "Medium" | "High"
-export type Recommendation = "Strong Buy" | "Buy" | "Buy on Dip" | "Accumulate" | "Hold" | "Neutral" | "Wait for Confirmation" | "Reduce Exposure" | "Book Partial Profit" | "Avoid Fresh Entries" | "Strong Sell"
+export type Recommendation = "Strong Buy" | "Buy" | "Buy on Dip" | "Accumulate" | "Hold" | "Neutral" | "Wait for Confirmation" | "Reduce Exposure" | "Book Partial Profit" | "Avoid Fresh Entries" | "Strong Sell" | "Strong Buy CE" | "Buy CE" | "Buy PE" | "Strong Buy PE" | "No Trade"
 
 export type Analysis = {
   // 1. Final recommendation
@@ -379,6 +379,17 @@ export type Analysis = {
   proInvestorView: string
   // 12. Final advice in one sentence
   aiVerdict: string
+  // Option-specific fields (only populated in options mode)
+  entryAggressive?: string
+  entryConservative?: string
+  entryBreakout?: string
+  target2?: string
+  target3?: string
+  bullishScenario?: string
+  neutralScenario?: string
+  bearishScenario?: string
+  tradeQuality?: string
+  optionRisk?: string
   disclaimer: string
 }
 
@@ -483,7 +494,7 @@ export async function generateAnalysis(input: { name: string; horizon: string; c
   const optionDetails = isOption ? parseOptionName(input.name) : null
 
   const system = isOption
-    ? `You are Lumora, a professional options trader and institutional derivatives analyst. Your job is NOT to explain Greeks or indicators. Your job is to identify where smart money is positioning and whether a trade has edge.
+    ? `You are Lumora, a professional institutional options analyst. Your job is NOT to analyze the option in isolation. Your job is to understand the underlying first, then assess the option premium and risk.
 
 ANALYZE THIS OPTION CONTRACT:
 Underlying: ${optionDetails?.underlying ?? input.name}
@@ -491,31 +502,69 @@ Strike: ${optionDetails?.strike ?? "N/A"}
 Expiry: ${optionDetails?.expiry ?? "N/A"}
 Type: ${optionDetails?.type ?? "N/A"}
 
-Evaluation priority:
-1. Overall market trend and index trend
-2. Open Interest shifts and Put-Call ratio
-3. Max Pain level
-4. VWAP and price action relative to it
-5. Support and resistance on the underlying
-6. Option Greeks: Delta, Theta, Gamma, Vega (if available)
-7. Implied Volatility and whether premium is fairly priced
-8. Momentum indicators (lowest priority)
+STEP 1: UNDERLYING ANALYSIS (analyze this first before touching the option)
+Determine: trend direction, market structure (higher highs/lower lows), support levels, resistance levels, VWAP, opening range, gap up/down, breakout or breakdown signals, momentum strength, volume conviction, RSI zone, MACD alignment, EMA20/50/200 position, and overall market structure.
+Only after fully understanding the underlying should you analyze the option.
 
-OUTPUT RULES:
-- Direction: Bullish / Bearish / Sideways
-- Best Trade: Buy CE / Buy PE / Wait / Avoid Trade
-- Entry, Target 1, Target 2, Stop Loss with specific price levels and reasoning
-- Confidence: 20-95 based on OI data, IV, Greeks, and market structure
-- Probability of Success: realistic estimate
-- Risk Level: Low / Medium / High
+STEP 2: OPTION ANALYSIS
+If available, use: option chain data, Open Interest, change in OI, Put-Call Ratio, Max Pain, Implied Volatility, Delta, Theta, Gamma, Vega, premium trend.
+If ANY data point is unavailable, explicitly say "Option-chain data unavailable for [field]." Never fabricate values.
 
-WARNINGS:
-- If Theta decay is high, warn the user explicitly about time decay.
-- If IV is elevated, warn that premium is expensive and a move must happen quickly.
-- If premium is overpriced relative to historical IV, flag it.
-- Never recommend buying options with poor probability. If no edge exists, clearly say "No Trade is better than a bad trade."
+STEP 3: TRADE DECISION
+Trade Direction (choose one):
+- Strong Buy CE — clear bullish confirmation with aligned catalysts
+- Buy CE — moderately bullish with reasonable risk-reward
+- Wait — setup unclear, conflicting signals, or poor risk-reward
+- No Trade — probability too low, IV too high, theta decay too aggressive
+- Buy PE — moderately bearish with reasonable risk-reward
+- Strong Buy PE — clear bearish confirmation
 
-Write like a professional derivatives desk analyst. Focus on edge, probability, and risk.
+Never default to "Hold". If probability of success is below 50%, recommend "No Trade" instead.
+
+STEP 4: ENTRIES
+Always provide three entry levels with reasoning:
+- Aggressive Entry: for traders willing to enter early near current price
+- Conservative Entry: for traders waiting for confirmation at a better level
+- Breakout Entry: for traders waiting for the underlying to break a key level
+
+STEP 5: TARGETS
+Provide three targets based on resistance/structural levels:
+- Target 1: nearest realistic target
+- Target 2: moderate extension
+- Target 3: stretch target if momentum sustains
+
+STEP 6: STOP LOSS
+Exactly one invalidation level with clear reasoning — explain WHY this level invalidates the thesis.
+
+STEP 7: PROBABILITY SCENARIOS
+Instead of a single probability, return:
+- Bullish Scenario (percentage) — conditions and expected outcome
+- Neutral Scenario (percentage) — conditions and expected outcome
+- Bearish Scenario (percentage) — conditions and expected outcome
+All three must add up to approximately 100.
+
+STEP 8: TRADE QUALITY
+Rate the trade on a 1-5 star scale based on: trend quality, momentum strength, liquidity, risk-reward ratio, volatility environment, and probability of success.
+- 5 stars: (85-95 confidence)
+- 4 stars: (70-84 confidence)
+- 3 stars: (55-69 confidence)
+- 2 stars: (40-54 confidence)
+- 1 star: (below 40 confidence)
+
+STEP 9: RISK MENTION
+Always mention these specific risk types if relevant:
+- Theta Risk: time decay impact on premium
+- IV Risk: implied volatility contraction
+- Gap Risk: overnight gap against position
+- Expiry Risk: accelerated decay near expiry
+- Liquidity Risk: wide bid-ask spreads
+
+STEP 10: INSTITUTIONAL VIEW
+Explain where smart money is likely positioned, who currently controls the market, and whether institutions appear to be accumulating or distributing.
+
+IMPORTANT: If sufficient option market data is unavailable to form a high-confidence view, explicitly state: "Insufficient option market data to produce a high-confidence options recommendation." Never hallucinate data.
+
+Write like a professional derivatives desk analyst at a top trading firm. Focus on edge, probability, and clarity.
 
 GROUNDING: ${GROUNDING}`
     : `You are Lumora, a hedge fund analyst. Your job is NOT to explain indicators. Your job is to explain the STORY of the market.
@@ -570,12 +619,12 @@ Expiry: ${optionDetails?.expiry ?? "N/A"}
 Type: ${optionDetails?.type ?? "N/A"}
 Horizon: ${input.horizon}
 
-Evaluate the option chain, implied volatility, Greeks, and market structure to determine if there is a trading edge.
+Follow the 10-step process from the system prompt. First analyze the underlying, then the option. Provide entries, targets, scenario probabilities, star rating, and risk warnings.
 
 ${input.context}
 
 Respond with ONLY valid JSON. No markdown, no code blocks. The JSON must follow this exact structure:
-{"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"explain the option market structure -- OI shifts, IV, premium pricing, and whether smart money is positioned for a move","confidenceScore":0-100,"confidenceNote":"what this confidence means given the option pricing and market conditions","quickSummary":["unique observation about OI or IV","unique observation about Greeks or premium","unique observation about index trend level"],"entry":"specific entry price with reasoning based on premium, IV, and support/resistance","target":"target 1 price","holdingPeriod":"expected holding time for this option","riskReward":"actual risk-reward ratio as 1:X","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using IV, theta decay, and market structure","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"best case price move and premium gain","scenarioLikely":"most probable scenario given Greeks and time decay","scenarioWorst":"worst case -- premium decay or direction failure","maxDownside":"maximum premium loss percentage","expectedUpside":"expected premium gain percentage","riskRewardNote":"whether this option trade is worth the premium risk","positionVerySafe":"percent of capital for this option trade","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"option sizing advice considering theta decay","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"why this timeframe fits the option Greeks and expected move","whyBuy":["option-specific reason 1","option-specific reason 2","option-specific reason 3","option-specific reason 4"],"whatCouldGoWrong":["theta decay risk","IV crush risk","direction failure risk","liquidity risk"],"support":"nearest support on underlying","supportNote":"what happens to option premium if underlying hits support","resistance":"nearest resistance on underlying","resistanceNote":"what happens to option premium if underlying hits resistance","riskLevel":"Low"|"Medium"|"High","riskNote":"explain option-specific risks -- theta, IV, liquidity","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"describe the options market tone and positioning","beginnerExplanation":"max 60 words explaining this option trade in plain language","isGoodToday":"whether this option has edge today based on IV and OI","biggestRisk":"the single biggest risk to this option position","safestWay":"the safest way to trade this option setup","waitOrBuyNow":"should the trader enter now or wait for better premium","smallBudgetPlan":"option buying plan with specific premium","largeBudgetPlan":"option buying plan with scaling","actionToday":"specific action for today on this option","actionNext3Days":"what levels to watch on the underlying","actionNextWeek":"what levels to watch on the underlying","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain based on theta decay and expected move timing","dataUsed":["string","string","string"],"aiCannotKnow":["future IV movement","unexpected news","market maker positioning","early exercise decisions","pin risk at expiry"],"whoCanConsider":["option trader profile suited to this risk","trader profile suited to this timeframe","trader profile suited to this IV environment"],"whoShouldAvoid":["trader who cannot monitor theta decay","trader with low risk tolerance for options","trader不适合 this timeframe"],"worstMistake":"the most common mistake traders make with this option setup","simpleExample":"concrete premium allocation example","ownMoneyView":"2-3 lines in first person on whether you would trade this option","proInvestorView":"full options analysis -- OI, IV, Greeks, max pain, VWAP, market maker positioning, and edge assessment","aiVerdict":"single sentence in first person on whether to take this option trade"}`
+{"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Wait"|"No Trade"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"tell the full options story -- start with underlying trend and market structure, then shift to option-specific analysis (OI, IV, premium, edge)","confidenceScore":20-95,"confidenceNote":"one sentence on what makes this option setup confident or uncertain","quickSummary":["underlying trend observation","option-specific observation (OI/IV/premium)","key risk or catalyst observation"],"entry":"Aggressive Entry price and reasoning -- where traders can enter near current price","holdingPeriod":"expected holding time for this option","riskReward":"actual risk-reward ratio as 1:X","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using market structure, IV, theta, and risk-reward quality","scenarioBest":"Bullish Scenario -- percentage probability, conditions, and expected outcome for this option","scenarioLikely":"Neutral Scenario -- percentage probability, conditions, and expected outcome","scenarioWorst":"Bearish Scenario -- percentage probability, conditions, and expected outcome","maxDownside":"maximum premium loss percentage","expectedUpside":"expected premium gain percentage","riskRewardNote":"whether this specific option trade risk-reward is worth taking","positionVerySafe":"percent of capital for this option trade","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"option sizing advice considering theta decay and IV","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"why this timeframe fits the option Greeks and expected move timing","whyBuy":["underlying catalyst for the move","option-specific edge (IV/OI structure)","risk-reward asymmetry","institutional positioning indication"],"whatCouldGoWrong":["underlying reverses direction","IV contracts (crush)","theta decay accelerates","unexpected news or event"],"support":"nearest support on the underlying","supportNote":"what happens to option premium if underlying hits support","resistance":"nearest resistance on the underlying","resistanceNote":"what happens to option premium if underlying hits resistance","riskLevel":"Low"|"Medium"|"High","riskNote":"mention specific option risks: theta, IV, gap, expiry, liquidity -- whichever are relevant","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"describe the options market tone and institutional positioning","beginnerExplanation":"max 60 words explaining this option trade in plain language","isGoodToday":"whether this option has edge today based on IV, OI, and setup quality","biggestRisk":"the single biggest risk specific to this option contract","safestWay":"the safest approach to trade this option","waitOrBuyNow":"should the trader enter now, wait for a better premium, or skip entirely","smallBudgetPlan":"option buying plan with specific premium level in the instrument currency","largeBudgetPlan":"option buying plan with scaling strategy","actionToday":"specific action for today based on underlying price relative to key levels","actionNext3Days":"what levels on the underlying to watch for confirmation","actionNextWeek":"what levels on the underlying to watch","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain based on theta decay rate and expected move timing","dataUsed":["underlying technical analysis","option chain and OI data","IV and Greeks if available"],"aiCannotKnow":["future IV expansion or contraction","unexpected news events","market maker delta hedging flows","early exercise decisions","pin risk at expiry"],"whoCanConsider":["option trader comfortable with this risk profile","trader suited to this holding timeframe","trader experienced with this strategy type"],"whoShouldAvoid":["trader who cannot monitor theta decay","trader with low risk tolerance for options","trader not suited to this timeframe"],"worstMistake":"the most common mistake traders make with this specific option setup","simpleExample":"concrete premium allocation example in the instrument currency","ownMoneyView":"2-3 lines in first person on whether you would trade this option with your own capital","proInvestorView":"full options desk analysis -- underlying structure, OI shifts, IV surface, max pain, VWAP, market maker positioning, Greeks interpretation, and edge assessment","aiVerdict":"single sentence in first person on whether to take this option trade","entryAggressive":"Aggressive entry price and reasoning -- for traders willing to enter early","entryConservative":"Conservative entry price and reasoning -- for traders waiting for confirmation","entryBreakout":"Breakout entry price and reasoning -- for traders waiting for a key level breakout","target2":"Target 2 price based on next resistance/structural level","target3":"Target 3 stretch target if momentum sustains","bullishScenario":"percentage and outcome description for the bullish case","neutralScenario":"percentage and outcome description for the neutral case","bearishScenario":"percentage and outcome description for the bearish case","tradeQuality":"star rating as text (e.g. 4-star) based on trend, momentum, liquidity, R:R, volatility, probability","optionRisk":"concatenated risk warnings mentioning theta, IV, gap, expiry, and liquidity risks where relevant"}`
       : `Analyze ${input.name} for a ${input.horizon} trader. Tell the market story. Never list indicators. Every sentence must be specific to this instrument and this data.
 
 ${input.context}
