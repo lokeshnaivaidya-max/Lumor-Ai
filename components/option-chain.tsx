@@ -17,7 +17,7 @@ function fmt(n: number | null | undefined, d = 2) {
 }
 
 function fmtNA(n: number | null | undefined, d = 2) {
-  return n == null ? "Not Available" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
+  return n == null ? "—" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
 function isIndianSymbol(s: string) {
@@ -25,7 +25,7 @@ function isIndianSymbol(s: string) {
 }
 
 function bigNum(n: number | undefined | null) {
-  if (n == null) return "Not Available"
+  if (n == null) return "—"
   if (n >= 1e7) return `${(n / 1e7).toFixed(1)}Cr`
   if (n >= 1e5) return `${(n / 1e5).toFixed(1)}L`
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
@@ -103,14 +103,14 @@ function OIHeatmapBar({ value, max }: { value: number; max: number }) {
 }
 
 export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: string; defaultStrike?: number; defaultExpiry?: string }) {
-  const { data, isLoading, error, mutate } = useSWR(
-    `/api/options?symbol=${encodeURIComponent(symbol)}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30000 },
-  )
   const [expiry, setExpiry] = useState("")
   const [expiries, setExpiries] = useState<string[]>([])
   const tableRef = useRef<HTMLDivElement>(null)
+  const { data, isLoading, error } = useSWR(
+    `/api/options?symbol=${encodeURIComponent(symbol)}${expiry ? `&expiry=${encodeURIComponent(expiry)}` : ''}`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 30000 },
+  )
 
   useEffect(() => {
     if (data?.data?.expiries) {
@@ -120,12 +120,6 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
       }
     }
   }, [data, expiry, defaultExpiry])
-
-  useEffect(() => {
-    if (expiry && expiries.includes(expiry)) {
-      mutate(`/api/options?symbol=${encodeURIComponent(symbol)}&expiry=${encodeURIComponent(expiry)}`)
-    }
-  }, [expiry, symbol, mutate, expiries])
 
   useEffect(() => {
     if (defaultStrike && tableRef.current) {
@@ -237,8 +231,8 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Underlying" value={fmtNA(chain.underlyingPrice)} change={chain.underlyingChangePercent != null ? `${chain.underlyingChangePercent >= 0 ? "+" : ""}${chain.underlyingChangePercent.toFixed(2)}%` : undefined} positive={chain.underlyingChangePercent != null ? chain.underlyingChangePercent >= 0 : undefined} />
-        <StatCard label="Put/Call Ratio" value={chain.pcr != null ? chain.pcr.toFixed(3) : "Not Available"} />
-        <StatCard label="Max Pain" value={chain.maxPain != null ? chain.maxPain.toFixed(0) : "Not Available"} />
+        <StatCard label="Put/Call Ratio" value={chain.pcr != null ? chain.pcr.toFixed(3) : "—"} />
+        <StatCard label="Max Pain" value={chain.maxPain != null ? chain.maxPain.toFixed(0) : "—"} />
         <StatCard label="Total OI" value={bigNum(chain.contracts.reduce((s, c) => s + c.openInterest, 0))} />
         <StatCard label="Provider" value={chain.provider} />
       </div>

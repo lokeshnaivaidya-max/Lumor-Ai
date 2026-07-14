@@ -8,7 +8,7 @@ import { SymbolSearch, type SearchResult } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
 import { currencySymbol, logoUrl } from "@/lib/utils"
-import { TrendingUp, TrendingDown, Clock, Globe, Gauge, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers } from "lucide-react"
+import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers } from "lucide-react"
 
 const POLL_INTERVAL = 12_000
 
@@ -39,7 +39,7 @@ function useAnimatedNumber(value: number, duration = 400): number {
 
 function AnimatedMoney({ value, ccySym, decimals = 2 }: { value: number | undefined; ccySym: string; decimals?: number }) {
   const animated = useAnimatedNumber(value ?? 0)
-  if (value == null) return <>{NOT_AVAILABLE}</>
+  if (value == null) return null
   const formatted = animated.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
   return <>{ccySym}{formatted}</>
 }
@@ -59,7 +59,7 @@ function AnimatedChange({ value }: { value: number | undefined }) {
 
 function AnimatedBigNum({ value }: { value: number | undefined }) {
   const animated = useAnimatedNumber(value ?? 0, 600)
-  if (value == null) return <>{NOT_AVAILABLE}</>
+  if (value == null) return null
   if (animated >= 1e12) return <>{`${(animated / 1e12).toFixed(2)}T`}</>
   if (animated >= 1e9) return <>{`${(animated / 1e9).toFixed(2)}B`}</>
   if (animated >= 1e6) return <>{`${(animated / 1e6).toFixed(2)}M`}</>
@@ -83,7 +83,7 @@ function useScrollPreserve() {
     })
     observer.observe(document.body)
     return () => observer.disconnect()
-  })
+  }, [])
 }
 
 const PriceChart = dynamic(() => import("@/components/price-chart").then((m) => m.PriceChart), {
@@ -111,21 +111,8 @@ const STATE_LABEL: Record<string, string> = {
   CLOSED: "Closed",
 }
 
-function money(n: number | undefined, ccySym: string) {
-  if (n == null) return "Not Available"
-  const formatted = n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  if (ccySym) return `${ccySym}${formatted}`
-  return formatted
-}
 
-function bigNum(n?: number) {
-  if (n == null) return "Not Available"
-  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
-  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
-  return n.toLocaleString()
-}
+
 
 function ChartSkeleton() {
   return (
@@ -470,23 +457,6 @@ const QuoteHeader = memo(function QuoteHeader({
   )
 })
 
-const NOT_AVAILABLE = "Not Available"
-
-function fieldVal<T>(val: T | null | undefined, fmt?: (v: T) => string): string {
-  if (val == null) return NOT_AVAILABLE
-  return fmt ? fmt(val) : String(val)
-}
-
-function naField<T>(val: T | null | undefined, fmt?: (v: T) => string): string {
-  if (val == null) return NOT_AVAILABLE
-  return fmt ? fmt(val) : String(val)
-}
-
-function notApplicableIf(condition: boolean, val: string | null | undefined): string {
-  if (condition) return val ?? "N/A"
-  return val ?? NOT_AVAILABLE
-}
-
 const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | null; ccySym: string }) {
   const isIndex = quote?.assetType === "INDEX"
   const isCrypto = quote?.assetType === "CRYPTOCURRENCY"
@@ -495,28 +465,30 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
     const id = setInterval(() => setNow(Date.now()), POLL_INTERVAL)
     return () => clearInterval(id)
   }, [])
-  const stats = useMemo(() => [
-    { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : fieldVal(null) },
-    { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"] },
-    { label: "Exchange", value: naField(quote?.exchange) },
-    { label: "Previous Close", value: <AnimatedMoney value={quote?.previousClose} ccySym={ccySym} /> },
-    { label: "Open", value: <AnimatedMoney value={quote?.open} ccySym={ccySym} /> },
-    { label: "Day High", value: <AnimatedMoney value={quote?.dayHigh} ccySym={ccySym} /> },
-    { label: "Day Low", value: <AnimatedMoney value={quote?.dayLow} ccySym={ccySym} /> },
-    { label: "Volume", value: <AnimatedBigNum value={quote?.volume} /> },
-    { label: "Market Cap", value: <AnimatedBigNum value={quote?.marketCap} /> },
-    { label: "P/E (TTM)", value: <span className="tabular-nums">{fieldVal(quote?.trailingPE, (v) => v.toFixed(2))}</span> },
-    { label: "EPS (TTM)", value: <span className="tabular-nums">{fieldVal(quote?.eps, (v) => v.toFixed(2))}</span> },
-    { label: "Dividend Yield", value: <span className="tabular-nums">{fieldVal(quote?.dividendYield, (v) => `${v.toFixed(2)}%`)}</span> },
-    { label: "Beta", value: <span className="tabular-nums">{fieldVal(quote?.beta, (v) => v.toFixed(2))}</span> },
-    { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : NOT_AVAILABLE, span: "md" as const },
-    { label: "52W High", value: <AnimatedMoney value={quote?.fiftyTwoWeekHigh} ccySym={ccySym} /> },
-    { label: "52W Low", value: <AnimatedMoney value={quote?.fiftyTwoWeekLow} ccySym={ccySym} /> },
-    { label: "Sector", value: notApplicableIf(isIndex, quote?.sector) },
-    { label: "Industry", value: notApplicableIf(isIndex, quote?.industry) },
-    { label: "CEO", value: notApplicableIf(isIndex || isCrypto, quote?.ceo) },
-    { label: "Updated", value: <span key={now} className="tabular-nums transition-opacity duration-500">{new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>, span: "md" as const },
-  ], [quote, ccySym, isIndex, isCrypto, now])
+  const stats = useMemo(() => {
+    const items: { label: string; value: React.ReactNode; span?: "sm" | "md" | "lg" }[] = [
+      { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : null },
+      { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"] },
+      { label: "Exchange", value: quote?.exchange || null },
+      { label: "Previous Close", value: quote?.previousClose != null ? <AnimatedMoney value={quote.previousClose} ccySym={ccySym} /> : null },
+      { label: "Open", value: quote?.open != null ? <AnimatedMoney value={quote.open} ccySym={ccySym} /> : null },
+      { label: "Day High", value: quote?.dayHigh != null ? <AnimatedMoney value={quote.dayHigh} ccySym={ccySym} /> : null },
+      { label: "Day Low", value: quote?.dayLow != null ? <AnimatedMoney value={quote.dayLow} ccySym={ccySym} /> : null },
+      { label: "Volume", value: quote?.volume != null ? <AnimatedBigNum value={quote.volume} /> : null },
+      { label: "Market Cap", value: quote?.marketCap != null ? <AnimatedBigNum value={quote.marketCap} /> : null },
+      { label: "P/E (TTM)", value: quote?.trailingPE != null ? <span className="tabular-nums">{quote.trailingPE.toFixed(2)}</span> : null },
+      { label: "EPS (TTM)", value: quote?.eps != null ? <span className="tabular-nums">{quote.eps.toFixed(2)}</span> : null },
+      { label: "Dividend Yield", value: quote?.dividendYield != null ? <span className="tabular-nums">{quote.dividendYield.toFixed(2)}%</span> : null },
+      { label: "Beta", value: quote?.beta != null ? <span className="tabular-nums">{quote.beta.toFixed(2)}</span> : null },
+      { label: "52W High", value: quote?.fiftyTwoWeekHigh != null ? <AnimatedMoney value={quote.fiftyTwoWeekHigh} ccySym={ccySym} /> : null },
+      { label: "52W Low", value: quote?.fiftyTwoWeekLow != null ? <AnimatedMoney value={quote.fiftyTwoWeekLow} ccySym={ccySym} /> : null },
+      { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : null, span: "md" as const },
+      { label: "Sector", value: !isIndex && quote?.sector ? quote.sector : null },
+      { label: "Industry", value: !isIndex && quote?.industry ? quote.industry : null },
+      { label: "CEO", value: !isIndex && !isCrypto && quote?.ceo ? quote.ceo : null },
+    ]
+    return items.filter((s) => s.value != null)
+  }, [quote, ccySym, isIndex, isCrypto])
 
   const spanMap = { sm: "col-span-1", md: "col-span-2", lg: "col-span-3" }
 
@@ -529,7 +501,7 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative group overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl px-4 py-3.5 transition-all duration-300 hover:border-white/40 hover:shadow-xl hover:bg-white/25 ${spanMap[(s as Record<string, unknown>).span as "sm" | "md" | "lg" ?? "sm"]}`}
+          className={`relative group overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl px-4 py-3.5 transition-all duration-300 hover:border-white/40 hover:shadow-xl hover:bg-white/25 ${spanMap[s.span ?? "sm"]}`}
         >
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-[28px]" />
           <div className="relative">

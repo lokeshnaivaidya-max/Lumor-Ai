@@ -1,4 +1,4 @@
-// Lumora AI service — provider-agnostic interface backed by Groq.
+﻿// Lumora AI service — provider-agnostic interface backed by Groq.
 //
 // The rest of the application imports ONLY the functions below and never learns
 // which model provider is in use. Swapping providers means editing this file
@@ -447,13 +447,13 @@ function parseOptionName(name: string): OptionDetails | null {
     }
   }
 
-  // Pattern 2: "NIFTY240724000CE" — Yahoo Finance compact format (underlying + YYMMDD + strike + CE/PE)
-  const yahooCompact = name.match(/^([A-Z]+)(\d{2})(?:\d{2})(\d{2})(\d+)(CE|PE)\s*$/i)
+  // Pattern 2: "NIFTY24072424000CE" — Yahoo Finance compact format (underlying + YYMMDD + strike + CE/PE)
+  const yahooCompact = name.match(/^([A-Z]+)(\d{2})(\d{2})(\d{2})(\d+)(CE|PE)\s*$/i)
   if (yahooCompact) {
     const [, underlying, year, month, day, strikeStr, type] = yahooCompact
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     const monthIdx = parseInt(month, 10)
-    const expiry = monthIdx >= 1 && monthIdx <= 12 ? monthNames[monthIdx - 1] + year : `${month}/${year}`
+    const expiry = monthIdx >= 1 && monthIdx <= 12 ? `${day} ${monthNames[monthIdx - 1]} ${year}` : `${day}/${month}/${year}`
     return {
       underlying: underlying.toUpperCase(),
       strike: strikeStr.replace(/^0+/, "") || strikeStr,
@@ -494,120 +494,77 @@ export async function generateAnalysis(input: { name: string; horizon: string; c
   const optionDetails = isOption ? parseOptionName(input.name) : null
 
   const system = isOption
-    ? `You are Lumora, a professional institutional options analyst. Your job is NOT to analyze the option in isolation. Your job is to understand the underlying first, then assess the option premium and risk.
+    ? `You are a derivatives desk strategist at a proprietary trading firm. Your job: read the underlying, price the option, assess the edge. Never analyze the option in isolation — start with the underlying.
 
-ANALYZE THIS OPTION CONTRACT:
-Underlying: ${optionDetails?.underlying ?? input.name}
-Strike: ${optionDetails?.strike ?? "N/A"}
-Expiry: ${optionDetails?.expiry ?? "N/A"}
-Type: ${optionDetails?.type ?? "N/A"}
+CONTRACT: ${optionDetails?.underlying ?? input.name} ${optionDetails?.strike ?? "N/A"} ${optionDetails?.type ?? "N/A"} expiring ${optionDetails?.expiry ?? "N/A"}
 
-STEP 1: UNDERLYING ANALYSIS (analyze this first before touching the option)
-Determine: trend direction, market structure (higher highs/lower lows), support levels, resistance levels, VWAP, opening range, gap up/down, breakout or breakdown signals, momentum strength, volume conviction, RSI zone, MACD alignment, EMA20/50/200 position, and overall market structure.
-Only after fully understanding the underlying should you analyze the option.
+YOUR PROCESS:
+1. UNDERLYING FIRST. Determine trend, structure, key levels, momentum, volume, and who is in control. Only after this, touch the option.
+2. OPTION METRICS. Use OI, PCR, Max Pain, IV, Greeks, premium behavior. If a field is unavailable, say "Option-chain data unavailable for [field]." Never fabricate.
+3. DIRECTION. Choose: Strong Buy CE / Buy CE / Buy PE / Strong Buy PE / Wait / No Trade. Never "Hold". Below 50% probability → No Trade.
+4. ENTRIES. Three levels with reasoning: aggressive (near price), conservative (on confirmation), breakout (on level break).
+5. TARGETS. Three: nearest, moderate, stretch.
+6. STOP. One clear invalidation level with reasoning.
+7. SCENARIOS. Bullish% + Neutral% + Bearish% ≈ 100%.
+8. QUALITY. 1-5 stars based on trend, momentum, liquidity, R:R, IV environment, probability.
+9. RISKS. Theta decay, IV contraction, gap risk, expiry acceleration, liquidity. Mention which ones matter here.
+10. INSTITUTIONAL VIEW. Where is smart money? Who controls the market? Accumulation or distribution?
 
-STEP 2: OPTION ANALYSIS
-If available, use: option chain data, Open Interest, change in OI, Put-Call Ratio, Max Pain, Implied Volatility, Delta, Theta, Gamma, Vega, premium trend.
-If ANY data point is unavailable, explicitly say "Option-chain data unavailable for [field]." Never fabricate values.
+Prohibited phrases: "The current market structure indicates", "Based on the technical setup", "Derived from the analysis", "The RSI suggests", "The MACD shows". Never use them.
 
-STEP 3: TRADE DECISION
-Trade Direction (choose one):
-- Strong Buy CE — clear bullish confirmation with aligned catalysts
-- Buy CE — moderately bullish with reasonable risk-reward
-- Wait — setup unclear, conflicting signals, or poor risk-reward
-- No Trade — probability too low, IV too high, theta decay too aggressive
-- Buy PE — moderately bearish with reasonable risk-reward
-- Strong Buy PE — clear bearish confirmation
+If insufficient option data exists to form a confident view, say exactly: "Insufficient option market data to produce a high-confidence recommendation."
 
-Never default to "Hold". If probability of success is below 50%, recommend "No Trade" instead.
-
-STEP 4: ENTRIES
-Always provide three entry levels with reasoning:
-- Aggressive Entry: for traders willing to enter early near current price
-- Conservative Entry: for traders waiting for confirmation at a better level
-- Breakout Entry: for traders waiting for the underlying to break a key level
-
-STEP 5: TARGETS
-Provide three targets based on resistance/structural levels:
-- Target 1: nearest realistic target
-- Target 2: moderate extension
-- Target 3: stretch target if momentum sustains
-
-STEP 6: STOP LOSS
-Exactly one invalidation level with clear reasoning — explain WHY this level invalidates the thesis.
-
-STEP 7: PROBABILITY SCENARIOS
-Instead of a single probability, return:
-- Bullish Scenario (percentage) — conditions and expected outcome
-- Neutral Scenario (percentage) — conditions and expected outcome
-- Bearish Scenario (percentage) — conditions and expected outcome
-All three must add up to approximately 100.
-
-STEP 8: TRADE QUALITY
-Rate the trade on a 1-5 star scale based on: trend quality, momentum strength, liquidity, risk-reward ratio, volatility environment, and probability of success.
-- 5 stars: (85-95 confidence)
-- 4 stars: (70-84 confidence)
-- 3 stars: (55-69 confidence)
-- 2 stars: (40-54 confidence)
-- 1 star: (below 40 confidence)
-
-STEP 9: RISK MENTION
-Always mention these specific risk types if relevant:
-- Theta Risk: time decay impact on premium
-- IV Risk: implied volatility contraction
-- Gap Risk: overnight gap against position
-- Expiry Risk: accelerated decay near expiry
-- Liquidity Risk: wide bid-ask spreads
-
-STEP 10: INSTITUTIONAL VIEW
-Explain where smart money is likely positioned, who currently controls the market, and whether institutions appear to be accumulating or distributing.
-
-IMPORTANT: If sufficient option market data is unavailable to form a high-confidence view, explicitly state: "Insufficient option market data to produce a high-confidence options recommendation." Never hallucinate data.
-
-Write like a professional derivatives desk analyst at a top trading firm. Focus on edge, probability, and clarity.
-Vary your writing style per underlying asset. NIFTY options analysis must read differently from BANKNIFTY or stock options.
+Vary every analysis. NIFTY options reads differently from BANKNIFTY. Stock options reads differently from index options. Different market regimes (trending vs range-bound) get different treatment.
 
 GROUNDING: ${GROUNDING}`
-    : `You are Lumora, a hedge fund analyst. Your job is NOT to explain indicators. Your job is to explain the STORY of the market.
+    : `You are a sell-side equity analyst writing institutional research. Every note reads like a standalone piece from a real analyst — not a template.
 
-Tell me who is controlling this instrument right now: buyers or sellers? Is accumulation happening or distribution? Is momentum building or fading? Is the trend strengthening or weakening? Where is liquidity sitting? Where would smart money enter?
+Your audience: portfolio managers and seasoned traders. They already know what RSI and MACD are. Tell them what matters: who is in control, where is the edge, what is the risk.
 
 RULES:
-1. Every analysis must be completely unique. Never reuse sentence structures. Never start consecutive analyses the same way.
-2. Indicators are evidence, NOT the analysis. Never say "RSI is 56. MACD is positive." Instead say "Buyers are slowly regaining control after defending the recent support zone. Momentum is improving, supported by strengthening RSI and a positive MACD crossover."
-3. Entry must be a practical level with a human reason: "Entry near 2180 where buyers previously absorbed selling pressure." Never say "Derived from..."
-4. Target must explain why: "Target 2310 near the previous resistance where profit booking is likely."
-5. Stop loss must explain invalidation: "Stop below 2140 because a break below this level would invalidate the bullish setup."
-6. Confidence must be a realistic score between 20 and 95, based on: trend strength, momentum, volume conviction, news sentiment, risk-reward quality, and market structure clarity. If indicators disagree, confidence drops.
-7. Risk reward must be a simple ratio like "1:2.4" or "1:3". Never explain the formula.
-8. Use institutional language naturally: accumulation, distribution, liquidity, breakout, pullback, demand zone, supply zone, trend exhaustion, momentum shift, smart money, institutional buying, profit booking, higher high, lower low.
-9. If recent news supports the trend, mention it naturally. If no meaningful news exists, do NOT invent news.
-10. If data is unavailable, say "Insufficient data" instead of inventing.
-11. Every instrument must sound different written as a fresh story. Reliance must not sound like Infosys. Before writing, silently note the instruments sector and market cap, then adopt a fitting tone:
-- Large-cap tech (AAPL, MSFT, NVDA): focus on innovation cycles, market dominance, product ecosystem, institutional accumulation
-- Indian large-cap (RELIANCE, TCS, INFY, HDFCBANK): focus on domestic growth story, regulatory landscape, FII/DII flows, sector tailwinds
-- Banking/financial: focus on interest rate cycles, credit growth, NIM trends, asset quality, NPAs
-- Crypto (BTC, ETH): focus on volatility regimes, network effects, on-chain metrics, macro liquidity, BTC dominance
-- Indices (NIFTY, BANKNIFTY, SENSEX): focus on breadth, sector rotation, FII/DII activity, global macro correlation
-- Consumer/retail: focus on demand trends, margin pressure, brand strength, competitive moat
-- Pharma: focus on drug pipeline, regulatory approvals, patent cliffs, export markets
-- Energy/commodities: focus on global supply-demand, geopolitical risks, inventory cycles, price trends
-12. Write like Bloomberg, Goldman Sachs, or Morgan Stanley research -- never like ChatGPT.
-13. Never list indicators. Tell the market story. Indicators are only supporting evidence.
-14. STRUCTURE VARIETY: Never use the same paragraph structure twice. One analysis might open with "The dominant feature of this market is...", another with "What matters most right now is...", and another with "Looking at the price action over the past sessions...". Vary how you present evidence, where you place the conclusion, and whether you lead with price action, fundamentals, or sentiment.
+1. Every analysis must be structurally unique. Vary openings: some start with price action, some with a catalyst, some with the macro setup, some with a contrarian take. Never open two analyses the same way.
+2. Prohibited phrases (do not use any of these):
+   - "The current market structure..."
+   - "Based on..." (as a sentence opener)
+   - "Derived from..."
+   - "The RSI indicates..." / "The MACD indicates..." / "[Indicator] indicates..."
+   - "The market is showing..."
+   - "This suggests that..."
+   - "The data suggests..."
+3. Indicators are supporting evidence, never the headline. Instead of "RSI is 56, MACD is positive", write "Buyers defended the support zone and momentum is quietly building. The RSI has room to run and the MACD is curling up."
+4. Entry, target, and stop must have real reasoning:
+   - Entry: "Near 2180 — the level where buyers stepped in last week."
+   - Target: "2310, just below the previous resistance that capped price twice."
+   - Stop: "Below 2140 breaks the bullish pattern."
+   Never use "Derived from..." or "Based on..."
+5. Confidence is 20-95. Score based on: trend clarity, momentum, volume, news, and how well indicators agree. Disagreement lowers confidence. A clean 75 is more credible than a forced 92.
+6. Risk-reward is a simple ratio like "1:2.4". Never show the math.
+7. Institutional vocabulary comes naturally: accumulation, distribution, liquidity, demand soaking, supply overhang, trend exhaustion, momentum rotation, institutional flow, profit booking, short covering.
+8. If news supports the narrative, work it in. If there's no meaningful news, say nothing.
+9. Missing data → "Insufficient data". Never invent.
+10. Every instrument reads like its own story. Sector-based tone:
+    - Large-cap tech (AAPL, MSFT, NVDA): innovation cycles, platform dominance, product cycles, institutional ownership
+    - Indian large-cap (RELIANCE, TCS, INFY, HDFCBANK): domestic demand, regulatory shifts, FII/DII flows, sector-specific tailwinds
+    - Banking: rate cycles, credit growth, NIM trajectory, asset quality, deposit franchise
+    - Crypto (BTC, ETH): volatility regimes, network effects, on-chain signals, macro liquidity, BTC dominance
+    - Indices (NIFTY, BANKNIFTY): breadth, sector rotation, FII/DII positioning, global correlation
+    - Consumer/retail: demand elasticity, margin trajectory, brand moat, competitive dynamics
+    - Pharma: pipeline milestones, regulatory catalysts, patent cliff management, export mix
+    - Energy/commodities: supply-demand balances, geopolitics, inventory cycles, price structure
+11. Write at a Bloomberg Terminal or Goldman morning meeting level. Direct, opinionated, evidence-backed.
+12. Never list indicators. Describe what the price action means.
+13. Before writing, ask: What is one thing an institutional trader would notice first about this chart? What is the clearest edge? Would I put my own firm's capital here?
 
-Before writing, silently ask yourself: What is the dominant trend? What is the biggest risk? What would an institutional trader notice first? Would I personally deploy capital here? Why?
-
-CONFIDENCE SCORING (compute dynamically):
+CONFIDENCE SCORING:
 - Start at 50
-- Trend alignment: +8 if price > EMA20 > EMA50 > EMA200, +4 if mildly bullish, -4 if bearish
-- RSI zone: +4 if 40-60, -4 if >70 or <30
-- MACD: +4 if positive and rising, -3 if negative/fading
-- ADX: +4 if >=25, +2 if >=20, -2 if <15
-- Volume: +3 if >1.5x average, -2 if <0.5x average
-- News: +3 if positive headlines, -3 if negative headlines
-- Indicator agreement: +5 if all point same direction, -5 if conflicted
-- Clamp between 20 and 95
+- Trend clarity (price vs EMAs): +8 clean trend, +4 mild, -4 conflicting
+- Momentum zone: +4 if RSI 40-60 (room), -4 if extreme (>70 or <30)
+- MACD: +4 rising bull cross, -3 fading or bear cross
+- ADX: +4 if >=25 (trending), +2 if >=20, -2 if <15 (choppy)
+- Volume: +3 above average conviction, -2 anemic
+- News: +3 supportive, -3 negative
+- Indicator agreement: +5 aligned, -5 mixed signals
+- Clamp 20-95
 
 VERDICT MAPPING:
 - 85-95: Strong Buy
@@ -622,25 +579,20 @@ VERDICT MAPPING:
 GROUNDING: ${GROUNDING}`
   try {
     const userPrompt = isOption
-      ? `Analyze this option contract: ${input.name}
-Underlying: ${optionDetails?.underlying ?? "N/A"}
-Strike: ${optionDetails?.strike ?? "N/A"}
-Expiry: ${optionDetails?.expiry ?? "N/A"}
-Type: ${optionDetails?.type ?? "N/A"}
-Horizon: ${input.horizon}
+      ? `${input.name} — ${optionDetails?.underlying ?? "N/A"} ${optionDetails?.strike ?? "N/A"} ${optionDetails?.type ?? "N/A"} exp ${optionDetails?.expiry ?? "N/A"}, horizon ${input.horizon}.
 
-Follow the 10-step process from the system prompt. First analyze the underlying, then the option. Provide entries, targets, scenario probabilities, star rating, and risk warnings.
+First analyze the underlying. Then assess the option. Include entries (aggressive/conservative/breakout), three targets, three scenarios, star quality, and risk warnings.
 
 ${input.context}
 
-Respond with ONLY valid JSON. No markdown, no code blocks. The JSON must follow this exact structure:
-{"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Wait"|"No Trade"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"tell the full options story -- start with underlying trend and market structure, then shift to option-specific analysis (OI, IV, premium, edge)","confidenceScore":20-95,"confidenceNote":"one sentence on what makes this option setup confident or uncertain","quickSummary":["underlying trend observation","option-specific observation (OI/IV/premium)","key risk or catalyst observation"],"entry":"Aggressive Entry price and reasoning -- where traders can enter near current price","holdingPeriod":"expected holding time for this option","riskReward":"actual risk-reward ratio as 1:X","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using market structure, IV, theta, and risk-reward quality","scenarioBest":"Bullish Scenario -- percentage probability, conditions, and expected outcome for this option","scenarioLikely":"Neutral Scenario -- percentage probability, conditions, and expected outcome","scenarioWorst":"Bearish Scenario -- percentage probability, conditions, and expected outcome","maxDownside":"maximum premium loss percentage","expectedUpside":"expected premium gain percentage","riskRewardNote":"whether this specific option trade risk-reward is worth taking","positionVerySafe":"percent of capital for this option trade","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"option sizing advice considering theta decay and IV","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"why this timeframe fits the option Greeks and expected move timing","whyBuy":["underlying catalyst for the move","option-specific edge (IV/OI structure)","risk-reward asymmetry","institutional positioning indication"],"whatCouldGoWrong":["underlying reverses direction","IV contracts (crush)","theta decay accelerates","unexpected news or event"],"support":"nearest support on the underlying","supportNote":"what happens to option premium if underlying hits support","resistance":"nearest resistance on the underlying","resistanceNote":"what happens to option premium if underlying hits resistance","riskLevel":"Low"|"Medium"|"High","riskNote":"mention specific option risks: theta, IV, gap, expiry, liquidity -- whichever are relevant","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"describe the options market tone and institutional positioning","beginnerExplanation":"max 60 words explaining this option trade in plain language","isGoodToday":"whether this option has edge today based on IV, OI, and setup quality","biggestRisk":"the single biggest risk specific to this option contract","safestWay":"the safest approach to trade this option","waitOrBuyNow":"should the trader enter now, wait for a better premium, or skip entirely","smallBudgetPlan":"option buying plan with specific premium level in the instrument currency","largeBudgetPlan":"option buying plan with scaling strategy","actionToday":"specific action for today based on underlying price relative to key levels","actionNext3Days":"what levels on the underlying to watch for confirmation","actionNextWeek":"what levels on the underlying to watch","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain based on theta decay rate and expected move timing","dataUsed":["underlying technical analysis","option chain and OI data","IV and Greeks if available"],"aiCannotKnow":["future IV expansion or contraction","unexpected news events","market maker delta hedging flows","early exercise decisions","pin risk at expiry"],"whoCanConsider":["option trader comfortable with this risk profile","trader suited to this holding timeframe","trader experienced with this strategy type"],"whoShouldAvoid":["trader who cannot monitor theta decay","trader with low risk tolerance for options","trader not suited to this timeframe"],"worstMistake":"the most common mistake traders make with this specific option setup","simpleExample":"concrete premium allocation example in the instrument currency","ownMoneyView":"2-3 lines in first person on whether you would trade this option with your own capital","proInvestorView":"full options desk analysis -- underlying structure, OI shifts, IV surface, max pain, VWAP, market maker positioning, Greeks interpretation, and edge assessment","aiVerdict":"single sentence in first person on whether to take this option trade","entryAggressive":"Aggressive entry price and reasoning -- for traders willing to enter early","entryConservative":"Conservative entry price and reasoning -- for traders waiting for confirmation","entryBreakout":"Breakout entry price and reasoning -- for traders waiting for a key level breakout","target2":"Target 2 price based on next resistance/structural level","target3":"Target 3 stretch target if momentum sustains","bullishScenario":"percentage and outcome description for the bullish case","neutralScenario":"percentage and outcome description for the neutral case","bearishScenario":"percentage and outcome description for the bearish case","tradeQuality":"star rating as text (e.g. 4-star) based on trend, momentum, liquidity, R:R, volatility, probability","optionRisk":"concatenated risk warnings mentioning theta, IV, gap, expiry, and liquidity risks where relevant"}`
-      : `Analyze ${input.name} for a ${input.horizon} trader. Tell the market story. Never list indicators. Every sentence must be specific to this instrument and this data.
+Return valid JSON with exactly these fields (no extra, no missing):
+{"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Wait"|"No Trade"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string"],"whatCouldGoWrong":["string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string","entryAggressive":"string","entryConservative":"string","entryBreakout":"string","target2":"string","target3":"string","bullishScenario":"string","neutralScenario":"string","bearishScenario":"string","tradeQuality":"string","optionRisk":"string"}`
+      : `Write a research note on ${input.name} for a ${input.horizon} trader. Who controls this market right now? Where is the edge? What is the risk? Every line specific to this instrument.
 
 ${input.context}
 
-Respond with ONLY valid JSON. No markdown, no code blocks. The JSON must follow this exact structure:
-{"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"tell the market story -- who is controlling price, what is the dominant trend phase, where is liquidity, what would an institutional analyst notice first","confidenceScore":20-95,"confidenceNote":"what makes this setup confident or uncertain in one sentence","quickSummary":["unique observation 1 about the current market phase","unique observation 2 about buyer/seller behavior","unique observation 3 about a key level or catalyst"],"entry":"practical entry level with a human reason -- e.g. Entry near X where buyers previously absorbed selling pressure","target":"realistic target with reasoning -- e.g. Target X near previous resistance where profit booking is likely","stopLoss":"invalidation level with reasoning -- e.g. Stop below X because a break below invalidates the setup","holdingPeriod":"string","riskReward":"simple ratio like 1:2.4 -- never explain the formula","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using market structure, trend conviction, and risk-reward quality","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"conditions that drive price to target and the percentage gain","scenarioLikely":"most probable outcome given current structure and percentage range","scenarioWorst":"what breaks the thesis and percentage loss","maxDownside":"percentage from entry to stop","expectedUpside":"percentage from entry to target","riskRewardNote":"one sentence on whether this specific risk-reward is worth taking","positionVerySafe":"percent of capital","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"position sizing advice specific to this instruments volatility","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"why this timeframe matches the current market phase","whyBuy":["specific reason this opportunity exists right now","technical or fundamental catalyst","risk-reward observation","institutional flow angle"],"whatCouldGoWrong":["support break scenario","headline or macro risk","momentum failure","liquidity risk"],"support":"nearest support level from the data","supportNote":"describe buyer behavior at this level -- where have they stepped in before","resistance":"nearest resistance level from the data","resistanceNote":"describe seller behavior at this level -- where has selling emerged before","riskLevel":"Low"|"Medium"|"High","riskNote":"specific risk factors using actual volatility and market conditions","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"describe the tone of price action and who is in control","beginnerExplanation":"max 60 words telling the market story plainly -- focus on what is happening, not indicators","isGoodToday":"yes/no/partly based on entry proximity to support and confidence score","biggestRisk":"the single most important thing that could go wrong right now","safestWay":"the lowest-risk way to participate given current conditions","waitOrBuyNow":"clear actionable recommendation given confidence and entry level","smallBudgetPlan":"actionable plan with specific price level in the instruments currency","largeBudgetPlan":"actionable entry plan with scaling","actionToday":"specific action based on where price is relative to key levels","actionNext3Days":"levels to watch that would confirm or invalidate","actionNextWeek":"levels to watch that would confirm or invalidate","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain using market phase, volatility, and trend duration","dataUsed":["string","string","string"],"aiCannotKnow":["unknown future catalysts","company insider intentions","unannounced macro events","institutional order flow details","retail sentiment extremes"],"whoCanConsider":["trader profile suited to this risk","trader profile suited to this timeframe","trader profile suited to this setup"],"whoShouldAvoid":["trader profile this setup does not fit","trader profile this risk level excludes","trader profile this timeframe does not suit"],"worstMistake":"the single most common error traders make with this specific setup","simpleExample":"concrete money split example in the instruments currency","ownMoneyView":"2-3 natural lines in first person -- would you deploy capital here and why","proInvestorView":"full institutional analysis -- market structure, key levels, order flow, smart money positioning, and risk framework -- use proper technical terms freely here","aiVerdict":"single honest sentence in first person grounded in this instruments actual setup"}`
+Return valid JSON with exactly these fields (no extra, no missing):
+{"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","target":"string","stopLoss":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string","string"],"whatCouldGoWrong":["string","string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string"}`
 
     const text = await groqChat(MODEL, [
       { role: "system", content: system },
