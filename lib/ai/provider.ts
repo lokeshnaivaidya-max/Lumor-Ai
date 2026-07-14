@@ -409,19 +409,89 @@ const GROUNDING = `You must analyze ONLY the real data provided in the prompt (Y
 
 /* ------------------------------- Functions ------------------------------- */
 
-/** Detect option contracts by name pattern. */
+/* ---------------------------- Options Detection --------------------------- */
+
+type OptionDetails = {
+  underlying: string
+  strike: string
+  expiry: string
+  type: "CALL" | "PUT"
+  raw: string
+}
+
+const INDEX_NAMES = /\b(NIFTY|BANKNIFTY|FINNIFTY|MIDCPNIFTY|SENSEX|BANKEX|NIFTYMIDCAP)\b/i
+
+function parseOptionName(name: string): OptionDetails | null {
+  // Pattern 1: "NIFTY JUL 24000 CE" — spaced format
+  const spaced = name.match(/^(.+?)\s+([A-Z]{3}\d*)\s+([\d,.]+)\s+(CE|PE)\s*$/i)
+  if (spaced) {
+    const [, underlying, expiry, strikeStr, type] = spaced
+    const strike = strikeStr.replace(/[,.]/g, "").replace(/^0+/, "") || strikeStr
+    return {
+      underlying: underlying.toUpperCase(),
+      strike,
+      expiry: expiry.toUpperCase(),
+      type: type.toUpperCase() === "CE" ? "CALL" : "PUT",
+      raw: name,
+    }
+  }
+
+  // Pattern 2: "NIFTY240724000CE" — Yahoo Finance compact format (underlying + YYMMDD + strike + CE/PE)
+  const yahooCompact = name.match(/^([A-Z]+)(\d{2})(?:\d{2})(\d{2})(\d+)(CE|PE)\s*$/i)
+  if (yahooCompact) {
+    const [, underlying, year, month, day, strikeStr, type] = yahooCompact
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+    const monthIdx = parseInt(month, 10)
+    const expiry = monthIdx >= 1 && monthIdx <= 12 ? monthNames[monthIdx - 1] + year : `${month}/${year}`
+    return {
+      underlying: underlying.toUpperCase(),
+      strike: strikeStr.replace(/^0+/, "") || strikeStr,
+      expiry,
+      type: type.toUpperCase() === "CE" ? "CALL" : "PUT",
+      raw: name,
+    }
+  }
+
+  // Pattern 3: "NIFTY Jul 24 2025 24000.00 C" — Yahoo Finance verbose format
+  const verbose = name.match(/^(.+?)\s+([A-Z][a-z]{2})\s+(\d+)\s+(\d{4})\s+([\d,.]+)\s+(C|P)\s*$/i)
+  if (verbose) {
+    const [, underlying, month, day, year, strikeStr, type] = verbose
+    return {
+      underlying: underlying.toUpperCase(),
+      strike: strikeStr.replace(/[,.]/g, "").replace(/^0+/, "") || strikeStr,
+      expiry: `${month.toUpperCase()} ${year}`,
+      type: type.toUpperCase() === "C" ? "CALL" : "PUT",
+      raw: name,
+    }
+  }
+
+  return null
+}
+
 function isOptionName(name: string): boolean {
-  return /\b(CE|PE)\b/i.test(name)
+  // Direct CE/PE check
+  if (/\b(CE|PE)\b/i.test(name)) return true
+  // Index option names without explicit CE/PE but containing index + number + C/P
+  if (INDEX_NAMES.test(name) && /\b(C|P)\b/i.test(name)) return true
+  // Parse attempt as final check
+  return parseOptionName(name) !== null
 }
 
 /** Deep, structured instrument analysis grounded strictly in the supplied data. */
 export async function generateAnalysis(input: { name: string; horizon: string; context: string }): Promise<Analysis> {
   const isOption = isOptionName(input.name)
+  const optionDetails = isOption ? parseOptionName(input.name) : null
 
   const system = isOption
     ? `You are Lumora, a professional options trader and institutional derivatives analyst. Your job is NOT to explain Greeks or indicators. Your job is to identify where smart money is positioning and whether a trade has edge.
 
-ANALYZE THIS OPTION CONTRACT using this priority:
+ANALYZE THIS OPTION CONTRACT:
+Underlying: ${optionDetails?.underlying ?? input.name}
+Strike: ${optionDetails?.strike ?? "N/A"}
+Expiry: ${optionDetails?.expiry ?? "N/A"}
+Type: ${optionDetails?.type ?? "N/A"}
+
+Evaluation priority:
 1. Overall market trend and index trend
 2. Open Interest shifts and Put-Call ratio
 3. Max Pain level
@@ -493,7 +563,14 @@ VERDICT MAPPING:
 GROUNDING: ${GROUNDING}`
   try {
     const userPrompt = isOption
-      ? `Analyze this option contract: ${input.name} for a ${input.horizon} trader. Evaluate the option chain, implied volatility, Greeks, and market structure to determine if there is a trading edge.
+      ? `Analyze this option contract: ${input.name}
+Underlying: ${optionDetails?.underlying ?? "N/A"}
+Strike: ${optionDetails?.strike ?? "N/A"}
+Expiry: ${optionDetails?.expiry ?? "N/A"}
+Type: ${optionDetails?.type ?? "N/A"}
+Horizon: ${input.horizon}
+
+Evaluate the option chain, implied volatility, Greeks, and market structure to determine if there is a trading edge.
 
 ${input.context}
 
