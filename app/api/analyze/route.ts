@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
-import { generateAnalysis, generateFallbackAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import { generateAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -40,29 +40,21 @@ export async function POST(req: Request) {
   log("Accept header:", accept)
 
   async function tryAnalyze(name: string, context: string) {
-    log("=== TRY GEMINI ===")
+    log("=== AI ANALYSIS ===")
     try {
       const analysis = await generateAnalysis({ name, horizon, context })
-      log("=== GEMINI SUCCESS ===")
+      log("=== AI SUCCESS ===")
       log("Recommendation:", analysis.recommendation, "Confidence:", analysis.confidenceScore)
       return analysis
     } catch (err) {
-      log("=== GEMINI FAILED ===")
+      log("=== AI FAILED ===")
       log("Error type:", (err as Error).name)
       log("Error message:", (err as Error).message)
       if ((err as Error).cause) {
         log("Error cause:", (err as Error).cause)
       }
       log("Diagnostic:", JSON.stringify(getAiErrorDiagnostic(err)))
-      // Surface quota/billing/config errors to the frontend — do NOT fall back silently
-      if (err instanceof AiBillingError || err instanceof AiConfigError) {
-        log("Surface error to UI — no fallback")
-        throw err
-      }
-      log("=== USING FALLBACK ===")
-      const fallback = generateFallbackAnalysis({ name, horizon, context })
-      log("Fallback recommendation:", fallback.recommendation, "Confidence:", fallback.confidenceScore)
-      return fallback
+      throw err
     }
   }
 
@@ -107,9 +99,9 @@ export async function POST(req: Request) {
           log("=== STREAM COMPLETE ===")
         } catch (err) {
           const errorMessage = err instanceof AiBillingError
-            ? "AI unavailable: Gemini quota exceeded."
+            ? "AI unavailable: Quota exceeded. Please try again later."
             : err instanceof AiConfigError
-            ? "AI unavailable: Gemini API key error."
+            ? "AI unavailable: API key not configured."
             : err instanceof Error
             ? err.message
             : "Analysis failed due to an unexpected error."

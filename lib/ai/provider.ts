@@ -1,4 +1,4 @@
-// Lumora AI service — provider-agnostic interface backed by OpenRouter.
+// Lumora AI service — provider-agnostic interface backed by Groq.
 //
 // The rest of the application imports ONLY the functions below and never learns
 // which model provider is in use. Swapping providers means editing this file
@@ -13,9 +13,9 @@ export const DISCLAIMER = "For research and educational purposes only. Not finan
 
 const SECRET_PATTERN = /(api[_-]?key|secret|token|password|authorization|bearer)/i
 
-const BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
-const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash"
-const MODEL_FAST = process.env.OPENROUTER_MODEL_FAST || "google/gemini-2.5-flash"
+const BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
+const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
+const MODEL_FAST = process.env.GROQ_MODEL_FAST || "llama-3.3-70b-versatile"
 
 type ErrorWithDetails = Error & {
   status?: unknown
@@ -41,50 +41,78 @@ export class AiBillingError extends Error {
 }
 
 function getApiKey(): string {
-  const key = process.env.OPENROUTER_API_KEY?.trim()
-  if (!key) throw new AiConfigError("OPENROUTER_API_KEY is not configured.")
+  const key = process.env.GROQ_API_KEY?.trim()
+  if (!key) throw new AiConfigError("GROQ_API_KEY is not configured.")
   return key
 }
 
-async function openRouterChat(
+const FALLBACK_MODEL = "deepseek-r1-distill-llama-70b"
+
+const GROQ_PERMANENT_CODES = new Set([401, 403])
+
+async function groqChat(
   model: string,
   messages: { role: "system" | "user" | "assistant"; content: string }[],
   opts?: { temperature?: number; responseFormat?: { type: "json_object" }; timeout?: number },
 ): Promise<string> {
   const key = getApiKey()
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), opts?.timeout ?? 30000)
+  const modelsToTry = model !== FALLBACK_MODEL ? [model, FALLBACK_MODEL] : [model]
+  let lastError: unknown
 
-  try {
-    const res = await fetch(BASE_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: opts?.temperature ?? 0.4,
-        ...(opts?.responseFormat ? { response_format: opts.responseFormat } : {}),
-      }),
-      signal: controller.signal,
-    })
+  for (const currentModel of modelsToTry) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), opts?.timeout ?? 30000)
 
-    if (!res.ok) {
-      const body = await res.text()
-      if (res.status === 429) throw new AiBillingError(`OpenRouter quota exceeded: ${body}`)
-      if (res.status === 401 || res.status === 403) throw new AiConfigError(`OpenRouter auth error (${res.status}): ${body}`)
-      throw new Error(`OpenRouter API error (${res.status}): ${body}`)
+    try {
+      console.log(`[Groq] Request started, Model: ${currentModel}`)
+      const res = await fetch(BASE_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: currentModel,
+          messages,
+          temperature: opts?.temperature ?? 0.4,
+          ...(opts?.responseFormat ? { response_format: opts.responseFormat } : {}),
+        }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok) {
+        const body = await res.text()
+        if (GROQ_PERMANENT_CODES.has(res.status)) {
+          throw new AiConfigError(`Groq auth error (${res.status}): ${body}`)
+        }
+        if (res.status === 429) {
+          throw new AiBillingError(`Groq quota exceeded: ${body}`)
+        }
+        throw new Error(`Groq API error (${res.status}): ${body}`)
+      }
+
+      const json = await res.json() as { choices: { message: { content: string } }[]; error?: { message: string } }
+      if (json.error) throw new Error(json.error.message)
+      if (!json.choices?.[0]?.message?.content) throw new Error("Groq returned an empty response.")
+      console.log(`[Groq] Success, Model: ${currentModel}`)
+      return json.choices[0].message.content
+    } catch (err) {
+      lastError = err
+      if (GROQ_PERMANENT_CODES.has((err as { status?: number })?.status ?? 0)) {
+        console.error(`[Groq] Error:`, (err as Error).message)
+        throw err
+      }
+      if (currentModel === modelsToTry[modelsToTry.length - 1]) {
+        console.error(`[Groq] Error:`, (err as Error).message)
+        throw err
+      }
+      console.log(`[Groq] Model ${currentModel} failed (${(err as Error).message}), trying fallback...`)
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const json = await res.json() as { choices: { message: { content: string } }[]; error?: { message: string } }
-    if (json.error) throw new Error(json.error.message)
-    if (!json.choices?.[0]?.message?.content) throw new Error("OpenRouter returned an empty response.")
-    return json.choices[0].message.content
-  } finally {
-    clearTimeout(timeout)
   }
+
+  throw lastError instanceof Error ? lastError : new Error("All Groq models failed.")
 }
 
 /* --------------------------- Lightweight TTL cache -------------------------- */
@@ -123,23 +151,18 @@ export type ChatStreamEvent =
   | { type: "done"; usage: { promptTokens: number; completionTokens: number } }
   | { type: "error"; message: string }
 
-/**
- * Streams a multi-turn chat completion from OpenRouter. Yields token deltas and
- * a final `done` event carrying token usage. Throws on configuration/billing
- * errors so the caller can surface a proper message.
- */
 export async function* streamChat(
   messages: ChatMessageInput[],
   opts?: { model?: string; system?: string },
 ): AsyncGenerator<ChatStreamEvent> {
   const key = getApiKey()
   const model = opts?.model || MODEL
-  const openRouterMessages: { role: "system" | "user" | "assistant"; content: string }[] = []
+  const groqMessages: { role: "system" | "user" | "assistant"; content: string }[] = []
   if (opts?.system || CHAT_SYSTEM) {
-    openRouterMessages.push({ role: "system", content: opts?.system || CHAT_SYSTEM })
+    groqMessages.push({ role: "system", content: opts?.system || CHAT_SYSTEM })
   }
   for (const m of messages) {
-    openRouterMessages.push({ role: m.role === "assistant" || m.role === "model" ? "assistant" : "user", content: m.content })
+    groqMessages.push({ role: m.role === "assistant" || m.role === "model" ? "assistant" : "user", content: m.content })
   }
 
   let promptTokens = 0
@@ -153,19 +176,19 @@ export async function* streamChat(
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ model, messages: openRouterMessages, temperature: 0.4, stream: true }),
+      body: JSON.stringify({ model, messages: groqMessages, temperature: 0.4, stream: true }),
       signal: controller.signal,
     })
 
     if (!res.ok) {
       const body = await res.text()
-      if (res.status === 429) throw new AiBillingError(`OpenRouter quota exceeded: ${body}`)
-      if (res.status === 401 || res.status === 403) throw new AiConfigError(`OpenRouter auth error (${res.status}): ${body}`)
-      throw new Error(`OpenRouter API error (${res.status}): ${body}`)
+      if (res.status === 429) throw new AiBillingError(`Groq quota exceeded: ${body}`)
+      if (res.status === 401 || res.status === 403) throw new AiConfigError(`Groq auth error (${res.status}): ${body}`)
+      throw new Error(`Groq API error (${res.status}): ${body}`)
     }
 
     const reader = res.body?.getReader()
-    if (!reader) throw new Error("OpenRouter returned no response body for streaming.")
+    if (!reader) throw new Error("Groq returned no response body for streaming.")
 
     const decoder = new TextDecoder()
     let buffer = ""
@@ -422,7 +445,7 @@ GROUNDING: ${GROUNDING}`
   try {
     const userPrompt = `Analyze the following instrument for a ${input.horizon} trader. Ground every statement in these figures.\n\n${input.context}\n\nRespond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON. The JSON must follow this structure exactly: {\n  "recommendation": "Strong Buy" | "Buy" | "Hold" | "Wait" | "Sell" | "Strong Sell",\n  "recommendationReason": "string",\n  "confidenceScore": 0-100,\n  "confidenceNote": "string",\n  "quickSummary": ["string", "string", "string"],\n  "entry": "string",\n  "target": "string",\n  "stopLoss": "string",\n  "holdingPeriod": "string",\n  "riskReward": "string",\n  "probabilityOfProfit": 0-100,\n  "probabilityOfLoss": 0-100,\n  "probabilityReason": "string",\n  "bestTimeframe": "string",\n  "suitableFor": ["string"],\n  "scenarioBest": "string",\n  "scenarioLikely": "string",\n  "scenarioWorst": "string",\n  "maxDownside": "string",\n  "expectedUpside": "string",\n  "riskRewardNote": "string",\n  "positionVerySafe": "string",\n  "positionModerate": "string",\n  "positionAggressive": "string",\n  "positionNote": "string",\n  "bestHoldingTime": "Intraday" | "1 Week" | "1 Month" | "3 Months" | "Long Term",\n  "holdingReason": "string",\n  "whyBuy": ["string"],\n  "whatCouldGoWrong": ["string"],\n  "support": "string",\n  "supportNote": "string",\n  "resistance": "string",\n  "resistanceNote": "string",\n  "riskLevel": "Low" | "Medium" | "High",\n  "riskNote": "string",\n  "marketMood": "Bullish" | "Bearish" | "Neutral",\n  "marketMoodNote": "string",\n  "beginnerExplanation": "string",\n  "isGoodToday": "string",\n  "biggestRisk": "string",\n  "safestWay": "string",\n  "waitOrBuyNow": "string",\n  "smallBudgetPlan": "string",\n  "largeBudgetPlan": "string",\n  "actionToday": "string",\n  "actionNext3Days": "string",\n  "actionNextWeek": "string",\n  "investmentStyle": "Intraday" | "Swing" | "Positional" | "Long Term",\n  "investmentStyleReason": "string",\n  "dataUsed": ["string"],\n  "aiCannotKnow": ["string"],\n  "whoCanConsider": ["string"],\n  "whoShouldAvoid": ["string"],\n  "worstMistake": "string",\n  "simpleExample": "string",\n  "ownMoneyView": "string",\n  "proInvestorView": "string",\n  "aiVerdict": "string"\n}`
 
-    const text = await openRouterChat(MODEL, [
+    const text = await groqChat(MODEL, [
       { role: "system", content: system },
       { role: "user", content: userPrompt },
     ], { temperature: 0.35, responseFormat: { type: "json_object" }, timeout: 25000 })
@@ -440,7 +463,7 @@ export async function generateNewsSentiment(input: { name: string; headlines: st
   const list = input.headlines.map((h, i) => `${i}. "${h}"`).join("\n")
   const system = `You are a financial news sentiment analyst. Classify each headline's likely impact on ${input.name} from an investor's perspective as "positive", "negative", or "neutral", based ONLY on the headline text. Do not invent headlines or facts.`
   try {
-    const text = await openRouterChat(MODEL_FAST, [
+    const text = await groqChat(MODEL_FAST, [
       { role: "system", content: system },
       { role: "user", content: `Headlines:\n${list}\n\nReturn JSON with "overall" ("positive"/"negative"/"neutral"), "summary" (string), and "items" (array of {index, sentiment, reason}).` },
     ], { temperature: 0.2, responseFormat: { type: "json_object" } })
@@ -455,12 +478,12 @@ export async function generateMarketSummary(input: { region: string; movers: str
   const system = `You are Lumora's markets desk. Write a single tight paragraph (max 3 sentences) summarizing the current market tone for the ${input.region} region. ${GROUNDING} Do not use markdown headers or bullet points.`
   return cached(`summary:${input.region}:${input.movers}`, 60_000, async () => {
     try {
-      const text = await openRouterChat(MODEL_FAST, [
+      const text = await groqChat(MODEL_FAST, [
         { role: "system", content: system },
         { role: "user", content: `Current snapshot of key instruments (symbol: price, % change):\n${input.movers}\n\nSummarize the market tone in plain prose.` },
       ], { temperature: 0.4 })
       const summary = text.trim()
-      if (!summary) throw new Error("OpenRouter returned an empty response for market summary.")
+      if (!summary) throw new Error("Groq returned an empty response for market summary.")
       return summary
     } catch (err) {
       throw classify(err)
@@ -476,7 +499,7 @@ export async function generateText(input: {
   temperature?: number
 }): Promise<{ text: string }> {
   try {
-    const text = await openRouterChat(input.model || MODEL_FAST, [
+    const text = await groqChat(input.model || MODEL_FAST, [
       { role: "system", content: input.system },
       { role: "user", content: input.prompt },
     ], { temperature: input.temperature ?? 0.4 })
@@ -494,7 +517,7 @@ export async function generateInvestmentResearch(input: {
 }): Promise<InvestmentResearch> {
   const system = `You are Lumora, a senior equity/asset research analyst writing a concise institutional research note. Always explain WHY. ${GROUNDING}`
   try {
-    const text = await openRouterChat(MODEL, [
+    const text = await groqChat(MODEL, [
       { role: "system", content: system },
       { role: "user", content: `Produce an investment research note for the following instrument. Ground every statement in these figures and headlines.\n\n${input.context}\n\nRespond with valid JSON.` },
     ], { temperature: 0.4, responseFormat: { type: "json_object" } })
@@ -505,340 +528,4 @@ export async function generateInvestmentResearch(input: {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Fallback analysis — data-driven when Gemini is unavailable                  */
-/* -------------------------------------------------------------------------- */
 
-function findNum(v: string): number | null {
-  const m = v.replace(/[,₹$€£¥]/g, "").match(/[-+]?\d+(?:\.\d+)?/)
-  return m ? parseFloat(m[0]) : null
-}
-
-function isBuy(r: string) { return r === "Strong Buy" || r === "Buy" }
-function isSell(r: string) { return r === "Sell" || r === "Strong Sell" }
-function isHoldWait(r: string) { return r === "Hold" || r === "Wait" }
-
-function pick<T>(arr: T[], seed: number): T {
-  return arr[Math.abs(seed) % arr.length]
-}
-
-
-
-function quickSummaryPoints(name: string, price: number, trend: string, rsiVal: number | null, macdHist: number | null, vol: number | null, avgVol: number | null): string[] {
-  const points: string[] = []
-  points.push(`${name} is trading near ${price >= 1000 ? (price / 1000).toFixed(2) + "K" : price.toFixed(2)} with a ${trend.toLowerCase().includes("bullish") ? "positive" : trend.toLowerCase().includes("bearish") ? "cautious" : "neutral"} outlook.`)
-  if (rsiVal !== null) points.push(`RSI at ${rsiVal.toFixed(1)} suggests ${rsiVal > 70 ? "the stock may be due for a pause" : rsiVal < 30 ? "the stock may be undervalued" : "balanced momentum with no extreme signals"}.`)
-  if (macdHist !== null) points.push(macdHist > 0 ? `Momentum indicators are improving, which often precedes upward movement.` : `Momentum is declining, suggesting the current push may be losing force.`)
-  if (vol !== null && avgVol !== null && avgVol > 0) points.push(vol > avgVol * 1.3 ? `Trading volume is above average, indicating strong market interest.` : `Volume is in line with normal levels, showing no unusual activity.`)
-  return points.slice(0, 3)
-}
-
-function scenarioText(name: string, price: number, sl: string, tgt: string, direction: "up" | "down" | "mixed"): { best: string; likely: string; worst: string } {
-  const slNum = parseFloat(sl)
-  const tgtNum = parseFloat(tgt)
-  const upPct = tgtNum && price > 0 ? `+${((tgtNum - price) / price * 100).toFixed(1)}%` : "+5-8%"
-  const downPct = slNum && price > 0 ? `-${((price - slNum) / price * 100).toFixed(1)}%` : "-5-8%"
-
-  if (direction === "up") return {
-    best: `If buying momentum continues, ${name} could push toward ${tgt}, for a potential gain of ${upPct}.`,
-    likely: `Gradual upward movement within the current range is the most realistic outcome — the trend is supportive but steady.`,
-    worst: `If sentiment shifts suddenly, ${name} could fall toward ${sl}, a drop of ${downPct}. This would likely be temporary if fundamentals remain sound.`,
-  }
-  if (direction === "down") return {
-    best: `A recovery bounce from current levels could take ${name} back toward ${tgt}, recovering ${upPct}.`,
-    likely: `The predominant direction is down — the most likely outcome is continued weakness toward ${sl}, a decline of ${downPct}.`,
-    worst: `If sellers intensify, ${name} could break below ${sl} and extend losses significantly beyond ${downPct}.`,
-  }
-  return {
-    best: `If buyers step in, ${name} could rally toward ${tgt}, a gain of ${upPct}.`,
-    likely: `The most likely path is sideways movement between ${sl} and ${tgt} as the market decides on a direction.`,
-    worst: `If sellers take control, ${name} could slip to ${sl}, a drop of ${downPct}.`,
-  }
-}
-
-export function generateFallbackAnalysis(input: {
-  name: string
-  horizon: string
-  context: string
-}): Analysis {
-  const ctx = input.context
-  const name = input.name
-  const lines = ctx.split("\n").filter(Boolean)
-
-  const get = (key: string): string => {
-    for (const l of lines) {
-      if (l.toLowerCase().includes(key.toLowerCase())) {
-        const after = l.split(":")[1]?.trim() ?? ""
-        return after || "n/a"
-      }
-    }
-    return "n/a"
-  }
-
-  const priceStr = get("Last:")
-  const price = findNum(priceStr) ?? 0
-
-  const prevClose = findNum(get("Previous close:"))
-  const dayLow = findNum(get("Day range:"))
-  const dayHigh = dayLow !== null ? (() => {
-    const parts = get("Day range:").split("–")
-    return parts.length > 1 ? findNum(parts[1]) : null
-  })() : null
-
-  const rsiVal = findNum(get("RSI(14):"))
-  const macdVal = get("MACD:")
-  const macdHist = macdVal.includes("hist") ? findNum(macdVal.split("hist")[1]) : null
-  const ema20 = findNum(get("EMA 20"))
-  const ema50 = findNum(get("EMA 50"))
-  const ema200 = findNum(get("EMA 200"))
-  const supportVal = findNum(get("Support / Resistance"))
-  const resistanceVal = supportVal !== null ? (() => {
-    const parts = get("Support / Resistance:").split("/")
-    return parts.length > 1 ? findNum(parts[1]) : null
-  })() : null
-  const trend = get("Trend regime:").split("(")[0]?.trim() || "neutral"
-  const mCap = get("Market cap:")
-  const pe = get("Trailing P/E:")
-  const beta = get("Beta:")
-
-  const rsiSignal = rsiVal !== null ? (rsiVal > 70 ? "overbought" : rsiVal < 30 ? "oversold" : "neutral") : "neutral"
-
-  const isBullishTrend = trend.toLowerCase().includes("bullish")
-  const isBearishTrend = trend.toLowerCase().includes("bearish")
-  const trendUp = ema20 !== null && ema50 !== null && ema20 > ema50
-
-  // Dynamic confidence from multiple factors
-  let confidence = 50
-
-  if (rsiVal !== null) {
-    if (rsiVal >= 40 && rsiVal <= 60) confidence += 4
-    else if (rsiVal > 70 || rsiVal < 30) confidence -= 4
-    else if (rsiVal > 60 || rsiVal < 40) confidence += 2
-  }
-
-  if (isBullishTrend && trendUp) confidence += 8
-  else if (isBearishTrend && !trendUp) confidence += 4
-  else if (isBullishTrend !== isBearishTrend) confidence += 2
-  else confidence -= 4
-
-  if (macdHist !== null) {
-    if (macdHist > 0) confidence += 4
-    else if (macdHist < 0) confidence -= 3
-  }
-
-  const adxVal = findNum(get("ADX"))
-  if (adxVal !== null) {
-    if (adxVal >= 25) confidence += 4
-    else if (adxVal >= 20) confidence += 2
-    else if (adxVal < 15) confidence -= 2
-  }
-
-  if (ema20 !== null && ema50 !== null && ema200 !== null && price > 0) {
-    const aligned = price > ema20 && ema20 > ema50 && ema50 > ema200
-    if (aligned) confidence += 4
-    else if (price < ema20 && ema20 < ema50) confidence -= 3
-  }
-
-  const volStr = get("Volume:")
-  const avgVolStr = get("avg")
-  const vol = findNum(volStr)
-  const avgVol = findNum(avgVolStr)
-  if (vol !== null && avgVol !== null && avgVol > 0) {
-    if (vol > avgVol * 1.5) confidence += 3
-    else if (vol < avgVol * 0.5) confidence -= 2
-  }
-
-  const betaStr = get("Beta:")
-  const betaVal = betaStr !== "n/a" ? findNum(betaStr) : null
-  if (betaVal !== null) {
-    if (betaVal >= 0.8 && betaVal <= 1.3) confidence += 2
-    else if (betaVal > 2) confidence -= 3
-    else if (betaVal < 0.5) confidence -= 1
-  }
-
-  const peVal = pe !== "n/a" ? findNum(pe) : null
-  if (peVal !== null) {
-    if (peVal > 0 && peVal <= 25) confidence += 2
-    else if (peVal > 50) confidence -= 2
-  }
-
-  confidence = Math.max(10, Math.min(95, confidence))
-
-  let direction: "up" | "down" | "mixed" = "mixed"
-  if (isBullishTrend && trendUp && (rsiVal === null || rsiVal < 70)) direction = "up"
-  else if (isBearishTrend || (rsiVal !== null && rsiVal > 70)) direction = "down"
-  else direction = "mixed"
-
-  let recommendation: Recommendation = "Hold"
-  if (confidence >= 80) recommendation = "Strong Buy"
-  else if (confidence >= 68) recommendation = "Buy"
-  else if (confidence >= 55) recommendation = "Hold"
-  else if (confidence >= 40) recommendation = "Wait"
-  else if (confidence >= 25) recommendation = "Sell"
-  else recommendation = "Strong Sell"
-
-  let mood: Bias = "Neutral"
-  if (isBullishTrend && rsiSignal !== "overbought") mood = "Bullish"
-  else if (isBearishTrend || rsiSignal === "overbought") mood = "Bearish"
-
-  let risk: RiskLevel = "Medium"
-  if (beta !== "n/a") {
-    const b = findNum(beta.split(",")[0])
-    if (b !== null) risk = b > 1.5 ? "High" : b < 0.8 ? "Low" : "Medium"
-  }
-
-  const entry = price > 0 ? `${price.toFixed(2)}` : "Not computed"
-  const tgt = resistanceVal !== null ? resistanceVal.toFixed(2) : price > 0 ? (price * 1.05).toFixed(2) : "Not computed"
-  const sl = supportVal !== null ? supportVal.toFixed(2) : prevClose !== null ? (prevClose * 0.95).toFixed(2) : "Not computed"
-
-  const horizonLabel = input.horizon === "day" ? "1-3 days" : input.horizon === "swing" ? "1-4 weeks" : "1-6 months"
-  const scen = scenarioText(name, price, sl, tgt, direction)
-
-  const recReasonText = recommendation === "Strong Buy" || recommendation === "Buy"
-    ? `${name} shows a favorable setup — the trend is supportive and most indicators align positively, suggesting conditions may be right for entry.`
-    : recommendation === "Sell" || recommendation === "Strong Sell"
-    ? `${name} faces headwinds — the trend is weak or deteriorating, and risk management should be the priority right now.`
-    : confidence >= 55
-    ? `The data for ${name} is balanced with mixed signals — holding off for clearer direction is reasonable while watching key price levels.`
-    : `The setup for ${name} lacks clear conviction — waiting for a better-defined entry point is the conservative call.`
-
-  const probOfProfit = isBuy(recommendation) ? Math.round(50 + confidence * 0.15) : isSell(recommendation) ? Math.round(100 - confidence * 0.2) : Math.round(45 + confidence * 0.08)
-
-  const probReasonText = isBuy(recommendation)
-    ? `Trend strength and positive momentum indicators give ${name} a higher probability of moving higher, though no prediction is guaranteed.`
-    : isSell(recommendation)
-    ? `Weak technical structure and negative momentum suggest the probability of further downside is elevated for ${name}.`
-    : `The mixed signals in ${name}'s data make the outcome uncertain — probabilities are roughly balanced between profit and loss.`
-
-  const rsiExplanation = rsiVal !== null
-    ? rsiVal > 70 ? `RSI at ${rsiVal.toFixed(1)} means many buyers have already entered, often leading to a pause.`
-      : rsiVal < 30 ? `RSI at ${rsiVal.toFixed(1)} means many sellers have exited, sometimes creating a buying opportunity.`
-        : `RSI at ${rsiVal.toFixed(1)} shows no extreme buying or selling pressure.`
-    : "RSI data is currently unavailable."
-
-  const entryText = price > 0
-    ? direction === "up"
-      ? `A reasonable entry range is near ${price.toFixed(2)}, with the option to add on dips toward support at ${sl}.`
-      : `Consider waiting for a pullback toward ${sl} before entering. A hurried entry at ${price.toFixed(2)} carries extra risk.`
-    : "Not computed"
-
-  const beginnerText = direction === "up"
-    ? `Think of ${name} like a shop that's getting more customers each day — the trend is positive. But even good shops have quiet days. The price may dip sometimes before continuing upward. A smart way to invest is to buy a little now and keep some money aside to buy more if the price drops.`
-    : direction === "down"
-    ? `${name} is like a shop with fewer customers lately — the trend is down. This doesn't mean it's a bad shop forever, but it's usually smarter to wait until customers start returning before jumping in.`
-    : `${name} is like a shop where the number of customers is steady — no boom, no bust. This stability can be good for patient investors, but waiting for a clearer direction before buying may be prudent.`
-
-  const confidenceNoteText = confidence >= 70
-    ? `The confidence of ${confidence}% reflects that multiple indicators point in the same direction for ${name}.`
-    : confidence >= 50
-    ? `The confidence of ${confidence}% indicates mixed but leaning signals for ${name}. Markets can change direction quickly, so this is not a guarantee.`
-    : `The confidence of ${confidence}% for ${name} reflects conflicting signals across indicators — outcomes are more uncertain than usual.`
-
-  return {
-    recommendation,
-    recommendationReason: recReasonText,
-    confidenceScore: confidence,
-    confidenceNote: confidenceNoteText,
-    quickSummary: quickSummaryPoints(name, price, trend, rsiVal, macdHist, vol, avgVol),
-    entry: entryText,
-    target: `~${tgt}`,
-    stopLoss: `~${sl}`,
-    holdingPeriod: horizonLabel,
-    riskReward: sl !== "Not computed" && tgt !== "Not computed" && price > 0
-      ? `1 : ${((parseFloat(tgt) - price) / (price - parseFloat(sl))).toFixed(1)}` : "Not computed",
-    probabilityOfProfit: Math.min(100, Math.max(0, probOfProfit)),
-    probabilityOfLoss: Math.min(100, Math.max(0, 100 - probOfProfit)),
-    probabilityReason: probReasonText,
-    bestTimeframe: input.horizon === "day" ? "Intraday" : input.horizon === "swing" ? "Swing (1-4 weeks)" : "Positional (1-6 months)",
-    suitableFor: ["Swing", "Long Term"] as Analysis["suitableFor"],
-    scenarioBest: scen.best,
-    scenarioLikely: scen.likely,
-    scenarioWorst: scen.worst,
-    maxDownside: sl !== "Not computed" && price > 0 ? `-${((price - parseFloat(sl)) / price * 100).toFixed(1)}%` : "Not computed",
-    expectedUpside: tgt !== "Not computed" && price > 0 ? `+${((parseFloat(tgt) - price) / price * 100).toFixed(1)}%` : "Not computed",
-    riskRewardNote: direction === "up"
-      ? `The potential upside to ${tgt} appears larger than the downside to ${sl} at current levels, but always plan for both outcomes.`
-      : direction === "down"
-      ? `The risk of further decline to ${sl} currently outweighs the upside potential — capital preservation may be more important than chasing gains.`
-      : `The risk and reward are relatively balanced near current levels — a clear direction has not yet emerged.`,
-    positionVerySafe: "10%",
-    positionModerate: "20%",
-    positionAggressive: "30%",
-    positionNote: "Never invest more than you can afford to lose. Start small and add on confirmation.",
-    bestHoldingTime: input.horizon === "day" ? "Intraday" as const : input.horizon === "swing" ? "1 Month" as const : "3 Months" as const,
-    holdingReason: `The ${horizonLabel} horizon aligns with the current technical setup for ${name}.`,
-    whyBuy: [
-      direction === "up"
-        ? `${name} is in a confirmed ${trend} direction with supportive momentum readings.`
-        : direction === "down"
-        ? `A potential contrarian opportunity if ${name} shows signs of reversal from its current downtrend.`
-        : `${name} offers stability — the neutral trend suggests no extreme moves in either direction.`,
-      ...(rsiVal !== null && rsiVal < 70 && rsiVal > 30 ? [`RSI at ${rsiVal.toFixed(1)} suggests a balanced risk-reward entry.`] : rsiVal !== null && rsiVal < 30 ? [`RSI at ${rsiVal.toFixed(1)} in oversold territory may present a value entry for patient investors.`] : []),
-      ...(mCap ? [`Market cap of ${mCap}.`] : []),
-    ].slice(0, 4),
-    whatCouldGoWrong: [
-      risk === "High" ? `${name} has high volatility — price swings of 3-5% in a single week are possible.` : `Markets can reverse direction quickly based on news or sentiment shifts.`,
-      ...(rsiVal !== null && rsiVal > 70 ? [`RSI at ${rsiVal.toFixed(1)} suggests the stock is overbought — a pullback is historically more likely in this zone.`] : []),
-      ...(peVal !== null && peVal > 30 ? [`The P/E ratio of ${peVal.toFixed(1)} is elevated — the market has priced in high growth expectations which may not materialize.`] : peVal !== null && peVal < 0 ? [`A negative P/E ratio indicates the company is not currently profitable.`] : []),
-      `Unexpected earnings results or macro events could impact ${name}.`,
-    ].slice(0, 4),
-    support: `~${sl}`,
-    supportNote: `Near ${sl}, buyers have stepped in previously, making it a level to watch for potential bounces.`,
-    resistance: `~${tgt}`,
-    resistanceNote: `Near ${tgt}, sellers have historically appeared, making it a level where upward moves may pause.`,
-    riskLevel: risk,
-    riskNote: risk === "Low" ? `${name} shows lower volatility than the broader market — price movements tend to be more predictable.` : risk === "High" ? `${name} has elevated volatility — price can move sharply in either direction, requiring wider stop-losses and stronger conviction for positions.` : `${name} shows average volatility — price moves are neither unusually calm nor excessively wild.`,
-    marketMood: mood,
-    marketMoodNote: mood === "Bullish" ? `The overall weight of evidence suggests more participants are buying ${name} than selling.` : mood === "Bearish" ? `The prevailing sentiment for ${name} is cautious — selling pressure outweighs buying interest.` : `Neither bullish nor bearish forces have clear control over ${name} at this time.`,
-    beginnerExplanation: beginnerText,
-    isGoodToday: isBuy(recommendation) && confidence >= 65
-      ? `${name} appears reasonably positioned for entry based on current data, though timing any purchase carries risk.`
-      : isHoldWait(recommendation) || confidence < 65
-      ? `The picture for ${name} is not yet clear enough to recommend buying today. Watching for a better-defined setup is the safer choice.`
-      : `The data for ${name} suggests caution — waiting for a clearer signal is prudent.`,
-    biggestRisk: direction === "up"
-      ? `The biggest risk is that the upward momentum fails and ${name} reverses direction unexpectedly. A stop-loss near ${sl} can help limit downside if this happens.`
-      : direction === "down"
-      ? `The biggest risk is that the decline accelerates. Without a clear support level, losses could exceed expectations.`
-      : `The biggest risk is that ${name} breaks out of its current range in either direction unexpectedly — being positioned before the breakout is risky without confirmation.`,
-    safestWay: isHoldWait(recommendation)
-      ? `The safest approach is to stay in cash and wait for a clearer signal. There is no penalty for waiting.`
-      : `The safest approach is to buy a small portion now and add gradually if the price moves in your favor.`,
-    waitOrBuyNow: isBuy(recommendation) && confidence >= 65
-      ? `Starting a small position with a stop-loss at ${sl} is reasonable for those comfortable with the risk.`
-      : `Waiting is the better choice — the data isn't aligned strongly enough to justify entering ${name} today.`,
-    smallBudgetPlan: `With a limited budget, consider a small initial purchase and set a reminder to add if ${name} dips toward ${sl}.`,
-    largeBudgetPlan: `With a larger budget, divide your total into 3-4 equal parts and invest one part now — deploy the rest if the price moves favorably or dips toward support.`,
-    actionToday: isBuy(recommendation) && confidence >= 65
-      ? `A small starter position with a stop-loss at ${sl} can be considered for those comfortable with the risk profile.`
-      : `No action needed today — waiting for confirmation is the disciplined move.`,
-    actionNext3Days: `Watch whether ${name} holds above ${sl} on any dips — if it does, the short-term structure remains intact.`,
-    actionNextWeek: `If ${name} approaches ${tgt}, reassess — near resistance, it may be wise to take partial profits or tighten stops.`,
-    investmentStyle: input.horizon === "day" ? "Intraday" as const : input.horizon === "swing" ? "Swing" as const : "Positional" as const,
-    investmentStyleReason: direction === "up"
-      ? `The trending nature of ${name} suits a ${input.horizon} approach, allowing the trend to develop.`
-      : `The uncertain direction of ${name} means shorter timeframes carry higher whipsaw risk — a ${input.horizon} approach with patience is appropriate.`,
-    dataUsed: ["Live Price", "Trend", "RSI", "MACD", "Moving Averages", "Support/Resistance", ...(mCap !== "n/a" ? ["Market Cap", "P/E Ratio"] : [])],
-    aiCannotKnow: ["Tomorrow's unexpected news", "Sudden government decisions or policy changes", "Company-specific events (fraud, management changes)", "Global conflicts or black swan events", "Surprise earnings results"],
-    whoCanConsider: [
-      direction === "up" ? "Investers comfortable with trend-following strategies" : "Patient investors willing to wait for reversal confirmation",
-      "Those who can hold through short-term volatility",
-      risk === "Low" ? "Conservative investors seeking stability" : risk === "High" ? "Experienced traders comfortable with volatility" : "Balanced investors with moderate risk tolerance",
-    ],
-    whoShouldAvoid: [
-      "You need the money within a month",
-      "You panic when prices drop temporarily",
-      "You cannot tolerate short-term losses in your portfolio",
-    ],
-    worstMistake: `The worst mistake would be investing all your money at once at the current price without a plan for if it drops.`,
-    simpleExample: `Split your budget: put 30% now, keep 30% to add if price dips near ${sl}, and hold 40% in cash for opportunities.`,
-    ownMoneyView: `If I were investing my own savings in ${name} today, I would not go all-in. I would start with a modest position — roughly 25-30% of what I ultimately want to invest — and observe how the next few trading sessions develop before committing more capital. This approach keeps me in the game without exposing my full portfolio to any single entry point.`,
-    proInvestorView: `Technical structure for ${name}: ${trend} bias with RSI at ${rsiVal !== null ? rsiVal.toFixed(1) : "n/a"}${rsiVal !== null ? (rsiVal > 70 ? " (overbought)" : rsiVal < 30 ? " (oversold)" : "") : ""}. ${ema20 !== null && ema50 !== null ? `EMAs show ${trendUp ? "a bullish alignment (20 > 50)" : "a bearish or mixed alignment"}.` : ""} ${macdHist !== null ? `MACD histogram at ${macdHist.toFixed(2)} suggests ${macdHist > 0 ? "expanding" : "contracting"} momentum.` : ""} Key technical levels: support ${sl}, resistance ${tgt}. ${adxVal !== null ? `ADX at ${adxVal.toFixed(1)} indicates ${adxVal >= 25 ? "a trending" : "a ranging"} market.` : ""}`,
-    aiVerdict: isBuy(recommendation) && confidence >= 65
-      ? `If this were my decision, I would start a small position with a stop-loss at ${sl} and add on confirmation.`
-      : isSell(recommendation)
-      ? `If I held ${name}, I would evaluate whether the current risk level justifies staying in, with a stop-loss at ${sl}.`
-      : `If I were deciding today, I would wait for a clearer entry signal in ${name} before committing capital.`,
-    disclaimer: DISCLAIMER,
-  }
-}
