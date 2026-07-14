@@ -298,7 +298,7 @@ function parseJsonResponse<T>(text: string | undefined, operation: string): T {
 export type Bias = "Bullish" | "Bearish" | "Neutral"
 export type SentimentLabel = "Positive" | "Negative" | "Neutral"
 export type RiskLevel = "Low" | "Medium" | "High"
-export type Recommendation = "Strong Buy" | "Buy" | "Hold" | "Wait" | "Sell" | "Strong Sell"
+export type Recommendation = "Strong Buy" | "Buy" | "Buy on Dip" | "Accumulate" | "Hold" | "Neutral" | "Wait for Confirmation" | "Reduce Exposure" | "Book Partial Profit" | "Avoid Fresh Entries" | "Strong Sell"
 
 export type Analysis = {
   // 1. Final recommendation
@@ -411,40 +411,72 @@ const GROUNDING = `You must analyze ONLY the real data provided in the prompt (Y
 
 /** Deep, structured instrument analysis grounded strictly in the supplied data. */
 export async function generateAnalysis(input: { name: string; horizon: string; context: string }): Promise<Analysis> {
-  const system = `You are Lumora, a senior equity research analyst. Your analysis must feel like a real institutional note — grounded in the specific numbers provided, never generic.
+  const system = `You are Lumora, an institutional-grade market analyst. Your analysis must read like a Bloomberg terminal or a top-tier sell-side note — concise, authoritative, and entirely unique to each instrument. You never write templates. Every paragraph is written fresh based on what the data actually shows.
 
-MANDATORY RULES:
-1. Read EVERY data point in the context: price, change%, volume vs avg, market cap, P/E, EPS, Beta, trend regime, ADX, RSI, MACD, EMAs, Bollinger, ATR, support/resistance, Fibonacci, and every headline.
-2. Every conclusion must reference an actual value from the data. Never write a sentence that could apply to any stock.
-3. If a stock has RSI 72 and ADX 28, say so and explain what that combination means. If another stock has RSI 45 and ADX 12, say something completely different.
-4. The confidenceScore must be uniquely calculated per stock: start from 50, then adjust up/down based on trend alignment (+8 if bullish + EMAs aligned), RSI zone (+4 if 40-60, -4 if >70 or <30), MACD (+4 if positive), ADX (+4 if >25), volume vs avg (+3 if >1.5x), support/resistance proximity, P/E reasonableness, and Beta stability. No two stocks should get the same score unless their data is truly identical.
-5. recommendationReason must explain the specific data-driven case for THIS stock, referencing actual indicator values.
-6. entry must be derived from current price relative to support/resistance/EMAs. target from resistance or Fibonacci levels. stopLoss from support or ATR. Never make up a price.
-7. quickSummary must contain 3 unique data points about THIS stock (e.g. actual RSI value, actual volume pattern, actual trend strength).
-8. Beginner fields (beginnerExplanation, isGoodToday, biggestRisk, safestWay, waitOrBuyNow, smallBudgetPlan, largeBudgetPlan, actionToday, actionNext3Days, actionNextWeek, ownMoneyView) must reference the actual numbers but explain them plainly — e.g. "The RSI is 72, which means many people have already bought recently, so the price might pause a bit."
-9. "proInvestorView" is the ONLY field where raw technical terms are used. Every other field must explain any technical concept in brackets.
-10. If the context says "No recent headlines available." explicitly state that there are no major news catalysts driving this stock right now. If news exists, reference actual headlines and explain their sentiment impact.
-11. NEVER use the same reasoning for different stocks. A tech stock with high P/E, strong momentum, and positive news is different from a bank stock with low P/E, neutral RSI, and no news.
+CORE PHILOSOPHY:
+- Think like an experienced analyst: identify the dominant market structure first, then reference only the indicators that matter. Do NOT list indicators one by one. Do NOT start sentences with "The RSI..." or "The MACD...".
+- Your reasoning must answer: What is happening? Why? What is the probability it continues? What invalidates the view? Where to enter, exit, and what risks exist?
+- Use institutional language naturally: accumulation, distribution, liquidity zones, breakout confirmation, false breakout, trend exhaustion, momentum fading, consolidation, profit booking, buyers defending support.
+- Never repeat sentence structures. Every analysis must feel like it was written fresh for this specific instrument.
+- If indicators disagree, say so explicitly and reduce confidence. Never force a decisive view when the data is conflicting.
+- If insufficient data exists to form a high-confidence view, state: "There isn't sufficient confirmation to produce a high-confidence recommendation."
 
-DATA-DRIVEN CONFIDENCE SCORING (use this framework):
+ASSET-CLASS TAILORING:
+- Stocks: Focus on trend structure, earnings context, sector dynamics, and news catalysts.
+- Crypto: Prioritize momentum, volatility regime, BTC dominance, and social/news sentiment. Structure matters less.
+- Indices: Discuss breadth, sector rotation, macro trend, and institutional flows.
+- Forex: Macro backdrop, interest rate differentials, trend clarity, and support/resistance at key psychological levels.
+
+CONFIDENCE SCORING FRAMEWORK (compute dynamically per instrument):
 - Start at 50
-- Trend: +8 if bullish with EMA alignment (price > EMA20 > EMA50 > EMA200), +4 if mildly bullish, -4 if bearish
-- RSI: +4 if 40-60 (healthy), -4 if >70 (overbought) or <30 (oversold)
-- MACD histogram: +4 if positive and rising, -3 if negative
-- ADX: +4 if >=25 (strong trend), +2 if >=20, -2 if <15 (weak trend)
-- Volume: +3 if >1.5x average, -2 if <0.5x average
-- Beta: +2 if 0.8-1.3 (stable), -3 if >2 (volatile)
-- P/E: +2 if positive and <=25 (reasonable), -2 if >50 or negative
+- Trend alignment: +8 if price > EMA20 > EMA50 > EMA200 (fully aligned bullish), +4 if mild bullish, -4 if bearish
+- RSI zone: +4 if 40-60 (neutral/healthy range), -4 if >70 (overbought/overextended) or <30 (oversold)
+- MACD: +4 if histogram positive and rising, -3 if negative/fading
+- ADX trend strength: +4 if >=25 (strong trend), +2 if >=20, -2 if <15 (weak/no trend)
+- Volume conviction: +3 if >1.5x average, -2 if <0.5x average (low participation)
+- Beta stability (stocks only): +2 if 0.8-1.3, -3 if >2
+- P/E reasonableness (stocks only): +2 if positive and <=25, -2 if >50 or negative
+- News sentiment: +3 if positive headlines exist, -3 if negative headlines exist
+- Indicator agreement bonus: +5 if trend, momentum, volume, and volatility all point in the same direction
+- Indicator conflict penalty: -5 if RSI and price diverge, or if trend direction conflicts with momentum
 - Clamp final score between 10 and 95
-- If score < 60, recommendation MUST be "Wait" or "Hold"
+- If score is 40-59, the verdict should be cautious: "Wait for Confirmation", "Neutral", or "Hold"
+- If score is below 40, the verdict should be defensive: "Reduce Exposure", "Avoid Fresh Entries", or "Book Partial Profit"
+
+RECOMMENDATION VERDICT MAPPING (use the most appropriate, not just Buy/Hold/Sell):
+- 85-95: Strong Buy
+- 70-84: Buy
+- 60-69: Buy on Dip or Accumulate
+- 50-59: Hold or Neutral
+- 40-49: Wait for Confirmation
+- 30-39: Reduce Exposure or Book Partial Profit
+- 20-29: Avoid Fresh Entries
+- Below 20: Strong Sell
+
+ENTRY, TARGET, STOP LOSS RULES:
+- entry: Derive from current price relative to support, EMAs, or swing low -- Explain WHY that level was chosen.
+- target: Derive from resistance, Fibonacci extension, or prior swing high. Must be realistic given ATR and recent volatility.
+- stopLoss: Derive from support, Fibonacci retracement, ATR-based volatility stop, or recent swing low. Explain invalidation logic.
+- riskReward: Calculate the actual ratio from target and stop loss. Never default to 1:2. Compute it.
+
+NEWS INTEGRATION:
+- If positive news exists: increase confidence, reference the specific headline, and explain why the news strengthens the thesis.
+- If negative news contradicts the technical setup: mention the conflict explicitly. Do not ignore bearish news just because the chart looks good.
+- If no news: state that the move is technically driven without a clear catalyst.
+
+WRITING STYLE:
+- Each paragraph must add new information. Never repeat the same point.
+- Avoid listing indicators. Instead, describe what the market is doing, then note which indicators support that observation.
+- Use varied sentence openings. Never start two consecutive paragraphs the same way.
+- Sound like an analyst who has been covering this specific instrument for years.
 
 GROUNDING: ${GROUNDING}`
   try {
-    const userPrompt = `Analyze the following instrument for a ${input.horizon} trader. Use the specific values below — every statement must reference actual data points. Do NOT write generic analysis. Each stock must get a unique, data-grounded treatment.
+    const userPrompt = `Analyze this ${input.name} for a ${input.horizon} trader. This is NOT a generic instrument — tailor every sentence specifically to the data below. Each analysis must read like a fresh institutional note, never a template.
 
 ${input.context}
 
-Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON. The JSON must follow this exact structure: {"recommendation":"Strong Buy"|"Buy"|"Hold"|"Wait"|"Sell"|"Strong Sell","recommendationReason":"explain which specific indicators drove this decision and why","confidenceScore":0-100,"confidenceNote":"what the confidence number means for THIS stock","quickSummary":["string","string","string"],"entry":"derived from price vs support/EMA levels","target":"derived from resistance or Fibonacci levels","stopLoss":"derived from support or ATR","holdingPeriod":"string","riskReward":"e.g. 1:2.5","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using actual trend strength, ADX, and RSI values","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"with actual target price and percentage","scenarioLikely":"with actual price range and percentage","scenarioWorst":"with actual stop loss level and percentage","maxDownside":"e.g. -4% derived from stop loss vs entry","expectedUpside":"e.g. +10% derived from target vs entry","riskRewardNote":"plain English explaining the risk-reward for THIS stock","positionVerySafe":"percent of capital","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"simple position sizing advice","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"explain why this timeframe fits THIS stock data","whyBuy":["string","string","string","string"],"whatCouldGoWrong":["string","string","string","string"],"support":"from actual support level in the data","supportNote":"plain English reference the actual price level","resistance":"from actual resistance level in the data","resistanceNote":"plain English reference the actual price level","riskLevel":"Low"|"Medium"|"High","riskNote":"explain using actual Beta ATR and volatility data","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"reference actual trend volume and price action","beginnerExplanation":"max 60 words plain English reference 2-3 actual data points and explain them simply","isGoodToday":"clear yes/no/partly based on actual data not generic","biggestRisk":"explain the single biggest risk using actual data","safestWay":"plain advice based on actual volatility and setup","waitOrBuyNow":"clear recommendation based on confidenceScore and data","smallBudgetPlan":"actionable plan in the instrument currency","largeBudgetPlan":"actionable plan in the instrument currency","actionToday":"specific action for today based on actual price levels","actionNext3Days":"specific levels to watch from the data","actionNextWeek":"specific levels to watch from the data","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain using ATR trend strength and volatility","dataUsed":["string","string","string"],"aiCannotKnow":["string","string","string","string","string"],"whoCanConsider":["string","string","string"],"whoShouldAvoid":["string","string","string"],"worstMistake":"specific to THIS stock setup","simpleExample":"concrete money split in the instrument currency","ownMoneyView":"2-3 natural lines in first person data-grounded","proInvestorView":"full technical summary with ALL indicator values from the data","aiVerdict":"single honest sentence in first person grounded in this stock actual data"}`
+Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON. The JSON must follow this exact structure: {"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"explain the market structure driving this instrument and the specific data points that support your thesis -- reference actual values, never generic phrases","confidenceScore":0-100,"confidenceNote":"explain in one sentence what the score reflects about this specific instrument setup","quickSummary":["unique observation about trend/momentum structure","unique observation about volume or volatility behavior","unique observation about support/resistance or news catalysts"],"entry":"derived from current price relative to nearest support, EMA, or swing low -- explain why this level","target":"derived from resistance, Fibonacci extension, or prior swing high -- must be realistic given ATR and recent volatility","stopLoss":"derived from support break level, Fibonacci retracement, or ATR-based volatility stop -- explain invalidation logic","holdingPeriod":"string","riskReward":"calculated as (target-entry)/(entry-stop) expressed as 1:X -- compute from actual numbers","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"explain using trend strength, indicator agreement, volume conviction, and news sentiment -- not just one indicator","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"describe the conditions that would drive the price to target and what percentage gain that represents","scenarioLikely":"describe the most probable outcome given current structure and percentage range","scenarioWorst":"describe what breaks the thesis and what percentage loss that represents","maxDownside":"percentage calculated from stop loss relative to entry","expectedUpside":"percentage calculated from target relative to entry","riskRewardNote":"one sentence explaining whether this specific risk-reward is worth taking for THIS instrument right now","positionVerySafe":"percent of capital","positionModerate":"percent of capital","positionAggressive":"percent of capital NEVER above 30%","positionNote":"position sizing advice specific to this instruments volatility and risk level","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"explain why this timeframe matches the current trend phase and volatility profile","whyBuy":["specific catalyst or structural reason","technical setup confirmation point","risk-reward asymmetry observation","institutional flow or sentiment angle"],"whatCouldGoWrong":["support break scenario","headline or macro risk","momentum failure scenario","liquidity or volatility risk"],"support":"from actual nearest support level in the data","supportNote":"describe why buyers have defended this level and what happens if it breaks","resistance":"from actual nearest resistance level in the data","resistanceNote":"describe what selling pressure exists at this level and what breakout confirmation looks like","riskLevel":"Low"|"Medium"|"High","riskNote":"explain the specific risk factors using actual Beta, ATR, volatility, and market conditions","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"describe the tone of price action, volume participation, and any institutional flow patterns","beginnerExplanation":"max 60 words describing what the instrument is doing right now in plain language -- focus on story not indicators","isGoodToday":"clear yes/no/partly based on entry proximity to support and confidenceScore","biggestRisk":"the single most important thing that could go wrong -- specific to this instruments current setup","safestWay":"the lowest-risk approach to participate given current volatility and setup quality","waitOrBuyNow":"clear actionable recommendation based on confidenceScore and whether entry is at a favorable level","smallBudgetPlan":"actionable entry plan in the instruments currency with specific price levels","largeBudgetPlan":"actionable entry plan in the instruments currency with specific price levels and scaling strategy","actionToday":"specific action based on where price sits relative to support and resistance right now","actionNext3Days":"specific levels to watch that would confirm or invalidate the thesis","actionNextWeek":"specific levels to watch that would confirm or invalidate the thesis","investmentStyle":"Intraday"|"Swing"|"Positional"|"Long Term","investmentStyleReason":"explain using ATR-based volatility, trend duration, and current market phase","dataUsed":["specific indicator or metric used","specific indicator or metric used","specific indicator or metric used"],"aiCannotKnow":["unknown future catalysts","company insider intentions","unannounced macro events","institutional order flow details","retail sentiment extremes"],"whoCanConsider":["trader profile suited to this risk","trader profile suited to this timeframe","trader profile suited to this setup"],"whoShouldAvoid":["trader profile this setup does not fit","trader profile this risk level excludes","trader profile this timeframe does not suit"],"worstMistake":"the single most common error traders make with this specific setup","simpleExample":"concrete money allocation example in the instruments currency","ownMoneyView":"2-3 natural lines in first person explaining honestly whether you would put your own capital here and why","proInvestorView":"full technical summary describing market structure, key levels, order flow interpretation, and institutional-grade reasoning -- use proper technical terms freely here","aiVerdict":"single honest sentence in first person grounded in this instruments actual data and setup quality"}`
 
     const text = await groqChat(MODEL, [
       { role: "system", content: system },
@@ -462,7 +494,7 @@ Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outsid
 /** Classify real news headlines by investor-impact sentiment. */
 export async function generateNewsSentiment(input: { name: string; headlines: string[] }): Promise<NewsSentiment> {
   const list = input.headlines.map((h, i) => `${i}. "${h}"`).join("\n")
-  const system = `You are a financial news sentiment analyst. Classify each headline's likely impact on ${input.name} from an investor's perspective as "positive", "negative", or "neutral", based ONLY on the headline text. Do not invent headlines or facts.`
+  const system = `You are a financial news sentiment -- not invent headlines or facts.`
   try {
     const text = await groqChat(MODEL_FAST, [
       { role: "system", content: system },
