@@ -437,9 +437,9 @@ const QuoteHeader = memo(function QuoteHeader({
               {[quote?.sector, quote?.industry].filter(Boolean).join(" · ")}
             </p>
           )}
-          {(quote?.ceo || quote?.headquarters) && (
+          {quote?.ceo && (
             <p className="mt-0.5 max-w-md truncate text-xs text-muted-foreground/50">
-              {[quote?.ceo ? `CEO: ${quote.ceo}` : "", quote?.headquarters].filter(Boolean).join(" · ")}
+              CEO: {quote.ceo}
             </p>
           )}
           {quote?.website && (
