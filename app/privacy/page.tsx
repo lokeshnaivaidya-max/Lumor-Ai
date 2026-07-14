@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft, Shield, Database, Cookie, Users, Lock, Mail, Eye, AlertTriangle } from "lucide-react"
-import { CursorGlow } from "@/components/cursor-glow"
+
 import { LumoraMark } from "@/components/lumora-mark"
 
 export const metadata = {
@@ -25,7 +25,6 @@ const SECTIONS = [
 export default function PrivacyPage() {
   return (
     <>
-      <CursorGlow />
       <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link href="/" className="flex items-center gap-2.5 text-foreground">
           <LumoraMark className="h-7 w-7" />

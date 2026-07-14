@@ -10,6 +10,82 @@ import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } fr
 import { currencySymbol, logoUrl } from "@/lib/utils"
 import { TrendingUp, TrendingDown, Clock, Globe, Gauge, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers } from "lucide-react"
 
+const POLL_INTERVAL = 12_000
+
+function useAnimatedNumber(value: number, duration = 400): number {
+  const [display, setDisplay] = useState(value)
+  const ref = useRef(value)
+  const frameRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (value === ref.current) return
+    const startVal = ref.current
+    const endVal = value
+    const startTime = performance.now()
+    ref.current = value
+
+    function tick(now: number) {
+      const t = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplay(startVal + (endVal - startVal) * eased)
+      if (t < 1) frameRef.current = requestAnimationFrame(tick)
+    }
+    frameRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameRef.current)
+  }, [value, duration])
+
+  return display
+}
+
+function AnimatedMoney({ value, ccySym, decimals = 2 }: { value: number | undefined; ccySym: string; decimals?: number }) {
+  const animated = useAnimatedNumber(value ?? 0)
+  if (value == null) return <>{NOT_AVAILABLE}</>
+  const formatted = animated.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  return <>{ccySym}{formatted}</>
+}
+
+function AnimatedPercent({ value, pos }: { value: number | undefined; pos?: boolean }) {
+  const animated = useAnimatedNumber(value ?? 0)
+  if (value == null) return <>—</>
+  const sign = pos ?? value >= 0 ? "+" : ""
+  return <>{sign}{animated.toFixed(2)}%</>
+}
+
+function AnimatedChange({ value }: { value: number | undefined }) {
+  const animated = useAnimatedNumber(value ?? 0)
+  if (value == null) return <>—</>
+  return <>{animated.toFixed(2)}</>
+}
+
+function AnimatedBigNum({ value }: { value: number | undefined }) {
+  const animated = useAnimatedNumber(value ?? 0, 600)
+  if (value == null) return <>{NOT_AVAILABLE}</>
+  if (animated >= 1e12) return <>{`${(animated / 1e12).toFixed(2)}T`}</>
+  if (animated >= 1e9) return <>{`${(animated / 1e9).toFixed(2)}B`}</>
+  if (animated >= 1e6) return <>{`${(animated / 1e6).toFixed(2)}M`}</>
+  if (animated >= 1e3) return <>{`${(animated / 1e3).toFixed(1)}K`}</>
+  return <>{animated.toLocaleString()}</>
+}
+
+function AnimatedPrice({ value, ccySym }: { value: number | undefined; ccySym: string }) {
+  const animated = useAnimatedNumber(value ?? 0, 500)
+  if (value == null) return <>—</>
+  const formatted = animated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return <>{ccySym}{formatted}</>
+}
+
+function useScrollPreserve() {
+  const scrollRef = useRef(0)
+  useEffect(() => {
+    scrollRef.current = window.scrollY
+    const observer = new ResizeObserver(() => {
+      window.scrollTo(0, scrollRef.current)
+    })
+    observer.observe(document.body)
+    return () => observer.disconnect()
+  })
+}
+
 const PriceChart = dynamic(() => import("@/components/price-chart").then((m) => m.PriceChart), {
   ssr: false,
   loading: () => <ChartSkeleton />,
@@ -128,6 +204,8 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const [region, setRegion] = useState<Region>("US")
   const [optionParams, setOptionParams] = useState<{ strike?: number; expiry?: string }>({})
 
+  useScrollPreserve()
+
   useEffect(() => {
     let active = true
     fetch("/api/region")
@@ -140,9 +218,9 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   }, [])
 
   const { data: quoteData, error: quoteError } = useSWR<{ quotes: Quote[] }>(`/api/quote?symbols=${encodeURIComponent(symbol)}`, fetcher, {
-    refreshInterval: 60000,
+    refreshInterval: POLL_INTERVAL,
     keepPreviousData: true,
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
   })
   const { data: chartData, isLoading: chartLoading, error: chartError } = useSWR<{ candles: Candle[] }>(
     `/api/chart?symbol=${encodeURIComponent(symbol)}&range=${range}`,
@@ -359,9 +437,9 @@ const QuoteHeader = memo(function QuoteHeader({
               {[quote?.sector, quote?.industry].filter(Boolean).join(" · ")}
             </p>
           )}
-          {(quote?.ceo || quote?.headquarters || quote?.founded) && (
+          {(quote?.ceo || quote?.headquarters) && (
             <p className="mt-0.5 max-w-md truncate text-xs text-muted-foreground/50">
-              {[quote?.ceo ? `CEO: ${quote.ceo}` : "", quote?.founded ? `Founded: ${quote.founded}` : "", quote?.headquarters].filter(Boolean).join(" · ")}
+              {[quote?.ceo ? `CEO: ${quote.ceo}` : "", quote?.headquarters].filter(Boolean).join(" · ")}
             </p>
           )}
           {quote?.website && (
@@ -374,14 +452,15 @@ const QuoteHeader = memo(function QuoteHeader({
 
         <div className="text-right">
           <div className="font-mono text-4xl tracking-tight text-foreground sm:text-5xl">
-            {quote ? money(quote.price, ccySym) : "—"}
+            {quote ? <AnimatedPrice value={quote.price} ccySym={ccySym} /> : "—"}
           </div>
           {quote && (
             <div className={`mt-1.5 flex items-center justify-end gap-1.5 font-mono text-sm ${positive ? "text-pos" : "text-neg"}`}>
               {positive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              {positive ? "+" : ""}
-              {quote.change.toFixed(2)} ({positive ? "+" : ""}
-              {quote.changePercent.toFixed(2)}%)
+              <AnimatedChange value={quote.change} />
+              {" ("}
+              <AnimatedPercent value={quote.changePercent} pos={positive} />
+              {")"}
             </div>
           )}
           <div className="mt-1 text-[11px] text-muted-foreground">{ccySym || quote?.currency || ""}</div>
@@ -411,30 +490,33 @@ function notApplicableIf(condition: boolean, val: string | null | undefined): st
 const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | null; ccySym: string }) {
   const isIndex = quote?.assetType === "INDEX"
   const isCrypto = quote?.assetType === "CRYPTOCURRENCY"
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), POLL_INTERVAL)
+    return () => clearInterval(id)
+  }, [])
   const stats = useMemo(() => [
     { label: "Currency", value: quote?.currency ? `${ccySym} ${quote.currency}`.trim() : fieldVal(null) },
     { label: "Market Status", value: STATE_LABEL[quote?.marketState ?? "CLOSED"] },
     { label: "Exchange", value: naField(quote?.exchange) },
-    { label: "Previous Close", value: money(quote?.previousClose, ccySym) },
-    { label: "Open", value: money(quote?.open, ccySym) },
-    { label: "Day High", value: money(quote?.dayHigh, ccySym) },
-    { label: "Day Low", value: money(quote?.dayLow, ccySym) },
-    { label: "Volume", value: bigNum(quote?.volume) },
-    { label: "Market Cap", value: bigNum(quote?.marketCap) },
-    { label: "P/E (TTM)", value: naField(quote?.trailingPE, (v) => v.toFixed(2)) },
-    { label: "EPS (TTM)", value: naField(quote?.eps, (v) => v.toFixed(2)) },
-    { label: "Dividend Yield", value: naField(quote?.dividendYield, (v) => `${v.toFixed(2)}%`) },
-    { label: "Beta", value: naField(quote?.beta, (v) => v.toFixed(2)) },
+    { label: "Previous Close", value: <AnimatedMoney value={quote?.previousClose} ccySym={ccySym} /> },
+    { label: "Open", value: <AnimatedMoney value={quote?.open} ccySym={ccySym} /> },
+    { label: "Day High", value: <AnimatedMoney value={quote?.dayHigh} ccySym={ccySym} /> },
+    { label: "Day Low", value: <AnimatedMoney value={quote?.dayLow} ccySym={ccySym} /> },
+    { label: "Volume", value: <AnimatedBigNum value={quote?.volume} /> },
+    { label: "Market Cap", value: <AnimatedBigNum value={quote?.marketCap} /> },
+    { label: "P/E (TTM)", value: <span className="tabular-nums">{fieldVal(quote?.trailingPE, (v) => v.toFixed(2))}</span> },
+    { label: "EPS (TTM)", value: <span className="tabular-nums">{fieldVal(quote?.eps, (v) => v.toFixed(2))}</span> },
+    { label: "Dividend Yield", value: <span className="tabular-nums">{fieldVal(quote?.dividendYield, (v) => `${v.toFixed(2)}%`)}</span> },
+    { label: "Beta", value: <span className="tabular-nums">{fieldVal(quote?.beta, (v) => v.toFixed(2))}</span> },
     { label: "52W Range", value: quote?.fiftyTwoWeekLow != null && quote?.fiftyTwoWeekHigh != null ? `${quote.fiftyTwoWeekLow.toFixed(0)}–${quote.fiftyTwoWeekHigh.toFixed(0)}` : NOT_AVAILABLE, span: "md" as const },
-    { label: "52W High", value: money(quote?.fiftyTwoWeekHigh, ccySym) },
-    { label: "52W Low", value: money(quote?.fiftyTwoWeekLow, ccySym) },
+    { label: "52W High", value: <AnimatedMoney value={quote?.fiftyTwoWeekHigh} ccySym={ccySym} /> },
+    { label: "52W Low", value: <AnimatedMoney value={quote?.fiftyTwoWeekLow} ccySym={ccySym} /> },
     { label: "Sector", value: notApplicableIf(isIndex, quote?.sector) },
     { label: "Industry", value: notApplicableIf(isIndex, quote?.industry) },
     { label: "CEO", value: notApplicableIf(isIndex || isCrypto, quote?.ceo) },
-    { label: "Employees", value: notApplicableIf(isIndex, quote?.employees ? quote.employees.toLocaleString() : null) },
-    { label: "Founded", value: notApplicableIf(isIndex, quote?.founded ? String(quote.founded) : null) },
-    { label: "Updated", value: naField(quote?.updatedAt ? new Date(quote.updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : null), span: "md" as const },
-  ], [quote, ccySym, isIndex, isCrypto])
+    { label: "Updated", value: <span key={now} className="tabular-nums transition-opacity duration-500">{new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>, span: "md" as const },
+  ], [quote, ccySym, isIndex, isCrypto, now])
 
   const spanMap = { sm: "col-span-1", md: "col-span-2", lg: "col-span-3" }
 
@@ -484,8 +566,6 @@ function IconFor({ label }: { label: string }) {
     "Sector": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
     "Industry": <Layers className="h-3.5 w-3.5 text-blue/60" />,
     "CEO": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
-    "Employees": <Hash className="h-3.5 w-3.5 text-blue/60" />,
-    "Founded": <Clock className="h-3.5 w-3.5 text-blue/60" />,
     "Updated": <Clock className="h-3.5 w-3.5 text-blue/60" />,
   }
   return <>{icons[label] ?? null}</>

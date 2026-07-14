@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { CursorGlow } from "@/components/cursor-glow"
+
 import { LumoraMark } from "@/components/lumora-mark"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MarketExplorer } from "@/components/market-explorer"
@@ -16,8 +16,7 @@ export default async function MarketsPage({ searchParams }: { searchParams?: Pro
 
   return (
     <>
-      <CursorGlow />
-
+      
       <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6">
         <Link href="/" className="flex items-center gap-2.5 text-foreground">
           <LumoraMark className="h-7 w-7" />
