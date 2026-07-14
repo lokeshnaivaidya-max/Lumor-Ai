@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                         data: "Symbol names and market data queries. No personally identifiable information is shared.",
                       },
                       {
-                        name: "Google / OpenRouter AI",
+                        name: "Groq AI (via Llama 3.3)",
                         what: "AI-powered analysis generation",
                         data: "Stock symbols, market data, and news headlines are sent for AI processing. No personal information (name, email, portfolio contents) is included in AI analysis requests.",
                       },

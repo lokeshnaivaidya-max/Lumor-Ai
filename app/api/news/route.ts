@@ -56,7 +56,7 @@ export async function GET(req: Request) {
       }
     }
   } catch (err) {
-    console.error("[Lumora AI] Gemini news sentiment failed", getAiErrorDiagnostic(err))
+    console.error("[Lumora AI] News sentiment analysis failed", getAiErrorDiagnostic(err))
     // Graceful degradation: return real headlines with neutral sentiment.
   }
 

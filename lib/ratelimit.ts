@@ -1,6 +1,5 @@
 // Lightweight in-memory sliding-window rate limiter.
-// Per warm server instance — good enough to shield the upstream APIs and the
-// Gemini quota from abusive bursts without adding an external dependency.
+// Per warm server instance — shields upstream APIs from abusive bursts.
 
 type Bucket = { count: number; resetAt: number }
 

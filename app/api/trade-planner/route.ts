@@ -75,7 +75,6 @@ Calculated Metrics:
 Assess this trade plan. Is it a Buy or Wait opportunity? Provide a better entry suggestion if applicable. Give confidence score and probability estimates. Include a beginner-friendly explanation. Also include brief support/resistance levels and position sizing advice based on the ${riskLevel || "Medium"} risk level.`
 
     const res = await generateText({
-      model: "gemini-2.0-flash-lite",
       system: systemPrompt,
       prompt,
       temperature: 0.3,
