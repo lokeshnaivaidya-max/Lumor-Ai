@@ -1,5 +1,13 @@
 import nodemailer from "nodemailer"
 
+function logEnvVars() {
+  console.log(`[EMAIL] SMTP_HOST: ${!!process.env.SMTP_HOST}`)
+  console.log(`[EMAIL] SMTP_PORT: ${!!process.env.SMTP_PORT}`)
+  console.log(`[EMAIL] SMTP_USER: ${!!process.env.SMTP_USER}`)
+  console.log(`[EMAIL] SMTP_PASS: ${!!process.env.SMTP_PASS}`)
+  console.log(`[EMAIL] SMTP_FROM: ${!!process.env.SMTP_FROM}`)
+}
+
 export function buildOtpEmail({ otp, type }: { otp: string; type: "verification" | "reset" }): {
   subject: string
   html: string
@@ -95,6 +103,9 @@ function createTransporter() {
   const pass = process.env.SMTP_PASS
   const from = process.env.SMTP_FROM
 
+  console.log(`[EMAIL] createTransporter: checking env vars`)
+  logEnvVars()
+
   const missing: string[] = []
   if (!host) missing.push("SMTP_HOST")
   if (!port) missing.push("SMTP_PORT")
@@ -102,11 +113,12 @@ function createTransporter() {
   if (!pass) missing.push("SMTP_PASS")
   if (!from) missing.push("SMTP_FROM")
   if (missing.length > 0) {
-    const msg = `SMTP not configured. Missing: ${missing.join(", ")}. Add them in Vercel → Settings → Environment Variables.`
+    const msg = `SMTP not configured. Missing: ${missing.join(", ")}.`
     console.error(`[EMAIL] ${msg}`)
     throw new Error(msg)
   }
 
+  console.log(`[EMAIL] Creating SMTP transporter: host=${host} port=${port} secure=false auth=PLAIN`)
   const transporter = nodemailer.createTransport({
     host: host!,
     port,
@@ -114,6 +126,7 @@ function createTransporter() {
     auth: { user: user!, pass: pass! },
   })
 
+  console.log(`[EMAIL] SMTP transporter created`)
   return { transporter, from: from! }
 }
 
@@ -136,24 +149,49 @@ export async function sendOtpEmail({
 
   const { transporter, from } = createTransporter()
 
-  console.log(`[EMAIL] Verifying SMTP connection to ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}...`)
-  await transporter.verify()
-  console.log(`[EMAIL] SMTP connection verified`)
+  console.log(`[EMAIL] transporter.verify() started`)
+  let verifyResult: any
+  try {
+    verifyResult = await transporter.verify()
+    console.log(`[EMAIL] transporter.verify() result: ${JSON.stringify(verifyResult)}`)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : ""
+    console.error(`[EMAIL] transporter.verify() FAILED: ${msg}`)
+    if (stack) console.error(`[EMAIL] transporter.verify() stack: ${stack}`)
+    throw err
+  }
 
   console.log(`[EMAIL] Sending email via SMTP...`)
-  const info = await transporter.sendMail({
-    from,
-    to: normalizedEmail,
-    subject: "Your Lumora Verification Code",
-    html,
-  })
+  console.log(`[EMAIL] SMTP envelope: from="${from}" to="${normalizedEmail}"`)
 
-  console.log(`[EMAIL] SMTP response: messageId=${info.messageId}`)
-  if (info.accepted.length > 0) console.log(`[EMAIL] Accepted: ${info.accepted.join(", ")}`)
+  let info: nodemailer.SentMessageInfo
+  try {
+    info = await transporter.sendMail({
+      from,
+      to: normalizedEmail,
+      subject: "Your Lumora Verification Code",
+      html,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : ""
+    console.error(`[EMAIL] sendMail() threw: ${msg}`)
+    if (stack) console.error(`[EMAIL] sendMail() stack: ${stack}`)
+    throw err
+  }
+
+  console.log(`[EMAIL] sendMail() completed`)
+  console.log(`[EMAIL] messageId: ${info.messageId}`)
+  console.log(`[EMAIL] accepted: ${JSON.stringify(info.accepted)}`)
+  console.log(`[EMAIL] rejected: ${JSON.stringify(info.rejected)}`)
+  console.log(`[EMAIL] response: ${info.response}`)
+
   if (info.rejected.length > 0) {
-    console.error(`[EMAIL] Rejected: ${info.rejected.join(", ")}`)
+    console.error(`[EMAIL] SMTP rejected recipients: ${info.rejected.join(", ")}`)
     throw new Error(`SMTP rejected delivery to: ${info.rejected.join(", ")}`)
   }
 
+  console.log(`[EMAIL] Email sent successfully`)
   return { success: true, messageId: info.messageId, accepted: info.accepted }
 }
