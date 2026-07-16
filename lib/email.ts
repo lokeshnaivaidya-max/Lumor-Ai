@@ -111,16 +111,21 @@ export async function sendOtpEmail({
   console.log(`[EMAIL lib/email.ts:94] RESEND_FROM_EMAIL env: ${configuredFrom}`)
 
   if (!hasApiKey) {
-    const msg = `RESEND_API_KEY is not configured. Add it in Vercel → Settings → Environment Variables → RESEND_API_KEY`
-    console.error(`[EMAIL lib/email.ts:113] ${msg}`)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[EMAIL] DEV MODE — OTP for ${email}: ${otp}`)
+      console.log(`[EMAIL] DEV MODE — Subject: ${subject}`)
+      return { success: true, devMode: true }
+    }
+    const msg = `RESEND_API_KEY is not configured. Set it in .env.local or Vercel → Settings → Environment Variables.`
+    console.error(`[EMAIL] ${msg}`)
     throw new Error(msg)
   }
 
   const { Resend } = await import("resend")
   const resend = new Resend(process.env.RESEND_API_KEY)
   const from = process.env.RESEND_FROM_EMAIL || "Lumora <onboarding@resend.dev>"
-  console.log(`[EMAIL lib/email.ts:119] Using from: ${from}`)
-  console.log(`[EMAIL lib/email.ts:120] Calling resend.emails.send(...)`)
+  console.log(`[EMAIL] Using from: ${from}`)
+  console.log(`[EMAIL] Calling resend.emails.send(...)`)
 
   const resendResponse = await resend.emails.send({
     from,
@@ -129,8 +134,8 @@ export async function sendOtpEmail({
     html,
   })
 
-  console.log(`[EMAIL lib/email.ts:126] Resend response:`, JSON.stringify(resendResponse, null, 2))
-  console.log(`[EMAIL lib/email.ts:127] Sent successfully via Resend to ${email}`)
+  console.log(`[EMAIL] Resend response:`, JSON.stringify(resendResponse, null, 2))
+  console.log(`[EMAIL] Sent successfully via Resend to ${email}`)
 
   return { success: true }
 }

@@ -556,15 +556,7 @@ RULES:
 13. Before writing, ask: What is one thing an institutional trader would notice first about this chart? What is the clearest edge? Would I put my own firm's capital here?
 
 CONFIDENCE SCORING:
-- Start at 50
-- Trend clarity (price vs EMAs): +8 clean trend, +4 mild, -4 conflicting
-- Momentum zone: +4 if RSI 40-60 (room), -4 if extreme (>70 or <30)
-- MACD: +4 rising bull cross, -3 fading or bear cross
-- ADX: +4 if >=25 (trending), +2 if >=20, -2 if <15 (choppy)
-- Volume: +3 above average conviction, -2 anemic
-- News: +3 supportive, -3 negative
-- Indicator agreement: +5 aligned, -5 mixed signals
-- Clamp 20-95
+Confidence reflects how clearly the data supports a directional view. A confident call (80+) means trend, momentum, volume, and news all align with minimal conflict. Low confidence (<50) means signals are mixed, data is thin, or the setup is unclear. Be honest — a 72 that you believe in is better than a forced 88. Every instrument and regime produces a different confidence level; vary it genuinely.
 
 VERDICT MAPPING:
 - 85-95: Strong Buy
