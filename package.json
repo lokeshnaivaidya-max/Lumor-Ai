@@ -37,7 +37,6 @@
     "drizzle-kit": "^0.31.10",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "typescript": "5.7.3",
-    "vitest": "^3.1.0"
+    "typescript": "5.7.3"
   }
 }
