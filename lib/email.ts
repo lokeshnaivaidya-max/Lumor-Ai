@@ -111,31 +111,35 @@ export async function sendOtpEmail({
   console.log(`[EMAIL lib/email.ts:94] RESEND_FROM_EMAIL env: ${configuredFrom}`)
 
   if (!hasApiKey) {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL] DEV MODE — OTP for ${email}: ${otp}`)
-      console.log(`[EMAIL] DEV MODE — Subject: ${subject}`)
-      return { success: true, devMode: true }
-    }
-    const msg = `RESEND_API_KEY is not configured. Set it in .env.local or Vercel → Settings → Environment Variables.`
+    const msg = `RESEND_API_KEY is not configured. Add it in Vercel → Settings → Environment Variables.`
     console.error(`[EMAIL] ${msg}`)
     throw new Error(msg)
   }
 
   const { Resend } = await import("resend")
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const from = process.env.RESEND_FROM_EMAIL || "Lumora <onboarding@resend.dev>"
+  const from = process.env.RESEND_FROM_EMAIL
+  if (!from) {
+    const msg = `RESEND_FROM_EMAIL is not configured. Add it in Vercel → Settings → Environment Variables (e.g. "Lumora <verify@lumora.ai>"). The domain must be verified in Resend dashboard.`
+    console.error(`[EMAIL] ${msg}`)
+    throw new Error(msg)
+  }
   console.log(`[EMAIL] Using from: ${from}`)
   console.log(`[EMAIL] Calling resend.emails.send(...)`)
 
-  const resendResponse = await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
     to: email,
     subject,
     html,
   })
 
-  console.log(`[EMAIL] Resend response:`, JSON.stringify(resendResponse, null, 2))
-  console.log(`[EMAIL] Sent successfully via Resend to ${email}`)
+  if (error) {
+    console.error(`[EMAIL] Resend send failed:`, JSON.stringify(error, null, 2))
+    throw new Error(`Failed to send email: ${error.message} (status ${error.statusCode})`)
+  }
 
-  return { success: true }
+  console.log(`[EMAIL] Sent successfully via Resend to ${email}, id: ${data?.id}`)
+
+  return { success: true, id: data?.id }
 }
