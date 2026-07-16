@@ -139,59 +139,74 @@ export async function sendOtpEmail({
   otp: string
   type: "verification" | "reset"
 }) {
-  const normalizedEmail = email.trim().toLowerCase()
-  const { subject, html } = buildOtpEmail({ otp, type })
-
-  console.log(`[EMAIL] sendOtpEmail called`)
-  console.log(`[EMAIL] To: ${normalizedEmail}`)
-  console.log(`[EMAIL] Subject: ${subject}`)
-  console.log(`[EMAIL] OTP: ${otp}`)
-
-  const { transporter, from } = createTransporter()
-
-  console.log(`[EMAIL] transporter.verify() started`)
-  let verifyResult: any
   try {
-    verifyResult = await transporter.verify()
-    console.log(`[EMAIL] transporter.verify() result: ${JSON.stringify(verifyResult)}`)
+    const normalizedEmail = email.trim().toLowerCase()
+    const { subject, html } = buildOtpEmail({ otp, type })
+
+    console.log(`[EMAIL] sendOtpEmail called`)
+    console.log(`[EMAIL] To: ${normalizedEmail}`)
+    console.log(`[EMAIL] Subject: ${subject}`)
+    console.log(`[EMAIL] OTP: ${otp}`)
+    console.log(`[EMAIL] process.env.NODE_ENV: ${process.env.NODE_ENV}`)
+    console.log(`[EMAIL] VERCEL_ENV: ${process.env.VERCEL_ENV || "not set"}`)
+
+    const { transporter, from } = createTransporter()
+
+    console.log(`[EMAIL] transporter.verify() started`)
+    let verifyResult: any
+    try {
+      verifyResult = await transporter.verify()
+      console.log(`[EMAIL] transporter.verify() result: ${JSON.stringify(verifyResult)}`)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const stack = err instanceof Error ? err.stack : ""
+      console.error(`[EMAIL] transporter.verify() FAILED: ${msg}`)
+      if (stack) console.error(`[EMAIL] transporter.verify() stack: ${stack}`)
+      throw err
+    }
+
+    console.log(`[EMAIL] Sending email via SMTP...`)
+    console.log(`[EMAIL] SMTP envelope: from="${from}" to="${normalizedEmail}"`)
+
+    let info: nodemailer.SentMessageInfo
+    try {
+      info = await transporter.sendMail({
+        from,
+        to: normalizedEmail,
+        subject: "Your Lumora Verification Code",
+        html,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const stack = err instanceof Error ? err.stack : ""
+      console.error(`[EMAIL] sendMail() threw: ${msg}`)
+      if (stack) console.error(`[EMAIL] sendMail() stack: ${stack}`)
+      throw err
+    }
+
+    console.log(`[EMAIL] sendMail() completed`)
+    console.log(`[EMAIL] messageId: ${info.messageId}`)
+    console.log(`[EMAIL] accepted: ${JSON.stringify(info.accepted)}`)
+    console.log(`[EMAIL] rejected: ${JSON.stringify(info.rejected)}`)
+    console.log(`[EMAIL] response: ${info.response}`)
+    if (info.response) console.log(`[EMAIL] raw response: ${info.response}`)
+    if (typeof info === "object") console.log(`[EMAIL] all info keys: ${Object.keys(info).join(", ")}`)
+
+    if (info.rejected.length > 0) {
+      console.error(`[EMAIL] SMTP rejected recipients: ${info.rejected.join(", ")}`)
+      throw new Error(`SMTP rejected delivery to: ${info.rejected.join(", ")}`)
+    }
+
+    console.log(`[EMAIL] Email sent successfully`)
+    return { success: true, messageId: info.messageId, accepted: info.accepted }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     const stack = err instanceof Error ? err.stack : ""
-    console.error(`[EMAIL] transporter.verify() FAILED: ${msg}`)
-    if (stack) console.error(`[EMAIL] transporter.verify() stack: ${stack}`)
+    console.error(`[EMAIL] sendOtpEmail TOP-LEVEL CATCH: ${msg}`)
+    if (stack) console.error(`[EMAIL] sendOtpEmail TOP-LEVEL stack: ${stack}`)
+    if (err && typeof err === "object") {
+      try { console.error(`[EMAIL] sendOtpEmail TOP-LEVEL full error: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`) } catch {}
+    }
     throw err
   }
-
-  console.log(`[EMAIL] Sending email via SMTP...`)
-  console.log(`[EMAIL] SMTP envelope: from="${from}" to="${normalizedEmail}"`)
-
-  let info: nodemailer.SentMessageInfo
-  try {
-    info = await transporter.sendMail({
-      from,
-      to: normalizedEmail,
-      subject: "Your Lumora Verification Code",
-      html,
-    })
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    const stack = err instanceof Error ? err.stack : ""
-    console.error(`[EMAIL] sendMail() threw: ${msg}`)
-    if (stack) console.error(`[EMAIL] sendMail() stack: ${stack}`)
-    throw err
-  }
-
-  console.log(`[EMAIL] sendMail() completed`)
-  console.log(`[EMAIL] messageId: ${info.messageId}`)
-  console.log(`[EMAIL] accepted: ${JSON.stringify(info.accepted)}`)
-  console.log(`[EMAIL] rejected: ${JSON.stringify(info.rejected)}`)
-  console.log(`[EMAIL] response: ${info.response}`)
-
-  if (info.rejected.length > 0) {
-    console.error(`[EMAIL] SMTP rejected recipients: ${info.rejected.join(", ")}`)
-    throw new Error(`SMTP rejected delivery to: ${info.rejected.join(", ")}`)
-  }
-
-  console.log(`[EMAIL] Email sent successfully`)
-  return { success: true, messageId: info.messageId, accepted: info.accepted }
 }
