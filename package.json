@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "drizzle-kit migrate",
-    "vercel-build": "next build"
+    "vercel-build": "next build",
+    "test": "node --experimental-strip-types tests/*.test.ts",
+    "test:watch": "echo \"Install vitest for watch mode\""
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.19",
@@ -35,6 +37,7 @@
     "drizzle-kit": "^0.31.10",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "^3.1.0"
   }
 }

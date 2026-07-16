@@ -2,9 +2,13 @@
 // Everything here comes from real Yahoo Finance data + locally computed
 // technical indicators. The model is instructed to use ONLY this context.
 
-import { getQuote, getChart, displayName, type Quote } from "@/lib/market"
+import { getQuote, getChart, displayName, type Quote, type Candle } from "@/lib/market"
 import { computeIndicators } from "@/lib/indicators"
 import { getNews, type NewsItem } from "@/lib/news"
+import { buildReasoningObject, type ReasoningObject } from "@/lib/ai/engine/reasoning"
+import { computeRiskScores, type RiskScores } from "@/lib/ai/engine/risk"
+import { computeConfidence, type ConfidenceResult } from "@/lib/ai/engine/confidence"
+import { validateReasoningObject, type ValidationResult } from "@/lib/ai/engine/validation"
 
 export function fmt(n: number | null | undefined, d = 2) {
   return n == null ? "n/a" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -22,7 +26,12 @@ export type InstrumentContext = {
   quote: Quote
   name: string
   news: NewsItem[]
+  candles: Candle[]
   context: string
+  reasoning: ReasoningObject
+  risk: RiskScores
+  confidence: ConfidenceResult
+  validation: ValidationResult
 }
 
 /**
@@ -95,5 +104,10 @@ RECENT HEADLINES
 ${newsStr}${horizonLine}
 `.trim()
 
-  return { quote, name, news, context }
+  const reasoning = buildReasoningObject(quote.symbol, quote, ind)
+  const risk = computeRiskScores(reasoning)
+  const confidence = computeConfidence(reasoning)
+  const validation = validateReasoningObject(reasoning)
+
+  return { quote, name, news, candles, context, reasoning, risk, confidence, validation }
 }

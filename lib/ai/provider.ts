@@ -488,8 +488,19 @@ function isOptionName(name: string): boolean {
   return parseOptionName(name) !== null
 }
 
+import { reasoningToPrompt } from "@/lib/ai/engine/reasoning"
+import type { ReasoningObject } from "@/lib/ai/engine/reasoning"
+import { computeRiskScores, type RiskScores } from "@/lib/ai/engine/risk"
+import { computeConfidence, type ConfidenceResult } from "@/lib/ai/engine/confidence"
+import { validateReasoningObject } from "@/lib/ai/engine/validation"
+
 /** Deep, structured instrument analysis grounded strictly in the supplied data. */
-export async function generateAnalysis(input: { name: string; horizon: string; context: string }): Promise<Analysis> {
+export async function generateAnalysis(input: {
+  name: string
+  horizon: string
+  context: string
+  reasoning?: ReasoningObject
+}): Promise<Analysis> {
   const isOption = isOptionName(input.name)
   const optionDetails = isOption ? parseOptionName(input.name) : null
 
@@ -686,6 +697,12 @@ Every conclusion must reference specific real data points from the context provi
 When evidence is insufficient, return Hold or No Trade.
 
 GROUNDING: ${grounding}`
+  const dataForAI = input.reasoning ? reasoningToPrompt(input.reasoning) : input.context
+
+  const riskScores = input.reasoning ? computeRiskScores(input.reasoning) : null
+  const confidenceResult = input.reasoning ? computeConfidence(input.reasoning) : null
+  const validationResult = input.reasoning ? validateReasoningObject(input.reasoning) : null
+
   try {
     const userPrompt = isOption
       ? `Instrument: ${input.name} | Underlying: ${optionDetails?.underlying ?? "N/A"} ${optionDetails?.strike ?? "N/A"} ${optionDetails?.type ?? "N/A"} exp ${optionDetails?.expiry ?? "N/A"} | Horizon: ${input.horizon}
@@ -693,7 +710,7 @@ GROUNDING: ${grounding}`
 Analyse the underlying first. Then assess the option chain data. Every conclusion must reference specific data points below.
 
 ━━ DATA ━━
-${input.context}
+${dataForAI}
 
 Output the analysis as JSON using exactly this schema (no extra fields, no missing fields):
 {"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Wait"|"No Trade"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string"],"whatCouldGoWrong":["string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string","entryAggressive":"string","entryConservative":"string","entryBreakout":"string","target2":"string","target3":"string","bullishScenario":"string","neutralScenario":"string","bearishScenario":"string","tradeQuality":"string","optionRisk":"string"}`
@@ -702,7 +719,7 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
 Analyse every available data point below. Who controls this name? Where is the edge? What is the risk? Every conclusion must reference specific data.
 
 ━━ DATA ━━
-${input.context}
+${dataForAI}
 
 Output the analysis as JSON using exactly this schema (no extra fields, no missing fields):
 {"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","target":"string","stopLoss":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string","string"],"whatCouldGoWrong":["string","string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string"}`
@@ -713,7 +730,16 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
     ], { temperature: 0.35, responseFormat: { type: "json_object" }, timeout: 25000 })
 
     const parsed = parseJsonResponse<Omit<Analysis, "disclaimer">>(text, "instrument analysis")
-    return { ...parsed, disclaimer: DISCLAIMER }
+    const overrides: Partial<Analysis> = {}
+    if (riskScores) {
+      overrides.riskLevel = riskScores.overall
+      overrides.riskNote = `Volatility: ${riskScores.breakdown.volatility}. Liquidity: ${riskScores.breakdown.liquidity}. Trend: ${riskScores.breakdown.trend}.`
+    }
+    if (confidenceResult) {
+      overrides.confidenceScore = confidenceResult.score
+      overrides.confidenceNote = confidenceResult.note
+    }
+    return { ...parsed, ...overrides, disclaimer: DISCLAIMER }
   } catch (err) {
     console.error("[Provider] generateAnalysis error:", (err as Error).name, (err as Error).message)
     throw classify(err)

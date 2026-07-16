@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { buildInstrumentContext } from "@/lib/context"
 import { generateAnalysis, getAiErrorDiagnostic, DISCLAIMER, AiConfigError, AiBillingError } from "@/lib/ai/provider"
+import type { ReasoningObject } from "@/lib/ai/engine/reasoning"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
@@ -39,10 +40,10 @@ export async function POST(req: Request) {
   const accept = req.headers.get("accept") ?? ""
   log("Accept header:", accept)
 
-  async function tryAnalyze(name: string, context: string) {
+  async function tryAnalyze(name: string, reasoning: ReasoningObject) {
     log("=== AI ANALYSIS ===")
     try {
-      const analysis = await generateAnalysis({ name, horizon, context })
+      const analysis = await generateAnalysis({ name, horizon, context: "", reasoning })
       log("=== AI SUCCESS ===")
       log("Recommendation:", analysis.recommendation, "Confidence:", analysis.confidenceScore)
       return analysis
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "loading", message: `Analyzing ${built.name}…` })}\n\n`))
           log("Sent: loading event")
 
-          const analysis = await tryAnalyze(built.name, built.context)
+          const analysis = await tryAnalyze(built.name, built.reasoning)
           log("Sending: complete event with analysis")
 
           controller.enqueue(
@@ -129,7 +130,7 @@ export async function POST(req: Request) {
   }
   log("Context built for:", built.name)
 
-  const analysis = await tryAnalyze(built.name, built.context)
+  const analysis = await tryAnalyze(built.name, built.reasoning)
   log("Returning JSON response")
   return NextResponse.json(
     { analysis, meta: { symbol: built.quote.symbol, name: built.name, horizon } },
