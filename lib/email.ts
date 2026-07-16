@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer"
+
 export function buildOtpEmail({ otp, type }: { otp: string; type: "verification" | "reset" }): {
   subject: string
   html: string
@@ -86,6 +88,35 @@ export function buildOtpEmail({ otp, type }: { otp: string; type: "verification"
   return { subject, html }
 }
 
+function createTransporter() {
+  const host = process.env.SMTP_HOST
+  const port = Number(process.env.SMTP_PORT)
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+  const from = process.env.SMTP_FROM
+
+  const missing: string[] = []
+  if (!host) missing.push("SMTP_HOST")
+  if (!port) missing.push("SMTP_PORT")
+  if (!user) missing.push("SMTP_USER")
+  if (!pass) missing.push("SMTP_PASS")
+  if (!from) missing.push("SMTP_FROM")
+  if (missing.length > 0) {
+    const msg = `SMTP not configured. Missing: ${missing.join(", ")}. Add them in Vercel → Settings → Environment Variables.`
+    console.error(`[EMAIL] ${msg}`)
+    throw new Error(msg)
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: host!,
+    port,
+    secure: false,
+    auth: { user: user!, pass: pass! },
+  })
+
+  return { transporter, from: from! }
+}
+
 export async function sendOtpEmail({
   email,
   otp,
@@ -95,51 +126,34 @@ export async function sendOtpEmail({
   otp: string
   type: "verification" | "reset"
 }) {
+  const normalizedEmail = email.trim().toLowerCase()
   const { subject, html } = buildOtpEmail({ otp, type })
 
-  // Log all details for debugging
-  const hasApiKey = !!process.env.RESEND_API_KEY
-  const apiKeyPreview = process.env.RESEND_API_KEY
-    ? process.env.RESEND_API_KEY.substring(0, 6) + "..."
-    : "NOT SET"
-  const configuredFrom = process.env.RESEND_FROM_EMAIL || "NOT SET"
-  console.log(`[EMAIL lib/email.ts:89] sendOtpEmail called`)
-  console.log(`[EMAIL lib/email.ts:90] To: ${email}`)
-  console.log(`[EMAIL lib/email.ts:91] Subject: ${subject}`)
-  console.log(`[EMAIL lib/email.ts:92] OTP: ${otp}`)
-  console.log(`[EMAIL lib/email.ts:93] RESEND_API_KEY: ${apiKeyPreview} (present: ${hasApiKey})`)
-  console.log(`[EMAIL lib/email.ts:94] RESEND_FROM_EMAIL env: ${configuredFrom}`)
+  console.log(`[EMAIL] sendOtpEmail called`)
+  console.log(`[EMAIL] To: ${normalizedEmail}`)
+  console.log(`[EMAIL] Subject: ${subject}`)
+  console.log(`[EMAIL] OTP: ${otp}`)
 
-  if (!hasApiKey) {
-    const msg = `RESEND_API_KEY is not configured. Add it in Vercel → Settings → Environment Variables.`
-    console.error(`[EMAIL] ${msg}`)
-    throw new Error(msg)
-  }
+  const { transporter, from } = createTransporter()
 
-  const { Resend } = await import("resend")
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  const from = process.env.RESEND_FROM_EMAIL
-  if (!from) {
-    const msg = `RESEND_FROM_EMAIL is not configured. Add it in Vercel → Settings → Environment Variables (e.g. "Lumora <verify@lumora.ai>"). The domain must be verified in Resend dashboard.`
-    console.error(`[EMAIL] ${msg}`)
-    throw new Error(msg)
-  }
-  console.log(`[EMAIL] Using from: ${from}`)
-  console.log(`[EMAIL] Calling resend.emails.send(...)`)
+  console.log(`[EMAIL] Verifying SMTP connection to ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}...`)
+  await transporter.verify()
+  console.log(`[EMAIL] SMTP connection verified`)
 
-  const { data, error } = await resend.emails.send({
+  console.log(`[EMAIL] Sending email via SMTP...`)
+  const info = await transporter.sendMail({
     from,
-    to: email,
-    subject,
+    to: normalizedEmail,
+    subject: "Your Lumora Verification Code",
     html,
   })
 
-  if (error) {
-    console.error(`[EMAIL] Resend send failed:`, JSON.stringify(error, null, 2))
-    throw new Error(`Failed to send email: ${error.message} (status ${error.statusCode})`)
+  console.log(`[EMAIL] SMTP response: messageId=${info.messageId}`)
+  if (info.accepted.length > 0) console.log(`[EMAIL] Accepted: ${info.accepted.join(", ")}`)
+  if (info.rejected.length > 0) {
+    console.error(`[EMAIL] Rejected: ${info.rejected.join(", ")}`)
+    throw new Error(`SMTP rejected delivery to: ${info.rejected.join(", ")}`)
   }
 
-  console.log(`[EMAIL] Sent successfully via Resend to ${email}, id: ${data?.id}`)
-
-  return { success: true, id: data?.id }
+  return { success: true, messageId: info.messageId, accepted: info.accepted }
 }
