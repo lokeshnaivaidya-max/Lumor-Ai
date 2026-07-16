@@ -12,10 +12,13 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-async function userExistsByEmail(email: string): Promise<boolean> {
+async function findUserByEmail(email: string) {
   const normalized = normalizeEmail(email)
-  const rows = await db.select({ id: user.id }).from(user).where(eq(user.email, normalized)).limit(1)
-  return rows.length > 0
+  const rows = await db.select({
+    id: user.id,
+    emailVerified: user.emailVerified,
+  }).from(user).where(eq(user.email, normalized)).limit(1)
+  return rows[0] || null
 }
 
 async function safeForward(request: Request): Promise<Response> {
@@ -71,8 +74,8 @@ export async function POST(request: Request) {
       )
     }
     if (email) {
-      const exists = await userExistsByEmail(email)
-      if (exists) {
+      const found = await findUserByEmail(email)
+      if (found) {
         return Response.json(
           { error: "An account with this email already exists. Please sign in instead.", message: "An account with this email already exists. Please sign in instead." },
           { status: 409 },
@@ -89,21 +92,38 @@ export async function POST(request: Request) {
     return safeForward(cleanRequest)
   }
 
-  // Email OTP send: reject if user already exists
+  // Email OTP send: type-aware validation
   if (path === "/api/auth/email-otp/send-verification-otp" && email) {
-    const exists = await userExistsByEmail(email)
-    if (exists) {
-      return Response.json(
-        { error: "An account with this email already exists. Please sign in instead.", message: "An account with this email already exists. Please sign in instead." },
-        { status: 409 },
-      )
+    const otpType: string = body.type || ""
+    const found = await findUserByEmail(email)
+
+    if (otpType === "email-verification") {
+      if (!found) {
+        return Response.json(
+          { error: "No account found for this email. Please sign up first.", message: "No account found for this email. Please sign up first." },
+          { status: 404 },
+        )
+      }
+      if (found.emailVerified) {
+        return Response.json(
+          { error: "This email is already verified. Please sign in instead.", message: "This email is already verified. Please sign in instead." },
+          { status: 409 },
+        )
+      }
+    } else if (otpType === "forget-password" || otpType === "password-reset") {
+      if (!found) {
+        return Response.json(
+          { error: "No account found for this email.", message: "No account found for this email." },
+          { status: 404 },
+        )
+      }
     }
   }
 
-  // Email OTP verify: reject if user does not exist (orphan verification)
+  // Email OTP verify: reject if user does not exist
   if (path === "/api/auth/email-otp/verify-email" && email) {
-    const exists = await userExistsByEmail(email)
-    if (!exists) {
+    const found = await findUserByEmail(email)
+    if (!found) {
       return Response.json(
         { error: "No account found for this email. Please sign up first.", message: "No account found for this email. Please sign up first." },
         { status: 404 },
