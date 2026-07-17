@@ -1,5 +1,326 @@
 @import "tailwindcss";
 
+/* ── Landing: cinematic design system ── */
+
+.lm-scene {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #070705;
+  color: #e8e4dd;
+  position: relative;
+  overflow: hidden;
+}
+
+.lm-scene--dark {
+  background: #040403;
+}
+
+.lm-scene--tight {
+  min-height: 60vh;
+  padding: 6rem 2rem;
+}
+
+.lm-scene--short {
+  min-height: 40vh;
+  padding: 4rem 2rem;
+}
+
+/* A single beam of light from top-left */
+.lm-light {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.lm-light::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -10%;
+  width: 60%;
+  height: 120%;
+  background: linear-gradient(
+    160deg,
+    rgba(232, 228, 221, 0.04) 0%,
+    rgba(232, 228, 221, 0.015) 30%,
+    transparent 60%
+  );
+  transform: rotate(12deg);
+  pointer-events: none;
+}
+
+.lm-light--right::before {
+  left: auto;
+  right: -10%;
+  transform: rotate(-12deg);
+}
+
+/* Typography */
+.lm-display {
+  font-family: var(--font-serif);
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 400;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: #e8e4dd;
+  margin: 0;
+}
+
+.lm-display--small {
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.9;
+}
+
+.lm-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #e8e4dd;
+  margin: 0;
+}
+
+.lm-title--large {
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  line-height: 0.95;
+}
+
+.lm-heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #e8e4dd;
+  margin: 0;
+}
+
+.lm-meta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #8a857c;
+  margin: 0;
+}
+
+.lm-body {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+  line-height: 1.6;
+  color: #8a857c;
+  margin: 0;
+  max-width: 32em;
+}
+
+.lm-body--large {
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.lm-body--gold {
+  color: #b8914b;
+}
+
+.lm-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #5a5650;
+  margin: 0;
+}
+
+/* Divider */
+.lm-rule {
+  width: 3rem;
+  height: 1px;
+  background: rgba(232, 228, 221, 0.15);
+  border: none;
+  margin: 0;
+}
+
+.lm-rule--long {
+  width: 6rem;
+}
+
+.lm-rule--gold {
+  background: #b8914b;
+}
+
+/* Container */
+.lm-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.lm-container--narrow {
+  max-width: 720px;
+}
+
+.lm-container--wide {
+  max-width: 1400px;
+}
+
+/* Stack */
+.lm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lm-stack--tight {
+  gap: 0.5rem;
+}
+
+.lm-stack--loose {
+  gap: 2rem;
+}
+
+.lm-stack--xloose {
+  gap: 3rem;
+}
+
+/* Split layout */
+.lm-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .lm-split {
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+  }
+  .lm-split--lopsided {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
+/* Count text */
+.lm-stat {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: #e8e4dd;
+  margin: 0;
+}
+
+.lm-stat-label {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #5a5650;
+}
+
+/* Link / button */
+.lm-link {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #e8e4dd;
+  text-decoration: none;
+  transition: opacity 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.lm-link:hover {
+  opacity: 0.6;
+}
+
+.lm-link--gold {
+  color: #b8914b;
+}
+
+/* Exchange pill - minimal typographic treatment only */
+.lm-exchange {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: #5a5650;
+  letter-spacing: 0.03em;
+}
+.lm-exchange strong {
+  font-weight: 500;
+  color: #8a857c;
+}
+
+/* Horizontal scroll container for exchanges */
+.lm-ticker {
+  display: flex;
+  gap: 2.5rem;
+  overflow-x: auto;
+  padding: 1.5rem 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.lm-ticker::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fade-in animation */
+@keyframes lm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lm-animate {
+  animation: lm-fade-up 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lm-animate--slow {
+  animation-duration: 1.4s;
+}
+
+.lm-animate--delay-1 { animation-delay: 0.1s; }
+.lm-animate--delay-2 { animation-delay: 0.25s; }
+.lm-animate--delay-3 { animation-delay: 0.45s; }
+.lm-animate--delay-4 { animation-delay: 0.7s; }
+.lm-animate--delay-5 { animation-delay: 1s; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lm-animate {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Responsive spacing for scenes */
+@media (max-width: 768px) {
+  .lm-scene {
+    padding: 1.5rem;
+    min-height: 80vh;
+  }
+  .lm-scene--tight {
+    min-height: 50vh;
+    padding: 3rem 1.5rem;
+  }
+  .lm-scene--short {
+    min-height: 30vh;
+    padding: 2.5rem 1.5rem;
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
