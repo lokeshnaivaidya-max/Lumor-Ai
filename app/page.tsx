@@ -1,22 +1,17 @@
-import Link from "next/link"
+import { LandingNav } from "@/components/landing-nav"
+import { HeroParallax } from "@/components/hero-parallax"
+import { StatsSection } from "@/components/stats-section"
 
 export default async function HomePage() {
   return (
     <>
+      <LandingNav />
+
       {/* Scene 1 — Title card */}
-      <section className="lm-scene">
-        <div className="lm-light" />
-        <div className="lm-container">
-          <div className="lm-animate" style={{ maxWidth: 800, marginLeft: "auto", marginRight: "auto" }}>
-            <hr className="lm-rule lm-rule--gold lm-animate lm-animate--delay-1" style={{ marginBottom: "2.5rem" }} />
-            <h1 className="lm-display" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-              Lumora
-            </h1>
-            <p className="lm-body lm-body--large" style={{ textAlign: "center", maxWidth: 480, margin: "0 auto" }}>
-              Market intelligence, distilled.
-            </p>
-          </div>
-        </div>
+      <section className="lm-scene lm-scene--hero">
+        <div className="lm-light lm-ambient" />
+        <div className="lm-vignette" />
+        <HeroParallax />
         <div style={{ position: "absolute", bottom: "2.5rem", left: 0, right: 0, textAlign: "center" }}>
           <span className="lm-caption" style={{ display: "inline-block", animation: "lm-fade-up 1.4s 1.5s both" }}>
             Scroll
@@ -25,8 +20,9 @@ export default async function HomePage() {
       </section>
 
       {/* Scene 2 — Insight */}
-      <section className="lm-scene lm-scene--dark">
-        <div className="lm-light lm-light--right" />
+      <section className="lm-scene lm-scene--dark lm-scene--insight">
+        <div className="lm-light lm-light--right lm-ambient" />
+        <div className="lm-vignette" />
         <div className="lm-container lm-container--narrow">
           <p className="lm-meta lm-animate lm-animate--delay-1" style={{ marginBottom: "1.5rem" }}>
             The problem
@@ -43,16 +39,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Scene 3 — What it does */}
-      <section className="lm-scene" style={{ paddingTop: "8rem", paddingBottom: "8rem" }}>
+      {/* Scene 3 — Offerings */}
+      <section className="lm-scene lm-scene--offerings" id="offerings">
+        <div className="lm-light lm-ambient" />
         <div className="lm-container lm-container--narrow">
           <p className="lm-meta lm-animate" style={{ marginBottom: "4rem" }}>
             What Lumora does
           </p>
 
-          {/* Offering 1 — simple, spacious */}
-          <div className="lm-animate lm-animate--delay-1" style={{ marginBottom: "6rem" }}>
-            <p className="lm-heading" style={{ marginBottom: "0.75rem" }}>
+          {/* 1 — spacious, centered */}
+          <div className="lm-animate lm-animate--delay-1" style={{ marginBottom: "6rem", maxWidth: 500 }}>
+            <p className="lm-heading" style={{ marginBottom: "0.75rem", fontSize: "clamp(1.5rem, 3.5vw, 3rem)" }}>
               Listens across 60+ exchanges.
             </p>
             <p className="lm-body" style={{ maxWidth: 380 }}>
@@ -60,9 +57,9 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* Offering 2 — tighter, different spacing */}
-          <div className="lm-animate lm-animate--delay-2" style={{ marginBottom: "6rem", paddingLeft: "2rem", borderLeft: "1px solid rgba(232,228,221,0.08)" }}>
-            <p className="lm-heading" style={{ marginBottom: "0.75rem" }}>
+          {/* 2 — offset right, bordered */}
+          <div className="lm-animate lm-animate--delay-2" style={{ marginBottom: "6rem", paddingLeft: "2rem", borderLeft: "1px solid rgba(232,228,221,0.08)", marginLeft: "auto", maxWidth: 500 }}>
+            <p className="lm-heading" style={{ marginBottom: "0.75rem", fontSize: "clamp(1.5rem, 3.5vw, 3rem)" }}>
               Thinks before it speaks.
             </p>
             <p className="lm-body" style={{ maxWidth: 380 }}>
@@ -70,12 +67,12 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* Offering 3 — offset, different treatment */}
-          <div className="lm-animate lm-animate--delay-3" style={{ textAlign: "right" }}>
-            <p className="lm-heading" style={{ marginBottom: "0.75rem" }}>
+          {/* 3 — left, compact */}
+          <div className="lm-animate lm-animate--delay-3" style={{ maxWidth: 440 }}>
+            <p className="lm-heading" style={{ marginBottom: "0.75rem", fontSize: "clamp(1.2rem, 2.5vw, 2rem)" }}>
               Puts you in control.
             </p>
-            <p className="lm-body" style={{ maxWidth: 380, marginLeft: "auto" }}>
+            <p className="lm-body" style={{ maxWidth: 380 }}>
               Portfolio intelligence, risk tracking, and trade planning — tools that inform decisions without making them for you.
             </p>
           </div>
@@ -83,33 +80,15 @@ export default async function HomePage() {
       </section>
 
       {/* Scene 4 — Reach */}
-      <section className="lm-scene lm-scene--tight" style={{ alignItems: "flex-start", justifyContent: "flex-start", paddingTop: "8rem" }}>
-        <div className="lm-light" />
+      <section className="lm-scene lm-scene--dark lm-scene--reach" id="reach">
+        <div className="lm-light lm-ambient" />
+        <div className="lm-vignette" />
         <div className="lm-container lm-container--wide">
-          <p className="lm-meta lm-animate" style={{ marginBottom: "0.5rem" }}>
+          <p className="lm-meta lm-animate" style={{ marginBottom: "2rem" }}>
             Reach
           </p>
-          <div className="lm-animate lm-animate--delay-1" style={{ marginBottom: "4rem" }}>
-            <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
-              <div>
-                <p className="lm-stat">60+</p>
-                <p className="lm-stat-label">Exchanges</p>
-              </div>
-              <div>
-                <p className="lm-stat">12K</p>
-                <p className="lm-stat-label">Instruments</p>
-              </div>
-              <div>
-                <p className="lm-stat">40+</p>
-                <p className="lm-stat-label">Countries</p>
-              </div>
-              <div>
-                <p className="lm-stat">500B+</p>
-                <p className="lm-stat-label">Data points</p>
-              </div>
-            </div>
-          </div>
-          <p className="lm-caption lm-animate lm-animate--delay-2" style={{ marginBottom: "1rem" }}>
+          <StatsSection />
+          <p className="lm-caption lm-animate lm-animate--delay-2" style={{ marginTop: "3rem", marginBottom: "1rem" }}>
             Exchanges tracked
           </p>
           <div className="lm-ticker lm-animate lm-animate--delay-3">
@@ -130,25 +109,45 @@ export default async function HomePage() {
       </section>
 
       {/* Scene 5 — Closing */}
-      <section className="lm-scene lm-scene--short" style={{ justifyContent: "center", paddingTop: "6rem", paddingBottom: "6rem" }}>
+      <section className="lm-scene lm-scene--closing">
+        <div className="lm-light lm-light--right lm-ambient" />
+        <div className="lm-vignette" />
         <div className="lm-container lm-container--narrow" style={{ textAlign: "center" }}>
-          <hr className="lm-rule lm-rule--gold lm-animate" style={{ margin: "0 auto 2rem" }} />
-          <h2 className="lm-heading lm-animate lm-animate--delay-1" style={{ marginBottom: "2rem" }}>
+          <hr className="lm-rule lm-rule--gold lm-animate" style={{ margin: "0 auto 2.5rem" }} />
+          <h2 className="lm-title lm-animate lm-animate--delay-1" style={{ marginBottom: "1rem" }}>
             See the market clearly.
           </h2>
-          <div className="lm-animate lm-animate--delay-2">
-            <Link href="/sign-up" className="lm-link lm-link--gold">
-              Get started
-              <span style={{ display: "inline-block", transition: "transform 0.3s" }}>→</span>
-            </Link>
-          </div>
-          <p className="lm-caption lm-animate lm-animate--delay-3" style={{ marginTop: "5rem" }}>
-            <Link href="/markets" className="lm-caption" style={{ color: "#5a5650", textDecoration: "none", transition: "color 0.3s" }}>
-              Explore markets without an account →
-            </Link>
+          <p className="lm-body lm-animate lm-animate--delay-2" style={{ margin: "0 auto 2.5rem", maxWidth: 360, textAlign: "center" }}>
+            No noise. No clutter. Just signal.
           </p>
+          <div className="lm-animate lm-animate--delay-3" style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+            <a href="/sign-up" className="lm-btn lm-btn--gold">
+              Get started
+            </a>
+            <a href="/markets" className="lm-btn">
+              Explore markets
+            </a>
+          </div>
         </div>
       </section>
+
+      {/* Scene 6 — Footer / Closing title card */}
+      <footer className="lm-footer">
+        <div className="lm-footer__inner">
+          <hr className="lm-rule lm-rule--gold" style={{ margin: "0 auto 1.5rem" }} />
+          <p className="lm-display lm-display--small" style={{ marginBottom: "0.75rem" }}>
+            Lumora
+          </p>
+          <p className="lm-caption" style={{ marginBottom: "1.5rem" }}>
+            Market intelligence, distilled.
+          </p>
+          <div className="lm-footer__links">
+            <a href="/privacy" className="lm-footer__link">Privacy</a>
+            <a href="/terms" className="lm-footer__link">Terms</a>
+            <a href="/markets" className="lm-footer__link">Markets</a>
+          </div>
+        </div>
+      </footer>
     </>
   )
 }
