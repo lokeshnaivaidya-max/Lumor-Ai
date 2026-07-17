@@ -5,7 +5,7 @@ import { Coverage } from "@/components/coverage"
 import { CtaFooter } from "@/components/cta-footer"
 import { LoadingSequence } from "@/components/loading-sequence"
 
-export default function HomePage() {
+export default async function HomePage() {
 
   return (
     <>
