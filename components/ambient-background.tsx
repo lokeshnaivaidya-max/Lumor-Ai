@@ -3,92 +3,105 @@
 import { useEffect, useRef } from "react"
 
 export function AmbientBackground() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
+    const el = ref.current
+    if (!el) return
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    let W: number, H: number
 
-    const resize = () => {
-      W = window.innerWidth
-      H = window.innerHeight
-      canvas.width = W * dpr
-      canvas.height = H * dpr
-      canvas.style.width = `${W}px`
-      canvas.style.height = `${H}px`
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
-    resize()
-
-    const blobs = [
-      { x: 0.15, y: 0.1, r: 0.4, h: 255, s: 0.15, delay: 0 },
-      { x: 0.82, y: 0.05, r: 0.35, h: 195, s: 0.12, delay: -7 },
-      { x: 0.5, y: 0.35, r: 0.45, h: 280, s: 0.1, delay: -14 },
-      { x: 0.1, y: 0.7, r: 0.3, h: 168, s: 0.1, delay: -5 },
-      { x: 0.75, y: 0.65, r: 0.35, h: 255, s: 0.08, delay: -10 },
-      { x: 0.3, y: 0.88, r: 0.25, h: 85, s: 0.08, delay: -3 },
-    ]
-
-    const particles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.2, vy: (Math.random() - 0.5) * 0.2,
-      r: Math.random() * 1.5 + 0.5, a: Math.random() * 0.3 + 0.1,
-    }))
-
-    let t = 0
+    let mouseX = 0.5
+    let mouseY = 0.5
     let raf = 0
 
-    const render = () => {
-      t += 0.004
-      ctx.clearRect(0, 0, W, H)
-
-      // Soft colored blobs
-      ctx.globalCompositeOperation = "lighter"
-      for (const b of blobs) {
-        const cx = W * b.x + Math.sin(t * 0.3 + b.delay) * W * 0.05
-        const cy = H * b.y + Math.cos(t * 0.25 + b.delay * 0.7) * H * 0.04
-        const r = Math.min(W, H) * b.r
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-        grad.addColorStop(0, `oklch(0.55 ${b.s} ${b.h} / 0.2)`)
-        grad.addColorStop(0.4, `oklch(0.5 ${b.s} ${b.h} / 0.08)`)
-        grad.addColorStop(1, `oklch(0 0 0 / 0)`)
-        ctx.fillStyle = grad
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
-      }
-
-      // Particles
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy
-        p.vx *= 0.99; p.vy *= 0.99
-        if (p.x < -10) p.x = W + 10
-        if (p.x > W + 10) p.x = -10
-        if (p.y < -10) p.y = H + 10
-        if (p.y > H + 10) p.y = -10
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r + 6)
-        grad.addColorStop(0, `oklch(0.55 0.15 255 / ${p.a})`)
-        grad.addColorStop(1, `oklch(0 0 0 / 0)`)
-        ctx.fillStyle = grad
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r + 6, 0, Math.PI * 2)
-        ctx.fill()
-      }
-
-      ctx.globalAlpha = 1
-      ctx.globalCompositeOperation = "source-over"
-      raf = requestAnimationFrame(render)
+    const onMouse = (e: MouseEvent) => {
+      mouseX = e.clientX / window.innerWidth
+      mouseY = e.clientY / window.innerHeight
     }
+    window.addEventListener("mousemove", onMouse, { passive: true })
 
-    if (!reduce) render()
+    const layers = el.querySelectorAll<HTMLDivElement>("[data-layer]")
+    const fogLayers = el.querySelectorAll<HTMLDivElement>("[data-fog]")
 
-    window.addEventListener("resize", resize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize) }
+    const tick = () => {
+      const t = Date.now() * 0.0001
+      for (let i = 0; i < layers.length; i++) {
+        const l = layers[i]
+        const depth = i + 1
+        const dx = (mouseX - 0.5) * depth * 8
+        const dy = (mouseY - 0.5) * depth * 6
+        const drift = Math.sin(t * (0.5 + i * 0.2) + i) * depth * 4
+        l.style.transform = `translate(${dx + drift}px, ${dy}px)`
+      }
+      for (let i = 0; i < fogLayers.length; i++) {
+        const f = fogLayers[i]
+        const driftX = Math.sin(t * (0.3 + i * 0.15) + i * 2) * 10
+        const driftY = Math.cos(t * (0.2 + i * 0.1) + i * 1.5) * 6
+        f.style.transform = `translate(${driftX}px, ${driftY}px)`
+      }
+      if (!reduce) raf = requestAnimationFrame(tick)
+    }
+    if (!reduce) raf = requestAnimationFrame(tick)
+
+    return () => {
+      window.removeEventListener("mousemove", onMouse)
+      cancelAnimationFrame(raf)
+    }
   }, [])
 
-  return <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 -z-10 h-full w-full" />
+  return (
+    <div ref={ref} className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.62_0.2_255/0.08),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_80%,oklch(0.65_0.16_168/0.04),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_30%_at_20%_60%,oklch(0.55_0.18_280/0.03),transparent)]" />
+      <div
+        data-fog="1"
+        className="absolute -inset-[10%] opacity-30"
+        style={{
+          background: `radial-gradient(ellipse 70% 40% at 30% 20%, oklch(0.62 0.2 255 / 0.04), transparent 60%)`,
+          filter: "blur(80px)",
+        }}
+      />
+      <div
+        data-fog="2"
+        className="absolute -inset-[10%] opacity-20"
+        style={{
+          background: `radial-gradient(ellipse 50% 50% at 70% 50%, oklch(0.65 0.16 168 / 0.03), transparent 60%)`,
+          filter: "blur(120px)",
+        }}
+      />
+      <div
+        data-fog="3"
+        className="absolute -inset-[10%] opacity-15"
+        style={{
+          background: `radial-gradient(ellipse 60% 30% at 50% 80%, oklch(0.55 0.18 280 / 0.03), transparent 60%)`,
+          filter: "blur(100px)",
+        }}
+      />
+      <div
+        data-layer="1"
+        className="absolute left-[15%] top-[10%] h-[300px] w-[300px] rounded-full opacity-10"
+        style={{
+          background: "radial-gradient(circle, oklch(0.62 0.2 255 / 0.08), transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      <div
+        data-layer="2"
+        className="absolute right-[10%] top-[40%] h-[250px] w-[400px] rounded-full opacity-8"
+        style={{
+          background: "radial-gradient(circle, oklch(0.65 0.16 168 / 0.06), transparent 70%)",
+          filter: "blur(80px)",
+        }}
+      />
+      <div
+        data-layer="3"
+        className="absolute bottom-[15%] left-[30%] h-[200px] w-[350px] rounded-full opacity-6"
+        style={{
+          background: "radial-gradient(circle, oklch(0.55 0.18 280 / 0.05), transparent 70%)",
+          filter: "blur(100px)",
+        }}
+      />
+    </div>
+  )
 }

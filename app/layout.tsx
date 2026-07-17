@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next"
 import { cookies } from "next/headers"
 import { Sora, Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AmbientBackground } from "@/components/ambient-background"
+import { PageTransition } from "@/components/page-transition"
 import type { ReactNode } from "react"
 import "./globals.css"
 
@@ -22,7 +24,7 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600"],
 })
 
 const mono = JetBrains_Mono({
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#F5F0EB",
+  themeColor: "#0a0a0f",
   width: "device-width",
   initialScale: 1,
 }
@@ -74,12 +76,13 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} ${themeClass(theme)} bg-background`}
+      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} ${themeClass(theme)}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
         <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>
-          {children}
+          <AmbientBackground />
+          <PageTransition>{children}</PageTransition>
         </ThemeProvider>
       </body>
     </html>

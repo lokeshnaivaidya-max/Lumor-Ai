@@ -1,5 +1,5 @@
 import { createCorrelationId, createLog, normalizeEmail, type EmailProvider, type SendEmailOptions, type SendEmailLog } from "./adapter"
-import { brevoProvider } from "./providers/brevo"
+import { gmailProvider } from "./providers/gmail"
 import { consoleProvider } from "./providers/console"
 
 const MAX_RETRIES = 3
@@ -9,23 +9,7 @@ const isDev = process.env.NODE_ENV === "development" || process.env.VERCEL_ENV =
 function selectProvider(): EmailProvider {
   if (isDev) return consoleProvider
   const hasSmtp = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM)
-  if (hasSmtp) return brevoProvider
-  if (process.env.RESEND_API_KEY) {
-    const { resendProvider } = require("./providers/resend") as { resendProvider: EmailProvider }
-    return resendProvider
-  }
-  if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
-    const { mailgunProvider } = require("./providers/mailgun") as { mailgunProvider: EmailProvider }
-    return mailgunProvider
-  }
-  if (process.env.POSTMARK_SERVER_TOKEN) {
-    const { postmarkProvider } = require("./providers/postmark") as { postmarkProvider: EmailProvider }
-    return postmarkProvider
-  }
-  if (process.env.SES_REGION && process.env.SES_ACCESS_KEY && process.env.SES_SECRET_KEY) {
-    const { sesProvider } = require("./providers/ses") as { sesProvider: EmailProvider }
-    return sesProvider
-  }
+  if (hasSmtp) return gmailProvider
   return consoleProvider
 }
 
@@ -55,6 +39,8 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailLog> {
 
   console.log("[EMAIL:SEND]", JSON.stringify({ correlationId, to, provider: provider.name, subject: opts.subject, retries: MAX_RETRIES }))
 
+  let lastLog: SendEmailLog = log
+
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const attemptLog = { ...log, retryCount: attempt }
     try {
@@ -72,6 +58,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailLog> {
 
       attemptLog.error = `Provider returned rejected recipients: ${result.rejected.join(", ")}`
       console.error("[EMAIL:REJECTED]", JSON.stringify(createLog(attemptLog)))
+      lastLog = attemptLog
 
       if (attempt < MAX_RETRIES - 1) {
         console.log("[EMAIL:RETRY]", JSON.stringify({ correlationId, attempt: attempt + 1, delay: RETRY_DELAY_MS }))
@@ -81,6 +68,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailLog> {
       const msg = err instanceof Error ? err.message : String(err)
       attemptLog.error = msg
       console.error("[EMAIL:ERROR]", JSON.stringify(createLog(attemptLog)))
+      lastLog = attemptLog
 
       if (attempt < MAX_RETRIES - 1) {
         console.log("[EMAIL:RETRY]", JSON.stringify({ correlationId, attempt: attempt + 1, delay: RETRY_DELAY_MS }))
@@ -89,6 +77,6 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailLog> {
     }
   }
 
-  console.error("[EMAIL:FAILED]", JSON.stringify(createLog(log)))
-  return createLog(log)
+  console.error("[EMAIL:FAILED]", JSON.stringify(createLog(lastLog)))
+  return createLog(lastLog)
 }

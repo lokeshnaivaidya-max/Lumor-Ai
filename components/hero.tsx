@@ -21,8 +21,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-10 inline-flex items-center gap-2.5 rounded-full border border-blue/15 bg-white/40 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.15em] text-blue/80"
-          style={{ backdropFilter: "blur(16px)" }}
+          className="mb-10 inline-flex items-center gap-2.5 rounded-full glass-btn-ghost bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.15em] text-blue/80"
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-75" />
@@ -69,12 +68,12 @@ export function Hero() {
           transition={{ duration: 0.9, delay: 1.9, ease: [0.16, 1, 0.3, 1] }}
           className="mt-12 flex flex-wrap items-center justify-center gap-4"
         >
-          <Link href="/markets" className="premium-btn premium-btn-primary group px-9 py-4 text-sm">
+          <Link href="/markets" className="glass-btn glass-btn-primary group px-9 py-4 text-sm">
             <Sparkles className="h-4 w-4" />
             Launch Terminal
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
-          <Link href="/sign-up" className="premium-btn premium-btn-ghost px-9 py-4 text-sm">
+          <Link href="/sign-up" className="glass-btn glass-btn-ghost px-9 py-4 text-sm">
             Get Started
           </Link>
         </motion.div>

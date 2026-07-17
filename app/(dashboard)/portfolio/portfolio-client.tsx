@@ -158,8 +158,8 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-2">
-          <Link href="/chat" className="premium-btn premium-btn-ghost flex items-center gap-1.5 px-4 py-2.5 text-xs"><Brain className="h-3.5 w-3.5" />AI Review</Link>
-          <button onClick={() => { setError(null); setAdding(true) }} className="premium-btn premium-btn-primary flex items-center gap-1.5 px-4 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
+          <Link href="/chat" className="glass-btn glass-btn-ghost flex items-center gap-1.5 px-4 py-2.5 text-xs"><Brain className="h-3.5 w-3.5" />AI Review</Link>
+          <button onClick={() => { setError(null); setAdding(true) }} className="glass-btn glass-btn-primary flex items-center gap-1.5 px-4 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
         </motion.div>
       </div>
 
@@ -322,7 +322,7 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           <div className="mb-4 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-border/30"><Wallet className="h-8 w-8 text-muted-foreground/40" /></div>
           <p className="font-heading text-lg font-medium">No portfolio yet.</p>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">Add your first holding to see live valuation, P&amp;L, and allocation analytics.</p>
-          <button onClick={() => setAdding(true)} className="premium-btn premium-btn-primary mt-5 px-5 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
+          <button onClick={() => setAdding(true)} className="glass-btn glass-btn-primary mt-5 px-5 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
         </div>
       )}
 
@@ -338,25 +338,25 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Symbol</label>
-                  <input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" className="premium-input w-full" />
+                  <input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" className="glass-input w-full" />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Quantity</label>
-                  <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10" className="premium-input w-full" />
+                  <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10" className="glass-input w-full" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Avg Price</label>
-                  <input type="number" value={avgPrice} onChange={(e) => setAvgPrice(e.target.value)} placeholder="150.00" className="premium-input w-full" />
+                  <input type="number" value={avgPrice} onChange={(e) => setAvgPrice(e.target.value)} placeholder="150.00" className="glass-input w-full" />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Name (opt)</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc." className="premium-input w-full" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc." className="glass-input w-full" />
                 </div>
               </div>
               {error && <p className="text-xs text-neg">{error}</p>}
-              <button onClick={handleAdd} disabled={busy} className="premium-btn premium-btn-primary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-xs disabled:opacity-60">
+              <button onClick={handleAdd} disabled={busy} className="glass-btn glass-btn-primary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-xs disabled:opacity-60">
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}Add Holding
               </button>
             </div>

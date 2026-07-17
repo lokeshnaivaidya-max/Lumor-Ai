@@ -280,13 +280,13 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
           <div className="mt-6 flex items-center justify-center gap-3">
             <Link
               href="/sign-in"
-              className="premium-btn premium-btn-primary rounded-full px-6 py-2.5 text-sm"
+              className="glass-btn glass-btn-primary rounded-full px-6 py-2.5 text-sm"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="premium-btn premium-btn-ghost rounded-full px-6 py-2.5 text-sm"
+              className="glass-btn glass-btn-ghost rounded-full px-6 py-2.5 text-sm"
             >
               Create account
             </Link>
@@ -332,7 +332,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             whileTap={{ scale: loading ? 1 : 0.97 }}
             onClick={run}
             disabled={loading}
-            className="premium-btn premium-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
+            className="glass-btn glass-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
             {loading ? "Analyzing…" : "Analyze"}
@@ -346,7 +346,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             <div className="flex-1 text-sm text-foreground/90">{error}</div>
             <button
               onClick={run}
-              className="premium-btn premium-btn-soft shrink-0 rounded-full px-3 py-1 text-xs"
+              className="glass-btn glass-btn-soft shrink-0 rounded-full px-3 py-1 text-xs"
             >
               <RefreshCw className="mr-1 h-3 w-3" /> Retry
             </button>

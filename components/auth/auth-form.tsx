@@ -172,11 +172,11 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
             <div className="flex flex-col gap-4">
               {isSignUp && (
                 <Field label="Full name" icon={<User className="h-3.5 w-3.5" />}>
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="auth-input" autoComplete="name" />
+                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="glass-input" autoComplete="name" />
                 </Field>
               )}
               <Field label="Email" icon={<Mail className="h-3.5 w-3.5" />}>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" autoComplete="email" />
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" autoComplete="email" />
               </Field>
               <Field label="Password" icon={<Lock className="h-3.5 w-3.5" />}>
                 <div className="relative">
@@ -187,7 +187,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="auth-input pr-10"
+                    className="glass-input pr-10"
                     autoComplete={isSignUp ? "new-password" : "current-password"}
                   />
                   <button

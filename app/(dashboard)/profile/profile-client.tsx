@@ -46,7 +46,7 @@ function GlowCard({ children, className }: { children: React.ReactNode; classNam
 function SaveButton({ onSave, busy, label = "Save changes" }: { onSave: () => void; busy: boolean; label?: string }) {
   return (
     <motion.button onClick={onSave} disabled={busy} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-      className="premium-btn premium-btn-primary flex items-center gap-2 px-5 py-2.5 text-xs disabled:opacity-60">
+      className="glass-btn glass-btn-primary flex items-center gap-2 px-5 py-2.5 text-xs disabled:opacity-60">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
       {label}
     </motion.button>
@@ -209,13 +209,13 @@ export function ProfileClient({ user }: {
                 </div>
                 <div className="h-px bg-gradient-to-r from-border/40 via-border/20 to-transparent" />
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="premium-input w-full" /></Field>
-                  <Field label="Avatar URL" icon={Camera}><input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" className="premium-input w-full" /></Field>
-                  <Field label="Timezone" icon={Clock}><input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" className="premium-input w-full" /></Field>
-                  <Field label="Country" icon={Globe}><input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="US" className="premium-input w-full" /></Field>
+                  <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full" /></Field>
+                  <Field label="Avatar URL" icon={Camera}><input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" className="glass-input w-full" /></Field>
+                  <Field label="Timezone" icon={Clock}><input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" className="glass-input w-full" /></Field>
+                  <Field label="Country" icon={Globe}><input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="US" className="glass-input w-full" /></Field>
                 </div>
                 <Field label="Bio" icon={User}>
-                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself…" className="premium-input w-full resize-none" />
+                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself…" className="glass-input w-full resize-none" />
                 </Field>
               </div>
             </GlowCard>
@@ -277,20 +277,20 @@ export function ProfileClient({ user }: {
             <GlowCard>
               <div className="space-y-4 p-6">
                 <p className="flex items-center gap-1.5 text-sm font-medium"><KeyRound className="h-4 w-4 text-muted-foreground" />Change password</p>
-                <Field label="Current password" icon={KeyRound}><input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="premium-input w-full" /></Field>
+                <Field label="Current password" icon={KeyRound}><input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="glass-input w-full" /></Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="New password" icon={KeyRound}><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="premium-input w-full" /></Field>
-                  <Field label="Confirm new password" icon={KeyRound}><input type="password" value={confPw} onChange={(e) => setConfPw(e.target.value)} className="premium-input w-full" /></Field>
+                  <Field label="New password" icon={KeyRound}><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="glass-input w-full" /></Field>
+                  <Field label="Confirm new password" icon={KeyRound}><input type="password" value={confPw} onChange={(e) => setConfPw(e.target.value)} className="glass-input w-full" /></Field>
                 </div>
-                <button onClick={handleChangePw} disabled={busy} className="premium-btn premium-btn-primary px-4 py-2.5 text-xs disabled:opacity-60">Update password</button>
+                <button onClick={handleChangePw} disabled={busy} className="glass-btn glass-btn-primary px-4 py-2.5 text-xs disabled:opacity-60">Update password</button>
               </div>
             </GlowCard>
 
             <GlowCard>
               <div className="space-y-4 p-6">
                 <p className="flex items-center gap-1.5 text-sm font-medium"><Mail className="h-4 w-4 text-muted-foreground" />Change email</p>
-                <Field label="New email" icon={Mail}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={user.email} className="premium-input w-full" /></Field>
-                <button onClick={handleUpdateEmail} disabled={busy} className="premium-btn premium-btn-primary px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
+                <Field label="New email" icon={Mail}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={user.email} className="glass-input w-full" /></Field>
+                <button onClick={handleUpdateEmail} disabled={busy} className="glass-btn glass-btn-primary px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
               </div>
             </GlowCard>
 
@@ -298,8 +298,8 @@ export function ProfileClient({ user }: {
               <div className="space-y-4 p-6">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-neg"><Trash2 className="h-4 w-4" />Delete account</p>
                 <p className="text-xs text-muted-foreground">Permanently remove your account and all associated data. This cannot be undone.</p>
-                <Field label="Confirm password" icon={KeyRound}><input type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} className="premium-input w-full" /></Field>
-                <button onClick={handleDelete} disabled={busy} className="premium-btn flex items-center gap-2 bg-neg/15 px-4 py-2.5 text-xs text-neg hover:bg-neg/25 disabled:opacity-60">
+                <Field label="Confirm password" icon={KeyRound}><input type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} className="glass-input w-full" /></Field>
+                <button onClick={handleDelete} disabled={busy} className="glass-btn flex items-center gap-2 bg-neg/15 px-4 py-2.5 text-xs text-neg hover:bg-neg/25 disabled:opacity-60">
                   <Trash2 className="h-3.5 w-3.5" />Delete account
                 </button>
               </div>

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { motion } from "motion/react"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { Trash2, Sparkles, ArrowUpRight, ArrowDownRight, Minus, Plus, FileText } from "lucide-react"
 import { deleteSavedAnalysis } from "@/app/actions/saved-analysis"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -44,17 +44,33 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
   return (
     <div className="relative p-6 lg:p-8">
       <div className="relative z-10 mx-auto max-w-4xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="font-heading text-3xl font-semibold tracking-tight">Saved Analysis</h1>
             <p className="mt-1 text-sm text-muted-foreground">Your curated AI market analyses.</p>
           </div>
-          <button onClick={() => router.push("/markets")} className="premium-btn premium-btn-primary px-4 py-2.5 text-xs">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => router.push("/markets")}
+            className="glass-btn glass-btn-primary flex items-center gap-2 px-4 py-2.5 text-xs"
+          >
             <Plus className="h-3.5 w-3.5" />New analysis
-          </button>
+          </motion.button>
         </motion.div>
 
-        {error && <p className="mb-4 text-xs text-neg">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              className="mb-4 rounded-xl border border-neg/20 bg-neg/[0.06] px-4 py-2.5 text-xs text-neg"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         {items.length === 0 ? (
           <EmptyState
@@ -63,47 +79,63 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
             title="No saved analyses yet"
             description="Run an AI analysis on any stock and save it here to revisit Lumora's insights anytime."
             action={
-              <button onClick={() => router.push("/markets")} className="premium-btn premium-btn-primary px-4 py-2 text-xs">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => router.push("/markets")}
+                className="glass-btn glass-btn-primary flex items-center gap-2 px-4 py-2 text-xs"
+              >
                 <Sparkles className="h-3.5 w-3.5" />Analyze a stock
-              </button>
+              </motion.button>
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {items.map((a, i) => (
-              <motion.div
-                key={a.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.04 * i, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -4 }}
-                className="group glass-card edge-light relative overflow-hidden rounded-3xl p-5"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet/10 text-violet">
-                      <Sparkles className="h-4.5 w-4.5" />
+          <AnimatePresence mode="popLayout">
+            <motion.div layout className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {items.map((a, i) => (
+                <motion.div
+                  key={a.id}
+                  layout
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.93, filter: "blur(6px)" }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: removing === a.id ? 0 : 0.04 * i }}
+                  whileHover={{ y: -4 }}
+                  className={`group glass-card edge-light relative overflow-hidden rounded-3xl p-5 ${
+                    removing === a.id ? "pointer-events-none scale-95 opacity-0 blur-sm" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet/10 text-violet ring-1 ring-inset ring-white/10">
+                        <Sparkles className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <p className="font-heading text-base font-semibold">{a.symbol}</p>
+                        <p className="text-xs capitalize text-muted-foreground">{a.kind}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-heading text-base font-semibold">{a.symbol}</p>
-                      <p className="text-xs capitalize text-muted-foreground">{a.kind}</p>
-                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(a.id)} disabled={removing === a.id}
+                      className="rounded-lg p-2 text-muted-foreground/50 transition-colors hover:bg-neg/10 hover:text-neg"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </motion.button>
                   </div>
-                  <button onClick={() => handleDelete(a.id)} disabled={removing === a.id} className="rounded-lg p-2 text-muted-foreground/50 transition-colors hover:bg-neg/10 hover:text-neg">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <DirectionBadge direction={a.direction} />
-                  {a.confidence != null && (
-                    <span className="text-xs text-muted-foreground">Confidence {Math.round(a.confidence * 100)}%</span>
-                  )}
-                </div>
-                <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-muted-foreground">{a.summary || "Analysis saved."}</p>
-                <p className="mt-3 text-[11px] text-muted-foreground/60">{new Date(a.createdAt).toLocaleDateString()}</p>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <DirectionBadge direction={a.direction} />
+                    {a.confidence != null && (
+                      <span className="text-xs text-muted-foreground">Confidence {Math.round(a.confidence * 100)}%</span>
+                    )}
+                  </div>
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{a.summary || "Analysis saved."}</p>
+                  <p className="mt-3 text-[11px] text-muted-foreground/60">{new Date(a.createdAt).toLocaleDateString()}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </div>

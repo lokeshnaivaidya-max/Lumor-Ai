@@ -5,14 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient, useSession } from "@/lib/auth-client"
-import {
-  LayoutDashboard,
-  Briefcase,
-  Star,
-  User as UserIcon,
-  LogOut,
-  Loader2,
-} from "lucide-react"
+import { LayoutDashboard, Briefcase, Star, User as UserIcon, LogOut, Loader2 } from "lucide-react"
 
 const MENU_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -52,22 +45,16 @@ export function AccountMenu() {
   }
 
   if (isPending) {
-    return <div className="h-9 w-9 animate-pulse rounded-full bg-bg/60" />
+    return <div className="h-9 w-9 animate-pulse rounded-full bg-white/5" />
   }
 
   if (!session?.user) {
     return (
       <div className="flex items-center gap-2">
-        <Link
-          href="/sign-in"
-          className="premium-btn premium-btn-ghost hidden rounded-full px-4 py-2 text-sm sm:block"
-        >
+        <Link href="/sign-in" className="glass-btn-ghost glass-btn rounded-full px-4 py-2 text-sm">
           Sign in
         </Link>
-        <Link
-          href="/sign-up"
-          className="premium-btn premium-btn-primary rounded-full px-4 py-2 text-sm font-medium"
-        >
+        <Link href="/sign-up" className="glass-btn glass-btn-primary rounded-full px-4 py-2 text-sm">
           Get started
         </Link>
       </div>
@@ -81,19 +68,14 @@ export function AccountMenu() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-colors hover:border-foreground/30"
+        className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-all duration-300 hover:border-white/20"
         aria-label="Account menu"
         aria-expanded={open}
       >
         {user.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.image || "/placeholder.svg"}
-            alt=""
-            className="h-8 w-8 rounded-full object-cover"
-          />
+          <img src={user.image || "/placeholder.svg"} alt="" className="h-8 w-8 rounded-full object-cover" />
         ) : (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] text-xs font-semibold text-foreground">
             {initials(user.name, user.email)}
           </span>
         )}
@@ -109,7 +91,7 @@ export function AccountMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-card absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl p-1.5 shadow-2xl shadow-black/40"
+            className="glass-strong absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl p-1.5 shadow-2xl"
           >
             <div className="px-3 py-2.5">
               <p className="truncate text-sm font-medium text-foreground">
@@ -117,19 +99,19 @@ export function AccountMenu() {
               </p>
               <p className="truncate text-xs text-muted-foreground">{user.email}</p>
             </div>
-            <div className="my-1 h-px bg-border" />
+            <div className="my-1 h-px bg-white/[0.06]" />
             {MENU_LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-bg/60 hover:text-foreground"
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
               >
                 <l.icon className="h-4 w-4" />
                 {l.label}
               </Link>
             ))}
-            <div className="my-1 h-px bg-border" />
+            <div className="my-1 h-px bg-white/[0.06]" />
             <button
               onClick={handleSignOut}
               disabled={signingOut}

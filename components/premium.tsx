@@ -321,7 +321,7 @@ export function EmptyState({
         <p className="mt-1 max-w-xs text-sm text-muted-foreground">{description}</p>
       </div>
       {action && (
-        <button onClick={action.onClick} className="premium-btn premium-btn-primary mt-2">
+        <button onClick={action.onClick} className="glass-btn glass-btn-primary mt-2">
           {action.label}
         </button>
       )}

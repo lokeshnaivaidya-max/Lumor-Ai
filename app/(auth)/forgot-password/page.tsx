@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { Loader2, ArrowLeft, CheckCircle2, Mail, ArrowRight, AlertCircle } from "lucide-react"
+import { Loader2, ArrowLeft, CheckCircle2, Mail, ArrowRight, AlertCircle, Info } from "lucide-react"
 import { LumoraMark } from "@/components/lumora-mark"
 import { authClient } from "@/lib/auth-client"
 
@@ -44,6 +44,20 @@ export default function ForgotPasswordPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             We sent a reset code to <strong className="text-foreground">{email}</strong>
           </p>
+          <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-blue/20 bg-blue/[0.04] px-4 py-3 text-xs leading-relaxed text-blue/90 text-left">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue/70" />
+            <div>
+              <p>
+                Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
+                <strong>Junk</strong> folder. For some email providers, verification emails may be
+                filtered there.
+              </p>
+              <p className="mt-1.5 text-[11px] text-blue/60">
+                If you still don&apos;t receive the email after a minute, you can request a new
+                verification code.
+              </p>
+            </div>
+          </div>
           <button
             onClick={() => router.push(`/reset-password?email=${encodeURIComponent(email)}`)}
             className="mt-6 w-full rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90"
@@ -80,7 +94,7 @@ export default function ForgotPasswordPage() {
               <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
                 <Mail className="h-3.5 w-3.5" /> Email
               </span>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" autoComplete="email" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" autoComplete="email" />
             </label>
 
             <AnimatePresence>

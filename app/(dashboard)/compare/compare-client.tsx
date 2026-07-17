@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { motion } from "motion/react"
-import { Search, Brain, TrendingUp, TrendingDown, Trophy, BarChart3, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
+import { Search, Brain, TrendingUp, TrendingDown, Trophy, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
+import { EmptyState } from "@/components/ui/empty-state"
 
 type Quote = { symbol: string; name: string; price: number; change: number; changePercent: number; previousClose: number }
 
@@ -85,18 +86,33 @@ export function CompareClient() {
                   placeholder={`Search symbol ${i + 1}...`}
                   className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
                 />
-                {loading === box && <span className="text-xs text-muted-foreground">…</span>}
+                {loading === box && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
-              {activeBox === box && suggestions.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border/40 bg-background/95 p-2 shadow-2xl backdrop-blur-2xl">
-                  {suggestions.map((s) => (
-                    <button key={s.symbol} onMouseDown={() => { loadQuote(s.symbol, box); setSuggestions([]); setActiveBox(null) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-white/[0.04]">
-                      <span className="font-medium">{s.symbol}</span>
-                      <span className="text-muted-foreground">{s.name}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {activeBox === box && suggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border/40 bg-background/95 p-2 shadow-2xl backdrop-blur-2xl"
+                  >
+                    {suggestions.map((s) => (
+                      <motion.button
+                        key={s.symbol}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.15 }}
+                        onMouseDown={() => { loadQuote(s.symbol, box); setSuggestions([]); setActiveBox(null) }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-white/[0.04]"
+                      >
+                        <span className="font-medium">{s.symbol}</span>
+                        <span className="text-muted-foreground text-xs">{s.name}</span>
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )
         })}
@@ -202,12 +218,13 @@ export function CompareClient() {
             ))}
           </div>
         </>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/50 px-6 py-20 text-center">
-          <div className="mb-4 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-border/30"><BarChart3 className="h-8 w-8 text-muted-foreground/40" /></div>
-          <p className="font-heading text-lg font-medium">Select two symbols to compare</p>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">Search and pick two tickers above to see a live side-by-side comparison.</p>
-        </div>
+        ) : (
+        <EmptyState
+          icon={BarChart3}
+          tone="blue"
+          title="Select two symbols to compare"
+          description="Search and pick two tickers above to see a live side-by-side comparison."
+        />
       )}
     </div>
   )

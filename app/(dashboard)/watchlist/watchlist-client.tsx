@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2, Activity } from "lucide-react"
 import { addToWatchlist, removeFromWatchlist } from "@/app/actions/portfolio"
 import type { WatchlistView } from "@/lib/portfolio"
@@ -145,27 +145,41 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
             {searching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             {query && <button onClick={() => { setQuery(""); setSuggestions([]) }}><X className="h-4 w-4 text-muted-foreground" /></button>}
           </div>
-          {suggestions.length > 0 && (
-            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border/30 bg-card/95 backdrop-blur-xl shadow-2xl">
-              {suggestions.map((s) => (
-                <button key={s.symbol} disabled={adding === s.symbol} onClick={() => handleAdd(s.symbol, s.name)}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/[0.05]">
-                  <div className="flex flex-col">
-                    <span className="font-semibold">{s.symbol}</span>
-                    <span className="text-xs text-muted-foreground">{s.name}</span>
-                  </div>
-                  {adding === s.symbol ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 text-gold" />}
-                </button>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border/30 bg-card/95 backdrop-blur-xl shadow-2xl"
+              >
+                {suggestions.map((s, i) => (
+                  <motion.button
+                    key={s.symbol}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.03, duration: 0.2 }}
+                    disabled={adding === s.symbol} onClick={() => handleAdd(s.symbol, s.name)}
+                    className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/[0.05]"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{s.symbol}</span>
+                      <span className="text-xs text-muted-foreground">{s.name}</span>
+                    </div>
+                    {adding === s.symbol ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 text-gold" />}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
           {error && <p className="mt-2 text-xs text-neg">{error}</p>}
         </motion.div>
 
         {items.length === 0 ? (
           <EmptyState icon={Plus} tone="blue" title="Add your first stock"
             description="Search a ticker above and add it to start tracking live prices, moves, and alerts."
-            action={<button onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()} className="premium-btn premium-btn-primary px-4 py-2 text-xs"><Plus className="h-3.5 w-3.5" />Add a stock</button>} />
+            action={<button onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()} className="glass-btn glass-btn-primary px-4 py-2 text-xs"><Plus className="h-3.5 w-3.5" />Add a stock</button>} />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item, i) => (

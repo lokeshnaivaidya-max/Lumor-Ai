@@ -56,10 +56,10 @@ export function Navbar() {
       className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4"
     >
       <nav
-        className={`relative flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-all duration-500 ${
+        className={`relative flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-all duration-700 ${
           scrolled
-            ? "bg-white/70 shadow-xs shadow-black/[0.03] backdrop-blur-md dark:bg-white/[0.04]"
-            : "border border-white/40 bg-white/30 backdrop-blur-sm dark:border-white/[0.06] dark:bg-white/[0.02]"
+            ? "glass-strong shadow-xl shadow-black/20"
+            : "glass shadow-lg shadow-black/10"
         }`}
       >
         <Link href="/" className="flex items-center gap-2.5 pl-1.5">
@@ -73,7 +73,7 @@ export function Navbar() {
               key={l.href}
               href={l.href}
               onClick={() => handleNavClick(l.href)}
-              className="rounded-full px-3.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-full px-3.5 py-1.5 text-[13px] text-muted-foreground/70 transition-all duration-300 hover:bg-white/5 hover:text-foreground"
             >
               {l.label}
             </Link>
@@ -87,7 +87,7 @@ export function Navbar() {
           </div>
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground md:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-white/10 hover:text-foreground md:hidden"
             aria-label="Menu"
           >
             {mobileOpen ? (
@@ -104,8 +104,8 @@ export function Navbar() {
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-0 right-0 top-full mt-3 overflow-hidden rounded-2xl border border-border/40 bg-white/80 backdrop-blur-xl p-2 shadow-lg dark:bg-black/80"
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute left-0 right-0 top-full mt-3 overflow-hidden rounded-2xl glass-strong p-2 shadow-2xl"
             >
               <div className="flex flex-col gap-0.5">
                 {links.map((l) => (
@@ -113,12 +113,12 @@ export function Navbar() {
                     key={l.href}
                     href={l.href}
                     onClick={() => handleNavClick(l.href)}
-                    className="rounded-xl px-3.5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
+                    className="rounded-xl px-3.5 py-2.5 text-sm text-muted-foreground/70 transition-colors hover:bg-white/5 hover:text-foreground"
                   >
                     {l.label}
                   </Link>
                 ))}
-                <div className="my-1.5 h-px bg-border/50" />
+                <div className="my-1.5 h-px divider-gradient" />
                 <div className="px-2 py-1">
                   <AccountMenu />
                 </div>

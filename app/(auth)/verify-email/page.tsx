@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, RefreshCw, Mail, SendHorizonal } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, RefreshCw, Mail, SendHorizonal, Info } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 const RESEND_COOLDOWN = 60
@@ -25,6 +25,8 @@ function VerifyEmailInner() {
   const [resendCooldown, setResendCooldown] = useState(0)
   const [sendingOtp, setSendingOtp] = useState(false)
   const [editingEmail, setEditingEmail] = useState(!emailFromUrl)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const handleSendOtp = useCallback(async (targetEmail: string) => {
@@ -59,9 +61,16 @@ function VerifyEmailInner() {
     return () => clearInterval(timer)
   }, [resendCooldown])
 
+  const showToast = (msg: string) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 3500)
+  }
+
   const handleResend = () => {
     if (resendCooldown > 0 || sendingOtp) return
     handleSendOtp(email)
+    showToast("New verification code sent. Please check your Inbox and Spam folder.")
   }
 
   const handleOtpChange = (index: number, value: string) => {
@@ -159,7 +168,7 @@ function VerifyEmailInner() {
                 <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
                   <Mail className="h-3.5 w-3.5" /> Email
                 </span>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
               </label>
               <div className="mt-4 flex gap-3">
                 <button onClick={() => setEditingEmail(false)} className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-sm font-medium text-foreground transition-all hover:bg-white/[0.08]">
@@ -187,10 +196,32 @@ function VerifyEmailInner() {
                 ))}
               </div>
 
+              <motion.div
+                initial={{ opacity: 0, y: -6, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-4 overflow-hidden"
+              >
+                <div className="flex items-start gap-2.5 rounded-2xl border border-blue/20 bg-blue/[0.04] px-4 py-3 text-xs leading-relaxed text-blue/90">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue/70" />
+                  <div>
+                    <p>
+                      Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
+                      <strong>Junk</strong> folder. For some email providers, verification emails may be
+                      filtered there.
+                    </p>
+                    <p className="mt-1.5 text-[11px] text-blue/60">
+                      If you still don&apos;t receive the email after a minute, you can request a new
+                      verification code.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
               <AnimatePresence>
                 {error && (
                   <motion.div initial={{ opacity: 0, y: -4, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, y: -4, height: 0 }}
-                    className="mt-4 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red">
+                    className="mt-2 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red">
                     <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
                   </motion.div>
                 )}
@@ -214,13 +245,39 @@ function VerifyEmailInner() {
                 </span>
               </motion.button>
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-                <button onClick={handleResend} disabled={resendCooldown > 0 || sendingOtp}
-                  className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors disabled:opacity-40 text-xs">
-                  {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : sendingOtp ? "Sending…" : "Resend code"}
-                </button>
-              </div>
+              <AnimatePresence mode="wait">
+                {resendCooldown > 0 ? (
+                  <motion.div
+                    key="cooldown"
+                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-4 flex items-center justify-center"
+                  >
+                    <button disabled className="flex items-center gap-1.5 text-xs text-muted-foreground/40">
+                      <RefreshCw className="h-3 w-3" />
+                      Resend in {resendCooldown}s
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="ready"
+                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-4 flex items-center justify-center"
+                  >
+                    <button onClick={handleResend} disabled={sendingOtp}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-40"
+                    >
+                      {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                      {sendingOtp ? "Sending…" : "Resend code"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
                 Wrong email?{" "}
@@ -228,6 +285,23 @@ function VerifyEmailInner() {
                   Change email address
                 </button>
               </p>
+
+              <AnimatePresence>
+                {toast && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12, scale: 0.92, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95, filter: "blur(4px)" }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+                  >
+                    <div className="flex items-center gap-2.5 rounded-2xl border border-emerald/20 bg-emerald/10 px-5 py-3 text-xs text-emerald shadow-2xl backdrop-blur-2xl">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      {toast}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>

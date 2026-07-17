@@ -54,7 +54,7 @@ export function CtaFooter() {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/sign-up"
-                className="premium-btn premium-btn-primary group px-9 py-4 text-sm"
+                className="glass-btn glass-btn-primary group px-9 py-4 text-sm"
               >
                 <Sparkles className="h-4 w-4" />
                 Start Free
@@ -62,7 +62,7 @@ export function CtaFooter() {
               </Link>
               <Link
                 href="/markets"
-                className="premium-btn premium-btn-ghost px-9 py-4 text-sm"
+                className="glass-btn glass-btn-ghost px-9 py-4 text-sm"
               >
                 Explore Terminal
               </Link>

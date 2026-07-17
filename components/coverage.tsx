@@ -108,7 +108,7 @@ export function Coverage() {
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-blue/20 bg-blue/[0.06] px-4 py-1.5 text-xs font-medium text-blue"
+            className="mb-4 badge badge-blue"
           >
             <Globe2 className="h-3 w-3" />
             Coverage

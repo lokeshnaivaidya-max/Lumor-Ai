@@ -91,7 +91,7 @@ function PremiumStat({ icon: Icon, label, value, change, accent, trend }: {
 
 function WatchlistWidget({ items }: { items: WatchlistView[] }) {
   if (items.length === 0) {
-    return <EmptyState icon={Star} title="Your watchlist is empty." description="Add a symbol to start tracking it." action={<Link href="/watchlist" className="premium-btn premium-btn-primary px-4 py-2 text-xs">Go to Watchlist</Link>} />
+    return <EmptyState icon={Star} title="Your watchlist is empty." description="Add a symbol to start tracking it." action={<Link href="/watchlist" className="glass-btn glass-btn-primary px-4 py-2 text-xs">Go to Watchlist</Link>} />
   }
   return (
     <div className="space-y-2">
@@ -128,7 +128,7 @@ function WatchlistWidget({ items }: { items: WatchlistView[] }) {
 
 function AnalysisWidget({ items }: { items: AnalysisView[] }) {
   if (items.length === 0) {
-    return <EmptyState icon={FileText} title="No analyses yet." description="Run an AI analysis to save it here." action={<Link href="/markets" className="premium-btn premium-btn-primary px-4 py-2 text-xs">Analyze a stock</Link>} />
+    return <EmptyState icon={FileText} title="No analyses yet." description="Run an AI analysis to save it here." action={<Link href="/markets" className="glass-btn glass-btn-primary px-4 py-2 text-xs">Analyze a stock</Link>} />
   }
   return (
     <div className="flex flex-col gap-2.5">
@@ -163,7 +163,7 @@ function AnalysisWidget({ items }: { items: AnalysisView[] }) {
 
 function NotificationWidget({ items }: { items: NotifView[] }) {
   if (items.length === 0) {
-    return <EmptyState icon={Bell} title="No notifications yet." description="Price alerts and AI insights will appear here." action={<Link href="/notifications" className="premium-btn premium-btn-primary px-4 py-2 text-xs">View Notifications</Link>} />
+    return <EmptyState icon={Bell} title="No notifications yet." description="Price alerts and AI insights will appear here." action={<Link href="/notifications" className="glass-btn glass-btn-primary px-4 py-2 text-xs">View Notifications</Link>} />
   }
   const iconMap: Record<string, React.ElementType> = { price: TrendingUp, ai: Brain, portfolio: Wallet }
   return (
@@ -223,7 +223,7 @@ export function DashboardClient({
           <p className="mt-1 text-sm text-muted-foreground">Your portfolio overview and market intelligence.</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-3">
-          <Link href="/portfolio" className="premium-btn premium-btn-primary px-4 py-2.5 text-xs">
+          <Link href="/portfolio" className="glass-btn glass-btn-primary px-4 py-2.5 text-xs">
             <Wallet className="h-3.5 w-3.5" />Portfolio
           </Link>
         </motion.div>
@@ -256,7 +256,7 @@ export function DashboardClient({
         ) : (
           <AnimatedSection delay={0.05} className="sm:col-span-6 md:col-span-12">
             <GlowCard>
-              <EmptyState icon={Wallet} title="No portfolio yet." description="Add your holdings to see live valuation and P&L." action={<Link href="/portfolio" className="premium-btn premium-btn-primary px-4 py-2 text-xs"><Plus className="h-3.5 w-3.5" />Add holdings</Link>} />
+              <EmptyState icon={Wallet} title="No portfolio yet." description="Add your holdings to see live valuation and P&L." action={<Link href="/portfolio" className="glass-btn glass-btn-primary px-4 py-2 text-xs"><Plus className="h-3.5 w-3.5" />Add holdings</Link>} />
             </GlowCard>
           </AnimatedSection>
         )}

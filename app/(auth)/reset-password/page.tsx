@@ -4,7 +4,7 @@ import { Suspense, useCallback, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, RefreshCw, KeyRound, Lock, Mail } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, RefreshCw, KeyRound, Lock, Mail, Info } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 const RESEND_COOLDOWN = 60
@@ -131,7 +131,7 @@ function ResetPasswordInner() {
                   <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
                     <Mail className="h-3.5 w-3.5" /> Email
                   </span>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-input" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
                 </label>
               </div>
               <AnimatePresence>
@@ -161,6 +161,21 @@ function ResetPasswordInner() {
                 Code sent to <strong className="text-foreground">{email}</strong>
               </p>
 
+              <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-blue/20 bg-blue/[0.04] px-4 py-3 text-xs leading-relaxed text-blue/90 text-left">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue/70" />
+                <div>
+                  <p>
+                    Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
+                    <strong>Junk</strong> folder. For some email providers, verification emails may be
+                    filtered there.
+                  </p>
+                  <p className="mt-1.5 text-[11px] text-blue/60">
+                    If you still don&apos;t receive the email after a minute, you can request a new
+                    verification code.
+                  </p>
+                </div>
+              </div>
+
               <div className="mt-6 flex justify-center gap-2">
                 {otp.map((digit, i) => (
                   <input key={i} ref={(el) => { inputRefs.current[i] = el }}
@@ -178,7 +193,7 @@ function ResetPasswordInner() {
               <div className="mt-5 flex flex-col gap-3">
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} required minLength={8} value={password}
-                    onChange={(e) => setPassword(e.target.value)} placeholder="New password" className="auth-input pr-10"
+                    onChange={(e) => setPassword(e.target.value)} placeholder="New password" className="glass-input pr-10"
                     autoComplete="new-password" />
                   <button type="button" onClick={() => setShowPassword((s) => !s)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors p-1"
@@ -188,7 +203,7 @@ function ResetPasswordInner() {
                 </div>
                 <div className="relative">
                   <input type={showConfirm ? "text" : "password"} required minLength={8} value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" className="auth-input pr-10"
+                    onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" className="glass-input pr-10"
                     autoComplete="new-password" />
                   <button type="button" onClick={() => setShowConfirm((s) => !s)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors p-1"
@@ -223,13 +238,39 @@ function ResetPasswordInner() {
                 </span>
               </motion.button>
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-                <button onClick={handleResend} disabled={resendCooldown > 0 || sendingOtp}
-                  className="flex items-center gap-1.5 text-muted-foreground/60 hover:text-foreground transition-colors disabled:opacity-40 text-xs">
-                  {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : sendingOtp ? "Sending…" : "Resend code"}
-                </button>
-              </div>
+              <AnimatePresence mode="wait">
+                {resendCooldown > 0 ? (
+                  <motion.div
+                    key="cooldown"
+                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-4 flex items-center justify-center"
+                  >
+                    <button disabled className="flex items-center gap-1.5 text-xs text-muted-foreground/40">
+                      <RefreshCw className="h-3 w-3" />
+                      Resend in {resendCooldown}s
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="ready"
+                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-4 flex items-center justify-center"
+                  >
+                    <button onClick={handleResend} disabled={sendingOtp}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-40"
+                    >
+                      {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                      {sendingOtp ? "Sending…" : "Resend code"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
                 Wrong email?{" "}

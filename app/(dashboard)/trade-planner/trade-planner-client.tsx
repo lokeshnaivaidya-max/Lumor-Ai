@@ -429,7 +429,7 @@ export function TradePlannerClient() {
                       value={buyPrice}
                       onChange={(e) => setBuyPrice(e.target.value)}
                       placeholder="0.00"
-                      className="premium-input"
+                      className="glass-input"
                     />
                   </div>
                   <div>
@@ -442,7 +442,7 @@ export function TradePlannerClient() {
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
                       placeholder="0"
-                      className="premium-input"
+                      className="glass-input"
                     />
                   </div>
                 </div>
@@ -457,7 +457,7 @@ export function TradePlannerClient() {
                     value={budget || computedBudget}
                     onChange={(e) => handleBudgetChange(e.target.value)}
                     placeholder="0.00"
-                    className="premium-input text-blue font-semibold"
+                    className="glass-input text-blue font-semibold"
                   />
                 </div>
 
@@ -472,7 +472,7 @@ export function TradePlannerClient() {
                       value={target}
                       onChange={(e) => setTarget(e.target.value)}
                       placeholder="Optional"
-                      className="premium-input"
+                      className="glass-input"
                     />
                   </div>
                   <div>
@@ -485,7 +485,7 @@ export function TradePlannerClient() {
                       value={stopLoss}
                       onChange={(e) => setStopLoss(e.target.value)}
                       placeholder="Optional"
-                      className="premium-input"
+                      className="glass-input"
                     />
                   </div>
                 </div>
@@ -497,7 +497,7 @@ export function TradePlannerClient() {
                   </label>
                   <button
                     onClick={() => setShowHoldingDropdown(!showHoldingDropdown)}
-                    className="premium-input flex items-center justify-between text-left"
+                    className="glass-input flex items-center justify-between text-left"
                   >
                     <span>{HOLDING_OPTIONS.find((o) => o.value === holdingPeriod)?.label}</span>
                     <motion.div animate={{ rotate: showHoldingDropdown ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -537,7 +537,7 @@ export function TradePlannerClient() {
                   </label>
                   <button
                     onClick={() => setShowRiskDropdown(!showRiskDropdown)}
-                    className="premium-input flex items-center justify-between text-left"
+                    className="glass-input flex items-center justify-between text-left"
                   >
                     <span className="flex items-center gap-2">
                       <span className={`h-2 w-2 rounded-full ${
@@ -593,11 +593,11 @@ export function TradePlannerClient() {
                         if (e.key === "Enter") handleNlParse()
                       }}
                       placeholder="e.g. I want to buy at ₹999, my budget is ₹50,000..."
-                      className="premium-input flex-1 text-sm"
+                      className="glass-input flex-1 text-sm"
                     />
                     <button
                       onClick={handleNlParse}
-                      className="premium-btn premium-btn-soft shrink-0"
+                      className="glass-btn glass-btn-soft shrink-0"
                       title="Parse natural language"
                     >
                       <Zap className="h-4 w-4" />
@@ -613,7 +613,7 @@ export function TradePlannerClient() {
                   disabled={!formValid || loading}
                   whileHover={formValid && !loading ? { scale: 1.02 } : {}}
                   whileTap={formValid && !loading ? { scale: 0.98 } : {}}
-                  className={`premium-btn premium-btn-primary w-full mt-2 ${
+                  className={`glass-btn glass-btn-primary w-full mt-2 ${
                     !formValid || loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -939,7 +939,7 @@ export function TradePlannerClient() {
                   onClick={handleAnalyze}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="premium-btn premium-btn-ghost w-full"
+                  className="glass-btn glass-btn-ghost w-full"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Re-analyze Trade Plan

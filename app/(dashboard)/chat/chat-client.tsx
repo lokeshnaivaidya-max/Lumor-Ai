@@ -172,7 +172,7 @@ export function ChatClient() {
   return (
     <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-4 lg:p-6">
       <div className="hidden w-64 shrink-0 flex-col gap-2 md:flex">
-        <button onClick={startNew} className="premium-btn premium-btn-primary flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
+        <button onClick={startNew} className="glass-btn glass-btn-primary flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
           <Plus className="h-3.5 w-3.5" />New chat
         </button>
         <div className="flex-1 space-y-1 overflow-y-auto pr-1">
@@ -266,7 +266,7 @@ export function ChatClient() {
             <button
               onClick={() => send(input)}
               disabled={streaming || !input.trim()}
-              className="premium-btn premium-btn-primary flex h-9 w-9 items-center justify-center rounded-xl p-0 disabled:opacity-50"
+              className="glass-btn glass-btn-primary flex h-9 w-9 items-center justify-center rounded-xl p-0 disabled:opacity-50"
             >
               {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
