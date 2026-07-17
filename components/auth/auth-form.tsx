@@ -88,7 +88,6 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           throw new Error(String(errMsg))
         }
         router.push("/dashboard")
-        router.refresh()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")

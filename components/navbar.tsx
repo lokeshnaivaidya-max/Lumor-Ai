@@ -11,7 +11,7 @@ import { useSession } from "@/lib/auth-client"
 const GUEST_LINKS = [
   { label: "Markets", href: "/markets" },
   { label: "Intelligence", href: "#intelligence" },
-  { label: "Coverage", href: "#coverage" },
+  { label: "Reach", href: "#reach" },
 ]
 
 const AUTH_LINKS = [

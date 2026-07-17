@@ -19,16 +19,6 @@
   background: #040403;
 }
 
-.lm-scene--tight {
-  min-height: 60vh;
-  padding: 6rem 2rem;
-}
-
-.lm-scene--short {
-  min-height: 40vh;
-  padding: 4rem 2rem;
-}
-
 /* A single beam of light from top-left */
 .lm-light {
   pointer-events: none;
@@ -124,10 +114,6 @@
   line-height: 1.5;
 }
 
-.lm-body--gold {
-  color: #b8914b;
-}
-
 .lm-caption {
   font-family: var(--font-sans);
   font-size: 0.75rem;
@@ -143,10 +129,6 @@
   background: rgba(232, 228, 221, 0.15);
   border: none;
   margin: 0;
-}
-
-.lm-rule--long {
-  width: 6rem;
 }
 
 .lm-rule--gold {
@@ -200,9 +182,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 5rem;
   }
-  .lm-split--lopsided {
-    grid-template-columns: 1.5fr 1fr;
-  }
 }
 
 /* Count text */
@@ -239,10 +218,6 @@
 }
 .lm-link:hover {
   opacity: 0.6;
-}
-
-.lm-link--gold {
-  color: #b8914b;
 }
 
 /* Exchange pill - minimal typographic treatment only */
@@ -286,10 +261,6 @@
   animation: lm-fade-up 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.lm-animate--slow {
-  animation-duration: 1.4s;
-}
-
 .lm-animate--delay-1 { animation-delay: 0.1s; }
 .lm-animate--delay-2 { animation-delay: 0.25s; }
 .lm-animate--delay-3 { animation-delay: 0.45s; }
@@ -311,14 +282,7 @@
     padding: 1.5rem;
     min-height: 80vh;
   }
-  .lm-scene--tight {
-    min-height: 50vh;
-    padding: 3rem 1.5rem;
-  }
-  .lm-scene--short {
-    min-height: 30vh;
-    padding: 2.5rem 1.5rem;
-  }
+
 }
 
 /* ── Navigation ── */
@@ -378,20 +342,6 @@
   background: rgba(232, 228, 221, 0.04);
 }
 
-.lm-nav__link--active {
-  color: #e8e4dd;
-}
-.lm-nav__link--active::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 1px;
-  background: #b8914b;
-}
-
 .lm-nav__cta {
   font-family: var(--font-sans);
   font-size: 0.75rem;
@@ -438,13 +388,6 @@
   border-color: #b8914b;
 }
 .lm-btn--gold:hover { background: #c9a55c; border-color: #c9a55c; opacity: 1; }
-
-.lm-btn--ghost {
-  border: none;
-  padding: 0.75rem 0;
-  color: #8a857c;
-}
-.lm-btn--ghost:hover { background: transparent; color: #e8e4dd; }
 
 /* ── Stat separator ── */
 .lm-stat-sep {
@@ -804,22 +747,6 @@
   }
   .divider-gradient { height: 1px; background: linear-gradient(90deg, transparent, oklch(0.99 0 0 / 0.08), transparent); }
 
-  .scene-section {
-    perspective: 1px;
-    perspective-origin: center center;
-  }
-  .scene-layer { transform-style: preserve-3d; }
-
-  .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   .float-subtle { animation: float-subtle 8s ease-in-out infinite; }
   .float-subtle-delayed { animation: float-subtle 10s ease-in-out infinite; animation-delay: -3s; }
   .float-subtle-slow { animation: float-subtle 14s ease-in-out infinite; }
@@ -865,6 +792,10 @@
   50% { transform: translateY(-6px) translateX(3px); }
 }
 @keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+@keyframes animate-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
 @keyframes light-sweep {
   0% { transform: translateX(-100%) rotate(25deg); }
   100% { transform: translateX(200%) rotate(25deg); }

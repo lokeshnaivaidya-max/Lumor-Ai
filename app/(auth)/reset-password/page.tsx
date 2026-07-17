@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useCallback, useRef, useState } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
@@ -28,6 +28,17 @@ function ResetPasswordInner() {
   const [sendingOtp, setSendingOtp] = useState(false)
   const [needsEmail, setNeedsEmail] = useState(!emailFromUrl)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   const handleSendOtp = useCallback(async (targetEmail: string) => {
     if (!targetEmail) return

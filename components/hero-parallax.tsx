@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import Link from "next/link"
 
 export function HeroParallax() {
   const ref = useRef<HTMLDivElement>(null)
@@ -41,12 +42,12 @@ export function HeroParallax() {
           <span style={{ color: "#b8914b" }}>Without the Noise.</span>
         </p>
         <div className="lm-animate lm-animate--delay-3" style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "2.5rem" }}>
-          <a href="/sign-up" className="lm-btn lm-btn--gold">
+          <Link href="/sign-up" className="lm-btn lm-btn--gold">
             Get started
-          </a>
-          <a href="/markets" className="lm-btn">
+          </Link>
+          <Link href="/markets" className="lm-btn">
             Explore markets
-          </a>
+          </Link>
         </div>
       </div>
     </div>

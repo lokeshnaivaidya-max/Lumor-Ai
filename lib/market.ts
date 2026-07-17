@@ -772,8 +772,6 @@ export function regionFromCountry(country?: string | null): Region {
   }
 }
 
-export const CURATED_TICKER = ["^GSPC", "^IXIC", "^DJI", "^NSEI", "^NSEBANK", "BTC-USD", "ETH-USD", "GC=F", "CL=F", "INR=X"]
-
 export function displayName(symbol: string, fallback?: string): string {
   const map: Record<string, string> = {
     "^GSPC": "S&P 500",

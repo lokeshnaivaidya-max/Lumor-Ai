@@ -3,6 +3,10 @@ import { NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production") {
+    return NextResponse.json({ error: "Not available in production" }, { status: 404 })
+  }
+
   const smtpKeys = Object.keys(process.env).filter((key) => key.startsWith("SMTP"))
 
   return NextResponse.json({

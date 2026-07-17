@@ -113,6 +113,7 @@ export function SymbolSearch({ onSelect }: { onSelect: (result: SearchResult) =>
       <AnimatePresence>
         {open && results.length > 0 && (
           <motion.div
+            onMouseDown={(e) => e.preventDefault()}
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}

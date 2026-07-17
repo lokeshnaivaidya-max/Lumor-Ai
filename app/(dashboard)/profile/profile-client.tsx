@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
-import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Type, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink } from "lucide-react"
+import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
 import { useRouter } from "next/navigation"
 

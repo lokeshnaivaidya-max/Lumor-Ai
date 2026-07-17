@@ -61,16 +61,10 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 600, // 10 minutes
       async sendVerificationOTP({ email, otp, type }) {
-        console.log(`[AUTH] sendVerificationOTP callback FIRING: email=${email} type=${type} otp=${otp}`)
         const emailType = type === "forget-password" ? "reset" : "verification"
         try {
           await sendOtpEmail({ email, otp, type: emailType })
-          console.log(`[AUTH] sendVerificationOTP callback COMPLETED successfully`)
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err)
-          const stack = err instanceof Error ? err.stack : ""
-          console.error(`[AUTH] sendVerificationOTP callback FAILED: ${msg}`)
-          if (stack) console.error(`[AUTH] sendVerificationOTP callback stack: ${stack}`)
           throw err
         }
       },

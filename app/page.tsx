@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { LandingNav } from "@/components/landing-nav"
 import { HeroParallax } from "@/components/hero-parallax"
 import { StatsSection } from "@/components/stats-section"
@@ -27,9 +28,9 @@ export default async function HomePage() {
           <p className="lm-meta lm-animate lm-animate--delay-1" style={{ marginBottom: "1.5rem" }}>
             The problem
           </p>
-          <blockquote className="lm-title lm-title--large lm-animate lm-animate--delay-2" style={{ margin: 0, border: "none", padding: 0 }}>
+          <h2 className="lm-title lm-title--large lm-animate lm-animate--delay-2" style={{ margin: 0, border: "none", padding: 0 }}>
             Markets are the loudest when clarity matters most.
-          </blockquote>
+          </h2>
           <div className="lm-animate lm-animate--delay-3" style={{ marginTop: "3rem" }}>
             <hr className="lm-rule" style={{ marginBottom: "1.5rem" }} />
             <p className="lm-body" style={{ maxWidth: 420 }}>
@@ -69,7 +70,7 @@ export default async function HomePage() {
 
           {/* 3 — left, compact */}
           <div className="lm-animate lm-animate--delay-3" style={{ maxWidth: 440 }}>
-            <p className="lm-heading" style={{ marginBottom: "0.75rem", fontSize: "clamp(1.2rem, 2.5vw, 2rem)" }}>
+            <p className="lm-heading" style={{ marginBottom: "0.75rem", fontSize: "clamp(1.5rem, 3.5vw, 3rem)" }}>
               Puts you in control.
             </p>
             <p className="lm-body" style={{ maxWidth: 380 }}>
@@ -121,12 +122,12 @@ export default async function HomePage() {
             No noise. No clutter. Just signal.
           </p>
           <div className="lm-animate lm-animate--delay-3" style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-            <a href="/sign-up" className="lm-btn lm-btn--gold">
+            <Link href="/sign-up" className="lm-btn lm-btn--gold">
               Get started
-            </a>
-            <a href="/markets" className="lm-btn">
+            </Link>
+            <Link href="/markets" className="lm-btn">
               Explore markets
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -142,9 +143,9 @@ export default async function HomePage() {
             Market intelligence, distilled.
           </p>
           <div className="lm-footer__links">
-            <a href="/privacy" className="lm-footer__link">Privacy</a>
-            <a href="/terms" className="lm-footer__link">Terms</a>
-            <a href="/markets" className="lm-footer__link">Markets</a>
+            <Link href="/privacy" className="lm-footer__link">Privacy</Link>
+            <Link href="/terms" className="lm-footer__link">Terms</Link>
+            <Link href="/markets" className="lm-footer__link">Markets</Link>
           </div>
         </div>
       </footer>

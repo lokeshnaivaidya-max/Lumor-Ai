@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
+import { useRouter } from "next/navigation"
 import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2 } from "lucide-react"
 import { addToWatchlist, removeFromWatchlist } from "@/app/actions/portfolio"
 import type { WatchlistView } from "@/lib/portfolio"
@@ -66,6 +67,7 @@ function WatchlistCard({ item, onRemove, delay }: { item: WatchlistView & { spar
 }
 
 export function WatchlistClient({ items: initialItems }: { items: WatchlistView[] }) {
+  const router = useRouter()
   const [items, setItems] = useState(initialItems)
   const [query, setQuery] = useState("")
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -115,6 +117,7 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
     try {
       await addToWatchlist({ symbol, name })
       setQuery(""); setSuggestions([])
+      router.refresh()
     } catch (e: any) {
       setError(e?.message || "Could not add symbol.")
     } finally { setAdding(null) }

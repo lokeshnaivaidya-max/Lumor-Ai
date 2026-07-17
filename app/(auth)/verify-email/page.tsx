@@ -61,6 +61,12 @@ function VerifyEmailInner() {
     return () => clearInterval(timer)
   }, [resendCooldown])
 
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+    }
+  }, [])
+
   const showToast = (msg: string) => {
     setToast(msg)
     if (toastTimer.current) clearTimeout(toastTimer.current)

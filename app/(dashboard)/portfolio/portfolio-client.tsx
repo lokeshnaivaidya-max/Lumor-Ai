@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, useSpring, useMotionValue } from "motion/react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Plus, Wallet, TrendingUp, ShieldCheck, BarChart3,
   ChevronRight, ArrowUpRight, ArrowDownRight, X, Loader2, Trash2,
@@ -96,6 +97,7 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (v: Tab) => void 
 }
 
 export function PortfolioClient({ holdings: initial, summary: initialSummary }: { holdings: Holding[]; summary: Summary }) {
+  const router = useRouter()
   const [holdings, setHoldings] = useState(initial)
   const [summary, setSummary] = useState(initialSummary)
   const [view, setView] = useState<Tab>("holdings")
@@ -137,12 +139,13 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
     try {
       await addHolding({ symbol, name: name || undefined, quantity: q, avgPrice: p })
       setAdding(false); setSymbol(""); setName(""); setQuantity(""); setAvgPrice("")
+      router.refresh()
     } catch (e: any) { setError(e?.message || "Failed to add holding") } finally { setBusy(false) }
   }
 
   async function handleRemove(id: number) {
     setBusy(true)
-    try { await removeHolding(id) } catch { /* ignore */ } finally { setBusy(false) }
+    try { await removeHolding(id); router.refresh() } catch { /* ignore */ } finally { setBusy(false) }
   }
 
   return (
