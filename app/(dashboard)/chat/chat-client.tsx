@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { motion } from "motion/react"
 import ReactMarkdown from "react-markdown"
-import { Send, Plus, Trash2, Bot, User, Loader2, Sparkles, MessageSquare } from "lucide-react"
+import { Send, Plus, Trash2, User, Loader2, MessageSquare } from "lucide-react"
 import { getConversations, getMessages, createConversation, deleteConversation } from "@/app/actions/chat"
 
 type Conversation = { id: number; title: string; updatedAt: string; preview?: string | null; messageCount?: number }
@@ -200,7 +200,7 @@ export function ChatClient() {
       <div className="glass-card edge-light flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
         <div className="flex items-center gap-2 border-b border-border/30 px-5 py-3.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet/10 text-violet">
-            <Bot className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </div>
           <div>
             <p className="text-sm font-medium">Lumora AI</p>
@@ -214,7 +214,7 @@ export function ChatClient() {
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="mb-4 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-border/30">
-                <Sparkles className="h-7 w-7 text-violet/70" />
+                <MessageSquare className="h-7 w-7 text-violet/70" />
               </div>
               <p className="font-heading text-base font-medium">Ask Lumora about the markets</p>
               <p className="mt-1 text-sm text-muted-foreground">Get grounded insights on stocks, strategies, and investing.</p>
@@ -235,7 +235,7 @@ export function ChatClient() {
                 className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${m.role === "user" ? "bg-blue/10 text-blue" : "bg-violet/10 text-violet"}`}>
-                  {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  {m.role === "user" ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                 </div>
                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-blue/10" : "bg-white/[0.04]"}`}>
                   {m.role === "assistant" && !m.content ? <TypingDots /> : <Markdown content={m.content} />}

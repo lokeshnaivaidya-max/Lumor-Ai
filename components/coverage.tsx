@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Globe2, BarChart3, TrendingUp } from "lucide-react"
 import { CountUp } from "./count-up"
 import { useRef } from "react"
 
@@ -21,38 +20,10 @@ const exchanges = [
 ]
 
 const stats = [
-  {
-    value: 60,
-    suffix: "+",
-    label: "Exchanges",
-    glow: "oklch(0.55 0.18 255 / 0.2)",
-    icon: Globe2,
-    accent: "text-blue",
-  },
-  {
-    value: 12,
-    suffix: "K+",
-    label: "Instruments",
-    glow: "oklch(0.6 0.16 168 / 0.2)",
-    icon: BarChart3,
-    accent: "text-emerald",
-  },
-  {
-    value: 40,
-    suffix: "+",
-    label: "Countries",
-    glow: "oklch(0.48 0.16 280 / 0.2)",
-    icon: Globe2,
-    accent: "text-violet",
-  },
-  {
-    value: 500,
-    suffix: "B+",
-    label: "Data Points",
-    glow: "oklch(0.75 0.1 85 / 0.2)",
-    icon: TrendingUp,
-    accent: "text-gold",
-  },
+  { value: 60, suffix: "+", label: "Exchanges" },
+  { value: 12, suffix: "K+", label: "Instruments" },
+  { value: 40, suffix: "+", label: "Countries" },
+  { value: 500, suffix: "B+", label: "Data Points" },
 ]
 
 function StatCard({ stat, index }: { stat: (typeof stats)[number]; index: number }) {
@@ -64,29 +35,15 @@ function StatCard({ stat, index }: { stat: (typeof stats)[number]; index: number
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div ref={ref} className="glass-stat group h-full">
-        <div className="pointer-events-none absolute -inset-[1px] rounded-[32px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{
-            background: `linear-gradient(135deg, ${stat.glow}, transparent 50%, ${stat.glow})`,
-            filter: "blur(2px)",
-          }}
-        />
-        <div className="relative z-10 flex flex-col items-center p-6 text-center">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-            transition={{ type: "spring", stiffness: 300, damping: 12 }}
-            className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl"
-            style={{ background: `linear-gradient(135deg, ${stat.glow}, transparent)` }}
-          >
-            <stat.icon className={`h-5 w-5 ${stat.accent}`} />
-          </motion.div>
+      <div ref={ref} className="glass-stat group h-full text-center">
+        <div className="relative z-10 flex flex-col items-center p-6">
           <div className="flex items-baseline gap-0.5">
-            <span className="font-heading text-3xl font-semibold tabular-nums text-foreground">
+            <span className="font-heading text-4xl font-semibold tabular-nums text-foreground">
               <CountUp to={stat.value} />
             </span>
             <span className="font-heading text-xl font-semibold text-foreground">{stat.suffix}</span>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">{stat.label}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
         </div>
       </div>
     </motion.div>
@@ -104,15 +61,7 @@ export function Coverage() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="mb-4 badge badge-blue"
-          >
-            <Globe2 className="h-3 w-3" />
-            Coverage
-          </motion.span>
+          <span className="mb-4 badge badge-blue">Coverage</span>
           <h2 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
             Global <span className="text-gradient">Market</span> Coverage
           </h2>

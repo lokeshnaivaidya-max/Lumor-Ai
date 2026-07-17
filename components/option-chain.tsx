@@ -4,9 +4,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import useSWR from "swr"
 import {
-  TrendingUp, TrendingDown, Minus, Loader2, AlertCircle,
-  BarChart3, Activity, Hash, Gauge, Sigma, ArrowUpDown,
-  ChevronDown, DollarSign, Layers, Brain, RefreshCw,
+  Loader2, AlertCircle,
+  Layers,
 } from "lucide-react"
 import type { OptionChainData, OptionContract } from "@/lib/options"
 

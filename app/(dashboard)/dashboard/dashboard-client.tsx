@@ -3,9 +3,9 @@
 import Link from "next/link"
 import { motion } from "motion/react"
 import {
-  TrendingUp, TrendingDown, Wallet, BarChart3, Brain, Activity,
-  ArrowUpRight, ArrowDownRight, Plus, Star, Bell, Sparkles,
-  RefreshCw, LineChart, ArrowRight, FileText,
+  TrendingUp, TrendingDown, Wallet, BarChart3,   Brain,
+  ArrowUpRight, ArrowDownRight,   Plus, Bell,
+  LineChart, ArrowRight, FileText,
 } from "lucide-react"
 import type { PortfolioSummary, WatchlistView } from "@/lib/portfolio"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -91,7 +91,7 @@ function PremiumStat({ icon: Icon, label, value, change, accent, trend }: {
 
 function WatchlistWidget({ items }: { items: WatchlistView[] }) {
   if (items.length === 0) {
-    return <EmptyState icon={Star} title="Your watchlist is empty." description="Add a symbol to start tracking it." action={<Link href="/watchlist" className="glass-btn glass-btn-primary px-4 py-2 text-xs">Go to Watchlist</Link>} />
+    return <EmptyState icon={BarChart3} title="Your watchlist is empty." description="Add a symbol to start tracking it." action={<Link href="/watchlist" className="glass-btn glass-btn-primary px-4 py-2 text-xs">Go to Watchlist</Link>} />
   }
   return (
     <div className="space-y-2">
@@ -145,7 +145,7 @@ function AnalysisWidget({ items }: { items: AnalysisView[] }) {
             className="group relative flex gap-3.5 overflow-hidden rounded-2xl border border-border/20 bg-background/20 p-4 transition-all hover:border-border/50 hover:bg-background/40"
           >
             <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${bar}`}>
-              <Sparkles className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export function DashboardClient({
             </AnimatedSection>
             <AnimatedSection delay={0.15} className="sm:col-span-3 md:col-span-3">
               <GlowCard glowColor="oklch(0.75 0.12 75 / 0.2)">
-                <PremiumStat icon={Activity} label="Total Returns" value={`${portfolio.totalReturns >= 0 ? "+" : "-"}${fmt(Math.abs(portfolio.totalReturns))}`} change={`${portfolio.returnsPercent.toFixed(2)}% all time`} accent="gold" trend={portfolio.totalReturns >= 0 ? "up" : "down"} />
+                <PremiumStat icon={BarChart3} label="Total Returns" value={`${portfolio.totalReturns >= 0 ? "+" : "-"}${fmt(Math.abs(portfolio.totalReturns))}`} change={`${portfolio.returnsPercent.toFixed(2)}% all time`} accent="gold" trend={portfolio.totalReturns >= 0 ? "up" : "down"} />
               </GlowCard>
             </AnimatedSection>
             <AnimatedSection delay={0.2} className="sm:col-span-3 md:col-span-2">
@@ -265,7 +265,7 @@ export function DashboardClient({
           <GlowCard glowColor="oklch(0.75 0.12 75 / 0.15)" className="flex h-full flex-col">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-gold" />
+                <BarChart3 className="h-4 w-4 text-gold" />
                 <h2 className="font-heading text-sm font-medium">Watchlist</h2>
               </div>
               <Link href="/watchlist" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
@@ -282,7 +282,7 @@ export function DashboardClient({
           <GlowCard glowColor="oklch(0.48 0.16 280 / 0.2)" className="flex h-full flex-col">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-violet" />
+                <BarChart3 className="h-4 w-4 text-violet" />
                 <h2 className="font-heading text-sm font-medium">Saved Analysis</h2>
               </div>
               <Link href="/saved-analysis" className="rounded-full bg-violet/10 px-2 py-0.5 text-[10px] font-medium text-violet">View all</Link>

@@ -3,11 +3,10 @@
 import { useState, useCallback, useRef } from "react"
 import { motion, AnimatePresence, useSpring, useMotionValue } from "motion/react"
 import {
-  TrendingUp, TrendingDown, Target, DollarSign, BarChart3,
-  Brain, Sparkles, Clock, ChevronDown, AlertTriangle,
-  RefreshCw, Zap, ArrowUpRight, ArrowDownRight, Search,
-  Loader2, Calculator, Percent, Sliders, Scale,
-  Gauge, Wallet, PieChart, Repeat,
+  TrendingUp, TrendingDown, BarChart3,
+  Clock, ChevronDown, AlertTriangle,
+  RefreshCw, ArrowUpRight, ArrowDownRight, ArrowRight, Search,
+  Loader2,
 } from "lucide-react"
 import { SymbolSearch } from "@/components/symbol-search"
 
@@ -382,7 +381,7 @@ export function TradePlannerClient() {
       >
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-[28px] bg-blue/10 border border-white/20">
-            <Brain className="h-6 w-6 text-blue" />
+            <BarChart3 className="h-6 w-6 text-blue" />
           </div>
           <div>
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
@@ -407,7 +406,6 @@ export function TradePlannerClient() {
             <GlassCard className="p-6">
               <div className="space-y-5">
                 <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-                  <Calculator className="h-4 w-4 text-blue" />
                   <span className="font-heading text-sm font-semibold tracking-tight">Trade Details</span>
                 </div>
 
@@ -580,8 +578,7 @@ export function TradePlannerClient() {
 
                 {/* Natural Language */}
                 <div className="border-t border-white/10 pt-4">
-                  <label className="mb-1.5 block flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    <Sparkles className="h-3.5 w-3.5 text-gold" />
+                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     Describe your trade plan
                   </label>
                   <div className="flex gap-2">
@@ -600,7 +597,7 @@ export function TradePlannerClient() {
                       className="glass-btn glass-btn-soft shrink-0"
                       title="Parse natural language"
                     >
-                      <Zap className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                   <p className="mt-1.5 text-[10px] text-muted-foreground">
@@ -624,7 +621,6 @@ export function TradePlannerClient() {
                     </>
                   ) : (
                     <>
-                      <Brain className="h-4 w-4" />
                       Analyze Trade Plan
                     </>
                   )}
@@ -636,8 +632,7 @@ export function TradePlannerClient() {
           {/* Bonus Calculators */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-violet" />
-              <span className="font-heading text-xs font-semibold tracking-tight text-foreground/80">Bonus Calculators</span>
+                    <span className="font-heading text-xs font-semibold tracking-tight text-foreground/80">Bonus Calculators</span>
             </div>
             {bPrice > 0 && qty > 0 && (
               <>
@@ -648,7 +643,7 @@ export function TradePlannerClient() {
                         <TrendingUp className="h-3.5 w-3.5 text-emerald" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Profit Calculator</p>
+                        <span className="text-[10px] tracking-wider text-muted-foreground uppercase">Profit</span>
                         <p className="font-mono text-sm font-semibold text-emerald tabular-nums">
                           +{profitAmt.toFixed(2)} ({profitPct.toFixed(2)}%)
                         </p>
@@ -663,7 +658,7 @@ export function TradePlannerClient() {
                         <TrendingDown className="h-3.5 w-3.5 text-neg" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Loss Calculator</p>
+                        <span className="text-[10px] tracking-wider text-muted-foreground uppercase">Loss</span>
                         <p className="font-mono text-sm font-semibold text-neg tabular-nums">
                           -{lossAmt.toFixed(2)} ({lossPct.toFixed(2)}%)
                         </p>
@@ -673,13 +668,10 @@ export function TradePlannerClient() {
                 )}
                 <GlassCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue/10">
-                      <Percent className="h-3.5 w-3.5 text-blue" />
-                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Position Size</p>
                       <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                        {qty} shares × {bPrice} = {totCost.toFixed(2)}
+                        {qty} shares x {bPrice} = {totCost.toFixed(2)}
                         {budget ? ` (${posSizePct.toFixed(1)}% of budget)` : ""}
                       </p>
                     </div>
@@ -688,30 +680,24 @@ export function TradePlannerClient() {
                 {tgt > 0 && sl > 0 && (
                   <>
                     <GlassCard className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gold/10">
-                          <Scale className="h-3.5 w-3.5 text-gold" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Risk/Reward Ratio</p>
-                          <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                            1:{rrRatio}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Risk/Reward Ratio</p>
+                        <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
+                          1:{rrRatio}
+                        </p>
                       </div>
+                    </div>
                     </GlassCard>
                     <GlassCard className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet/10">
-                          <Repeat className="h-3.5 w-3.5 text-violet" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Break-even Price</p>
-                          <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                            {breakevenPrice.toFixed(2)}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Break-even Price</p>
+                        <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
+                          {breakevenPrice.toFixed(2)}
+                        </p>
                       </div>
+                    </div>
                     </GlassCard>
                   </>
                 )}
@@ -754,9 +740,6 @@ export function TradePlannerClient() {
               animate={{ opacity: 1 }}
               className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-[32px] border border-white/20 bg-white/15 backdrop-blur-xl p-12 text-center"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br from-blue/10 to-violet/10 border border-white/20">
-                <Brain className="h-8 w-8 text-blue" />
-              </div>
               <h3 className="font-heading text-lg font-semibold text-foreground">Ready to Plan</h3>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Fill in your trade details on the left and click Analyze to get AI-powered insights on your trade plan.
@@ -765,31 +748,28 @@ export function TradePlannerClient() {
           )}
 
           {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 rounded-[32px] border border-white/20 bg-white/15 backdrop-blur-xl p-12"
-            >
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                <Brain className="h-12 w-12 text-blue" />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 rounded-[32px] border border-white/20 bg-white/15 backdrop-blur-xl p-12"
+              >
+                <div className="space-y-2 text-center">
+                  <h3 className="font-heading text-lg font-semibold text-foreground">Analyzing Your Trade Plan</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Calculating risk metrics and generating AI insights...
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="h-2 w-2 rounded-full bg-blue"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                    />
+                  ))}
+                </div>
               </motion.div>
-              <div className="space-y-2 text-center">
-                <h3 className="font-heading text-lg font-semibold text-foreground">Analyzing Your Trade Plan</h3>
-                <p className="text-sm text-muted-foreground">
-                  Calculating risk metrics and generating AI insights...
-                </p>
-              </div>
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="h-2 w-2 rounded-full bg-blue"
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                  />
-                ))}
-              </div>
-            </motion.div>
           )}
 
           <AnimatePresence>
@@ -822,7 +802,6 @@ export function TradePlannerClient() {
                   <GlassCard className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue/10">
-                        <DollarSign className="h-4 w-4 text-blue" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -864,7 +843,6 @@ export function TradePlannerClient() {
                   <GlassCard className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet/10">
-                        <Target className="h-4 w-4 text-violet" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -880,7 +858,6 @@ export function TradePlannerClient() {
                   <GlassCard className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/10">
-                        <BarChart3 className="h-4 w-4 text-gold" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -923,8 +900,7 @@ export function TradePlannerClient() {
                   </GlassCard>
 
                   <GlassCard className="p-5">
-                    <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-3">
-                      <Brain className="h-4 w-4 text-violet" />
+                    <div className="border-b border-white/10 pb-3 mb-3">
                       <span className="font-heading text-xs font-semibold tracking-tight text-foreground">
                         AI Explanation
                       </span>

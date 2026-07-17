@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Brain, TrendingUp, TrendingDown, Trophy, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
+import { Search, TrendingUp, TrendingDown, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
 import { EmptyState } from "@/components/ui/empty-state"
 
 type Quote = { symbol: string; name: string; price: number; change: number; changePercent: number; previousClose: number }
@@ -124,7 +124,7 @@ export function CompareClient() {
             <GlowCard glowColor="oklch(0.48 0.16 280 / 0.2)">
               <div className="p-5">
                 <div className="mb-2 flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-violet" />
+                  <BarChart3 className="h-4 w-4 text-violet" />
                   <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Live Snapshot</span>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground">
@@ -144,15 +144,13 @@ export function CompareClient() {
                 <div className="mb-6 grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 ${aWins >= bWins ? "bg-blue/15" : "bg-blue/5"}`}>
-                      <Trophy className={`h-3.5 w-3.5 ${aWins > bWins ? "text-blue" : "text-muted-foreground/30"}`} />
-                      <span className={`text-xs font-medium ${aWins > bWins ? "text-blue" : "text-muted-foreground/50"}`}>{aWins} wins</span>
+                      <span className={`text-xs font-medium ${aWins > bWins ? "text-blue" : "text-muted-foreground/50"}`}>{a.symbol} — {aWins} {aWins === 1 ? "lead" : "leads"}</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-center"><span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Metric</span></div>
                   <div className="text-center">
                     <div className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 ${bWins > aWins ? "bg-emerald/15" : "bg-emerald/5"}`}>
-                      <Trophy className={`h-3.5 w-3.5 ${bWins > aWins ? "text-emerald" : "text-muted-foreground/30"}`} />
-                      <span className={`text-xs font-medium ${bWins > aWins ? "text-emerald" : "text-muted-foreground/50"}`}>{bWins} wins</span>
+                      <span className={`text-xs font-medium ${bWins > aWins ? "text-emerald" : "text-muted-foreground/50"}`}>{b.symbol} — {bWins} {bWins === 1 ? "lead" : "leads"}</span>
                     </div>
                   </div>
                 </div>

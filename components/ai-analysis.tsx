@@ -5,29 +5,20 @@ import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient, useSession } from "@/lib/auth-client";
 import {
-  Sparkles,
   Loader2,
   TrendingUp,
   TrendingDown,
   Minus,
   ShieldAlert,
-  Target,
   LogIn,
   Ban,
   Clock,
-  Scale,
   CheckCircle2,
-  Heart,
   LineChart,
-  Gauge,
   ArrowUpRight,
   ArrowDownRight,
   UserCheck,
-  Flag,
-  GitBranch,
   ChevronDown,
-  Brain,
-  Zap,
   RefreshCw,
 } from "lucide-react"
 
@@ -271,7 +262,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.02] to-violet/[0.02]" />
         <div className="relative mx-auto max-w-sm">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br from-blue/10 to-violet/10 border border-white/20">
-            <Brain className="h-8 w-8 text-blue" />
+            <LineChart className="h-8 w-8 text-blue" />
           </div>
           <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">Sign in to analyze</h3>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -305,7 +296,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue/20 to-violet/20 border border-white/20 text-blue">
-            <Brain className="h-4 w-4" />
+            <LineChart className="h-4 w-4" />
           </span>
           <div>
             <h3 className="font-heading text-sm font-medium text-foreground">Lumora AI Analysis</h3>
@@ -334,7 +325,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             disabled={loading}
             className="glass-btn glass-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
           >
-            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             {loading ? "Analyzing…" : "Analyze"}
           </motion.button>
         </div>
@@ -359,7 +350,7 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
           <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
             <div className="flex h-6 w-6 items-center justify-center">
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                <Brain className="h-4 w-4 text-blue" />
+                <LineChart className="h-4 w-4 text-blue" />
               </motion.div>
             </div>
             {progressMsg || "Reading the tape…"}
@@ -413,7 +404,7 @@ function Report({ data }: { data: Analysis }) {
           />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="h-3 w-3" /> AI verdict
+               AI verdict
             </span>
             <div className={`mt-3 flex items-center gap-2.5 text-2xl font-semibold ${rec.text}`}>
               <RecIcon rec={data.recommendation} />
@@ -434,7 +425,7 @@ function Report({ data }: { data: Analysis }) {
         <CockpitMetric icon={<ArrowUpRight />} label="Target" value={data.target} accent="emerald" />
         <CockpitMetric icon={<Ban />} label="Stop Loss" value={data.stopLoss} accent="rose" />
         <CockpitMetric icon={<Clock />} label="Hold" value={data.holdingPeriod} accent="violet" />
-        <CockpitMetric icon={<Scale />} label="R:R" value={data.riskReward} accent="gold" />
+        <CockpitMetric icon={<ArrowUpRight />} label="R:R" value={data.riskReward} accent="gold" />
         <CockpitMetric icon={<Clock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
       </motion.div>
 
@@ -459,7 +450,7 @@ function Report({ data }: { data: Analysis }) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <Section title="Probability" icon={<Gauge className="h-3.5 w-3.5 text-blue" />}>
+        <Section title="Probability" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-2">
             <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
             <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
@@ -475,7 +466,7 @@ function Report({ data }: { data: Analysis }) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.45 }}
       >
-        <Section title="Scenarios" icon={<GitBranch className="h-3.5 w-3.5 text-blue" />}>
+        <Section title="Scenarios" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-3">
             <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
             <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
@@ -572,7 +563,7 @@ function Report({ data }: { data: Analysis }) {
         className="rounded-[28px] border border-blue/30 bg-blue/[0.06] p-5 backdrop-blur-sm"
       >
         <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-blue">
-          <Heart className="h-3.5 w-3.5" /> Explained Like I&apos;m Your Family
+           Explained Like I&apos;m Your Family
         </h4>
         <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
       </motion.div>
@@ -619,7 +610,7 @@ function Report({ data }: { data: Analysis }) {
         className="flex items-start gap-3 rounded-[28px] border border-blue/30 bg-blue/10 p-4 backdrop-blur-sm"
       >
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue/20 text-blue">
-          <Flag className="h-4 w-4" />
+          <ArrowUpRight className="h-4 w-4" />
         </span>
         <div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-blue">Final Advice</div>

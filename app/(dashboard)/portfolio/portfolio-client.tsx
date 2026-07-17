@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, useSpring, useMotionValue } from "motion/react"
 import Link from "next/link"
 import {
-  Plus, Brain, Wallet, TrendingUp, ShieldCheck, BarChart3,
+  Plus, Wallet, TrendingUp, ShieldCheck, BarChart3,
   ChevronRight, ArrowUpRight, ArrowDownRight, X, Loader2, Trash2,
 } from "lucide-react"
 import { addHolding, removeHolding } from "@/app/actions/portfolio"
@@ -158,7 +158,7 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-2">
-          <Link href="/chat" className="glass-btn glass-btn-ghost flex items-center gap-1.5 px-4 py-2.5 text-xs"><Brain className="h-3.5 w-3.5" />AI Review</Link>
+          <Link href="/chat" className="glass-btn glass-btn-ghost flex items-center gap-1.5 px-4 py-2.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />AI Review</Link>
           <button onClick={() => { setError(null); setAdding(true) }} className="glass-btn glass-btn-primary flex items-center gap-1.5 px-4 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
         </motion.div>
       </div>

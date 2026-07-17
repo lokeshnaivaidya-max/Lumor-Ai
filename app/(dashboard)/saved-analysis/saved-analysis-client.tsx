@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Trash2, Sparkles, ArrowUpRight, ArrowDownRight, Minus, Plus, FileText } from "lucide-react"
+import { Trash2, ArrowUpRight, ArrowDownRight, Minus, Plus, FileText } from "lucide-react"
 import { deleteSavedAnalysis } from "@/app/actions/saved-analysis"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useRouter } from "next/navigation"
@@ -85,7 +85,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
                 onClick={() => router.push("/markets")}
                 className="glass-btn glass-btn-primary flex items-center gap-2 px-4 py-2 text-xs"
               >
-                <Sparkles className="h-3.5 w-3.5" />Analyze a stock
+                Analyze a stock
               </motion.button>
             }
           />
@@ -108,7 +108,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet/10 text-violet ring-1 ring-inset ring-white/10">
-                        <Sparkles className="h-4.5 w-4.5" />
+                        <FileText className="h-4.5 w-4.5" />
                       </div>
                       <div>
                         <p className="font-heading text-base font-semibold">{a.symbol}</p>

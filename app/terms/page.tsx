@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, AlertTriangle, Scale, FileText, Shield, Gavel, Mail } from "lucide-react"
+import { ArrowLeft, AlertTriangle, FileText, Mail } from "lucide-react"
 
 import { LumoraMark } from "@/components/lumora-mark"
 
@@ -82,7 +82,7 @@ export default function TermsPage() {
                     </p>
                   </Section>
 
-                  <Section id="description" title="2. Description of Service" icon={Scale}>
+                  <Section id="description" title="2. Description of Service" icon={FileText}>
                     <p>
                       Lumora provides AI-powered market analysis, research tools, and market intelligence for educational and informational purposes. The Service processes publicly available market data, technical indicators, and news to generate analysis, recommendations, and content.
                     </p>
@@ -137,7 +137,7 @@ export default function TermsPage() {
                     </div>
                   </Section>
 
-                  <Section id="user-responsibilities" title="5. User Responsibilities" icon={Shield}>
+                  <Section id="user-responsibilities" title="5. User Responsibilities" icon={FileText}>
                     <p>You are responsible for:</p>
                     <ul className="mt-3 list-disc space-y-1.5 pl-5">
                       <li>Maintaining the confidentiality of your account credentials</li>
@@ -150,7 +150,7 @@ export default function TermsPage() {
                     </ul>
                   </Section>
 
-                  <Section id="acceptable-use" title="6. Acceptable Use" icon={Shield}>
+                  <Section id="acceptable-use" title="6. Acceptable Use" icon={FileText}>
                     <p>You agree not to:</p>
                     <ul className="mt-3 list-disc space-y-1.5 pl-5">
                       <li>Use the Service for any illegal purpose or in violation of any laws</li>
@@ -164,7 +164,7 @@ export default function TermsPage() {
                     </ul>
                   </Section>
 
-                  <Section id="data-accuracy" title="7. Data Accuracy" icon={Scale}>
+                  <Section id="data-accuracy" title="7. Data Accuracy" icon={FileText}>
                     <p>
                       Market data displayed on Lumora comes from third-party providers, including Yahoo Finance and other financial data sources. We do not guarantee the accuracy, completeness, or timeliness of this data.
                     </p>
@@ -196,7 +196,7 @@ export default function TermsPage() {
         </p>
                   </Section>
 
-                  <Section id="termination" title="9. Account Termination" icon={Gavel}>
+                  <Section id="termination" title="9. Account Termination" icon={FileText}>
                     <p>
                       We may suspend or terminate accounts that violate these Terms, applicable laws, or threaten the security or integrity of the Service.
                     </p>
@@ -217,7 +217,7 @@ export default function TermsPage() {
                     </p>
                   </Section>
 
-                  <Section id="governing-law" title="11. Governing Law" icon={Gavel}>
+                  <Section id="governing-law" title="11. Governing Law" icon={FileText}>
                     <p>
                       These terms shall be governed by and construed in accordance with the laws of <strong>India</strong>.
                     </p>

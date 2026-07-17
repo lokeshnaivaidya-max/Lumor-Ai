@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { motion } from "motion/react"
 import { LumoraMark } from "./lumora-mark"
 import { AccountMenu } from "./auth/account-menu"
-import { LayoutDashboard, Briefcase, Star, Bell, MessageSquare, BarChart3, FileText, Settings, TrendingUp, ChevronLeft, Sparkles } from "lucide-react"
+import { LayoutDashboard, Briefcase, Star, Bell, MessageSquare, BarChart3, FileText, Settings, TrendingUp, ChevronLeft } from "lucide-react"
 
 const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2, Activity } from "lucide-react"
+import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2 } from "lucide-react"
 import { addToWatchlist, removeFromWatchlist } from "@/app/actions/portfolio"
 import type { WatchlistView } from "@/lib/portfolio"
 import { EmptyState } from "@/components/ui/empty-state"
