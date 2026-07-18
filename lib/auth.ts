@@ -3,7 +3,6 @@ import { emailOTP } from "better-auth/plugins"
 import { pool } from "@/lib/db"
 import { sendOtpEmail } from "@/lib/email"
 
-// Only enable an OAuth provider when both its client id and secret are present.
 const socialProviders: Record<string, unknown> = {}
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -32,11 +31,9 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET) {
 
 export const enabledProviders = Object.keys(socialProviders)
 
-export const auth = betterAuth({
+const _auth = betterAuth({
   database: pool,
-  secret:
-    process.env.BETTER_AUTH_SECRET ||
-    "lumora-dev-secret-change-in-production-abcdef123456",
+  secret: process.env.BETTER_AUTH_SECRET || "please-set-BETTER_AUTH_SECRET",
   baseURL:
     process.env.BETTER_AUTH_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -46,11 +43,8 @@ export const auth = betterAuth({
         : process.env.V0_RUNTIME_URL),
   emailAndPassword: {
     enabled: true,
-    // Session is created ONLY after the user verifies their email via OTP.
     autoSignIn: false,
   },
-  // After a successful OTP verification we mark the email verified AND open a
-  // real session — this is what lets the user reach the dashboard.
   emailVerification: {
     sendOnSignUp: false,
     autoSignInAfterVerification: true,
@@ -59,14 +53,10 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       otpLength: 6,
-      expiresIn: 600, // 10 minutes
+      expiresIn: 600,
       async sendVerificationOTP({ email, otp, type }) {
         const emailType = type === "forget-password" ? "reset" : "verification"
-        try {
-          await sendOtpEmail({ email, otp, type: emailType })
-        } catch (err) {
-          throw err
-        }
+        await sendOtpEmail({ email, otp, type: emailType })
       },
     }),
   ],
@@ -78,8 +68,8 @@ export const auth = betterAuth({
       : []),
   ],
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
   ...(process.env.NODE_ENV === "development"
     ? {
@@ -92,3 +82,9 @@ export const auth = betterAuth({
       }
     : {}),
 })
+
+if (!process.env.BETTER_AUTH_SECRET) {
+  console.warn("[Lumora] BETTER_AUTH_SECRET is not set. Auth will fail at runtime.")
+}
+
+export const auth = _auth

@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
 import { searchSymbols } from "@/lib/market"
 import { parseInstrument, suggestOptionContracts } from "@/lib/instrument"
+import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
 
 export async function GET(req: Request) {
+  const rl = rateLimit(`search:${clientIp(req)}`, 20, 60_000)
+  if (!rl.ok) return NextResponse.json({ error: "Too many requests." }, { status: 429 })
+
   const { searchParams } = new URL(req.url)
   const q = searchParams.get("q") ?? ""
   if (!q.trim()) return NextResponse.json({ results: [] })

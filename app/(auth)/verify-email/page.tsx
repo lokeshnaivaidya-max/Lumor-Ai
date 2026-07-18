@@ -28,25 +28,38 @@ function VerifyEmailInner() {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const sendingRef = useRef(false)
+  const mountedRef = useRef(true)
 
   const handleSendOtp = useCallback(async (targetEmail: string) => {
-    if (!targetEmail) return
+    if (!targetEmail || sendingRef.current) return
+    sendingRef.current = true
     setSendingOtp(true)
     setError(null)
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "email-verification" })
       if (error) throw new Error(error.message || "Failed to send verification code")
-      setResendCooldown(RESEND_COOLDOWN)
-      setAttempts(0)
+      if (mountedRef.current) {
+        setResendCooldown(RESEND_COOLDOWN)
+        setAttempts(0)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send code")
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to send code")
+      }
     } finally {
-      setSendingOtp(false)
+      if (mountedRef.current) setSendingOtp(false)
+      sendingRef.current = false
     }
   }, [])
 
   useEffect(() => {
-    if (!emailFromUrl) return
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    if (!emailFromUrl || sendingRef.current) return
     handleSendOtp(emailFromUrl)
   }, [emailFromUrl, handleSendOtp])
 
@@ -74,7 +87,7 @@ function VerifyEmailInner() {
   }
 
   const handleResend = () => {
-    if (resendCooldown > 0 || sendingOtp) return
+    if (resendCooldown > 0 || sendingOtp || sendingRef.current) return
     handleSendOtp(email)
     showToast("New verification code sent. Please check your Inbox and Spam folder.")
   }
@@ -123,10 +136,13 @@ function VerifyEmailInner() {
         setLoading(false)
         return
       }
-      setSuccess(true)
-      setTimeout(() => { router.push("/dashboard"); router.refresh() }, 1500)
+      if (mountedRef.current) {
+        setSuccess(true)
+        const navTimer = setTimeout(() => { if (mountedRef.current) { router.push("/dashboard"); router.refresh() } }, 1500)
+        toastTimer.current = navTimer
+      }
     } catch {
-      setError("Something went wrong. Try again.")
+      if (mountedRef.current) setError("Something went wrong. Try again.")
       setLoading(false)
     }
   }
@@ -139,26 +155,26 @@ function VerifyEmailInner() {
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}>
           <CheckCircle2 className="h-14 w-14 text-emerald" />
         </motion.div>
-        <h2 className="mt-5 font-heading text-lg font-semibold text-foreground">Email verified!</h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">Redirecting to your dashboard…</p>
+        <h2 className="dm-heading dm-heading--small mt-5">Email verified!</h2>
+        <p className="dm-body mt-1.5">Redirecting to your dashboard…</p>
       </motion.div>
     )
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-      <Link href={emailFromUrl ? "/sign-up" : "/sign-in"} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground/60 hover:text-foreground transition-colors">
+      <Link href={emailFromUrl ? "/sign-up" : "/sign-in"} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.55 0.18 255 / 0.06)" }} />
+      <div className="dm-card dm-card--inset overflow-hidden">
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px] bg-primary/[0.04]" />
         <div className="relative">
           <div className="flex items-center justify-center gap-2 mb-6">
             <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
           </div>
 
-          <h1 className="text-xl font-semibold tracking-tight text-foreground text-center">Verify your email</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground text-center">
+          <h1 className="dm-heading dm-heading--small text-center">Verify your email</h1>
+          <p className="dm-body mt-1.5 text-center">
             {editingEmail ? "Enter your email address" : (
               <>Enter the code sent to{" "}
                 <button onClick={() => setEditingEmail(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-foreground/80">
@@ -171,7 +187,7 @@ function VerifyEmailInner() {
           {editingEmail ? (
             <div className="mt-6">
               <label className="flex flex-col gap-1">
-                <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                <span className="dm-meta flex items-center gap-1.5">
                   <Mail className="h-3.5 w-3.5" /> Email
                 </span>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
@@ -208,15 +224,15 @@ function VerifyEmailInner() {
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-4 overflow-hidden"
               >
-                <div className="flex items-start gap-2.5 rounded-2xl border border-blue/20 bg-blue/[0.04] px-4 py-3 text-xs leading-relaxed text-blue/90">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue/70" />
+                <div className="flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-primary/[0.06] px-4 py-3 text-xs leading-relaxed text-primary">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
                   <div>
                     <p>
                       Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
                       <strong>Junk</strong> folder. For some email providers, verification emails may be
                       filtered there.
                     </p>
-                    <p className="mt-1.5 text-[11px] text-blue/60">
+                    <p className="mt-1.5 text-[11px] text-primary/60">
                       If you still don&apos;t receive the email after a minute, you can request a new
                       verification code.
                     </p>
@@ -318,7 +334,7 @@ function VerifyEmailInner() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="h-64 w-full max-w-sm animate-pulse rounded-3xl bg-white/5 backdrop-blur-2xl" />}>
+    <Suspense fallback={<div className="dm-card dm-card--inset h-64 w-full max-w-sm animate-pulse" />}>
       <VerifyEmailInner />
     </Suspense>
   )

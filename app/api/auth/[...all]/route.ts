@@ -3,6 +3,7 @@ import { toNextJsHandler } from "better-auth/next-js"
 import { db } from "@/lib/db"
 import { user } from "@/lib/db/schema"
 import { eq, and, lt, sql } from "drizzle-orm"
+import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 const betterHandler = toNextJsHandler(auth.handler)
 
@@ -38,8 +39,13 @@ export async function POST(request: Request) {
   const email = body.email as string | undefined
   const normalizedEmail = email ? normalizeEmail(email) : undefined
 
+  const ip = clientIp(request)
+
   // ── Sign-up ──────────────────────────────────────────────────
   if (path === "/api/auth/sign-up/email") {
+    const rl = rateLimit(`auth:signup:${ip}`, 5, 60_000)
+    if (!rl.ok) return json({ error: "Too many sign-up attempts. Please try again later." }, 429)
+
     if (!body.agreedToLegal || !body.acceptedTerms || !body.acceptedPrivacyPolicy) {
       return error("You must accept the Terms & Conditions and Privacy Policy.", 400)
     }
@@ -70,6 +76,9 @@ export async function POST(request: Request) {
 
   // ── Send OTP ──────────────────────────────────────────────────
   if (path === "/api/auth/email-otp/send-verification-otp" && normalizedEmail) {
+    const rl = rateLimit(`auth:send-otp:${ip}`, 3, 60_000)
+    if (!rl.ok) return json({ error: "Too many OTP requests. Please wait before trying again." }, 429)
+
     const otpType: string = body.type || ""
     const found = await findUserByEmail(normalizedEmail)
 
@@ -92,6 +101,9 @@ export async function POST(request: Request) {
 
   // ── Verify OTP ────────────────────────────────────────────────
   if (path === "/api/auth/email-otp/verify-email" && normalizedEmail) {
+    const rl = rateLimit(`auth:verify-otp:${ip}`, 10, 60_000)
+    if (!rl.ok) return json({ error: "Too many verification attempts. Please try again later." }, 429)
+
     const found = await findUserByEmail(normalizedEmail)
     if (!found) {
       return error("No account found for this email. Please sign up first.", 404)
@@ -109,22 +121,15 @@ async function safeForward(request: Request): Promise<Response> {
     if (!response.ok) {
       const cloned = response.clone()
       const body = await cloned.json().catch(() => ({}))
-      const msg = (body as Record<string, unknown>)?.message || (body as Record<string, unknown>)?.error || "Request failed"
+      const msg = String((body as Record<string, unknown>)?.message || (body as Record<string, unknown>)?.error || "Request failed.")
       if (response.status === 422 || response.status === 409) {
         return error("An account with this email already exists. Please sign in instead.", 409)
       }
-      return error(String(msg), response.status)
+      return error(msg, response.status)
     }
     return response
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Internal server error"
-    console.error("[AUTH API ERROR]", msg)
-    const isDuplicate =
-      msg.includes("unique") || msg.includes("duplicate") ||
-      msg.includes("already exists") || msg.includes("E11000") || msg.includes("23505")
-    if (isDuplicate) {
-      return error("An account with this email already exists. Please sign in instead.", 409)
-    }
-    return error(msg, 500)
+    console.error("[AUTH API ERROR]", e)
+    return error("An internal error occurred. Please try again.", 500)
   }
 }

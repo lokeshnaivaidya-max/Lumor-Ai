@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { chatConversation, chatMessage } from "@/lib/db/schema"
 import { streamChat, type ChatMessageInput } from "@/lib/ai/provider"
 import { eq, and } from "drizzle-orm"
+import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -11,6 +12,9 @@ export const maxDuration = 60
 type IncomingMessage = { role: "user" | "assistant"; content: string }
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`chat:${clientIp(req)}`, 5, 60_000)
+  if (!rl.ok) return Response.json({ error: "Too many requests. Please wait before sending another message." }, { status: 429 })
+
   let body: { conversationId?: number; message?: string; history?: IncomingMessage[] }
   try {
     body = await req.json()
@@ -82,7 +86,8 @@ export async function POST(req: Request) {
           }
         }
       } catch (err) {
-        send({ type: "error", message: err instanceof Error ? err.message : "Stream failed" })
+        console.error("[Chat]", err)
+        send({ type: "error", message: "Analysis failed. Please try again." })
       } finally {
         if (assistantText) {
           await db.insert(chatMessage).values({

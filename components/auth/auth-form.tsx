@@ -51,30 +51,22 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       return
     }
 
-    if (isSignUp) {
-      if (!agreedToLegal) {
-        setError("You must agree to the Terms & Conditions and Privacy Policy to create an account.")
-        setLoading(false)
-        return
-      }
+    if (isSignUp && !agreedToLegal) {
+      setError("You must agree to the Terms & Conditions and Privacy Policy to create an account.")
+      setLoading(false)
+      return
     }
 
     try {
       if (isSignUp) {
         const result = await (authClient.signUp.email as any)({
-          email,
-          password,
-          name,
-          agreedToLegal: true,
-          acceptedTerms: true,
-          acceptedPrivacyPolicy: true,
-          acceptedLegalVersion: "1.0",
+          email, password, name, agreedToLegal: true, acceptedTerms: true,
+          acceptedPrivacyPolicy: true, acceptedLegalVersion: "1.0",
         })
         if (result.error) {
           const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Could not create account."
           const isDuplicate = (result.error as Record<string, unknown>).status === 409 || String(errMsg).toLowerCase().includes("already exists")
-          const isLegal = (result.error as Record<string, unknown>).status === 400
-          throw new Error(isDuplicate ? "An account with this email already exists" : isLegal ? String(errMsg) : String(errMsg))
+          throw new Error(isDuplicate ? "An account with this email already exists" : String(errMsg))
         }
         const userId = (result.data as any)?.user?.id
         if (userId) {
@@ -108,27 +100,23 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="relative w-full max-w-sm"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.04] via-transparent to-violet/[0.04]" />
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.55 0.18 255 / 0.08)" }} />
-
+      <div className="relative overflow-hidden rounded-3xl border border-[oklch(0.91_0.01_75_/_0.06)] bg-[oklch(0.073_0.008_75)] p-8 shadow-2xl" style={{ backdropFilter: "blur(24px)" }}>
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.75 0.1 85 / 0.06)" }} />
         <div className="relative">
           <div className="flex items-center gap-3 mb-8">
-            <motion.span whileHover={{ rotate: 90, scale: 1.05 }} transition={{ type: "spring", stiffness: 300, damping: 18 }}>
-              <LumoraMark className="h-7 w-7" />
-            </motion.span>
-            <span className="font-heading text-base font-semibold tracking-tight text-foreground">Lumora</span>
+            <LumoraMark className="h-6 w-6" />
+            <span className="font-heading text-sm font-semibold tracking-tight text-[oklch(0.91_0.01_75)]">Lumora</span>
           </div>
 
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="font-serif text-2xl font-normal tracking-tight text-[oklch(0.91_0.01_75)]" style={{ lineHeight: 1.1, letterSpacing: "-0.03em" }}>
             {isSignUp ? "Create your account" : "Welcome back"}
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-[oklch(0.53_0.015_75)]" style={{ maxWidth: "26em" }}>
             {isSignUp
               ? "Start tracking global markets with AI-grade intelligence."
               : "Sign in to your Lumora terminal and portfolio."}
@@ -144,9 +132,9 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                     type="button"
                     onClick={() => handleOAuth(p)}
                     disabled={oauthLoading !== null || loading}
-                    whileHover={{ scale: 1.01 }}
+                    whileHover={{ scale: 1.005 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[oklch(0.91_0.01_75_/_0.08)] bg-[oklch(0.91_0.01_75_/_0.03)] px-4 py-2.5 text-sm font-medium text-[oklch(0.91_0.01_75)] transition-all hover:bg-[oklch(0.91_0.01_75_/_0.06)] hover:border-[oklch(0.91_0.01_75_/_0.15)] disabled:opacity-50"
                   >
                     {oauthLoading === p ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
                     {label}
@@ -159,10 +147,10 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           {enabledProviders.length > 0 && (
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
+                <div className="w-full border-t border-[oklch(0.91_0.01_75_/_0.06)]" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-[#0a0a0f] px-3 text-[11px] uppercase tracking-widest text-muted-foreground">or</span>
+                <span className="bg-[oklch(0.073_0.008_75)] px-3 text-[11px] uppercase tracking-widest text-[oklch(0.53_0.015_75)]">or</span>
               </div>
             </div>
           )}
@@ -170,43 +158,49 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           <form onSubmit={handleSubmit} className={enabledProviders.length > 0 ? "" : "mt-6"}>
             <div className="flex flex-col gap-4">
               {isSignUp && (
-                <Field label="Full name" icon={<User className="h-3.5 w-3.5" />}>
-                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="glass-input" autoComplete="name" />
-                </Field>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Full name</span>
+                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="glass-input" autoComplete="name" />
+                </div>
               )}
-              <Field label="Email" icon={<Mail className="h-3.5 w-3.5" />}>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Email</span>
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" autoComplete="email" />
-              </Field>
-              <Field label="Password" icon={<Lock className="h-3.5 w-3.5" />}>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Password</span>
                 <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    className="glass-input pr-10"
-                    autoComplete={isSignUp ? "new-password" : "current-password"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors hover:text-foreground p-1"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
+                  <input type={showPassword ? "text" : "password"} required minLength={8} value={password}
+                    onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="glass-input pr-10"
+                    autoComplete={isSignUp ? "new-password" : "current-password"} />
+                  <button type="button" onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[oklch(0.53_0.015_75)] hover:text-[oklch(0.91_0.01_75)] transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}>
                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                 </div>
-              </Field>
+              </div>
             </div>
 
             {!isSignUp && (
-              <div className="mt-2 flex justify-end">
-                <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground/70 hover:text-foreground transition-colors">
+              <div className="mt-3 text-right">
+                <Link href="/forgot-password" className="text-xs text-[oklch(0.53_0.015_75)] hover:text-[oklch(0.91_0.01_75)] transition-colors underline underline-offset-2">
                   Forgot password?
                 </Link>
               </div>
+            )}
+
+            {isSignUp && (
+              <label className="mt-4 flex items-start gap-2.5">
+                <input type="checkbox" checked={agreedToLegal} onChange={(e) => setAgreedToLegal(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-[oklch(0.91_0.01_75_/_0.15)] bg-transparent accent-[oklch(0.75_0.1_85)]" />
+                <span className="text-xs text-[oklch(0.53_0.015_75)] leading-relaxed">
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-[oklch(0.91_0.01_75)] underline underline-offset-2 hover:text-[oklch(0.75_0.1_85)]">Terms &amp; Conditions</Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-[oklch(0.91_0.01_75)] underline underline-offset-2 hover:text-[oklch(0.75_0.1_85)]">Privacy Policy</Link>
+                </span>
+              </label>
             )}
 
             <AnimatePresence>
@@ -215,80 +209,35 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                   initial={{ opacity: 0, y: -4, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -4, height: 0 }}
-                  className="mt-4 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red"
+                  className="mt-4 flex items-start gap-2 rounded-xl border border-[oklch(0.55_0.22_22_/_0.15)] bg-[oklch(0.55_0.22_22_/_0.06)] px-3.5 py-2.5 text-xs text-[oklch(0.6_0.22_22)]"
                 >
-                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  <span>{error}</span>
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {isSignUp && (
-              <div className="mt-5">
-                <label className="flex cursor-pointer items-start gap-3">
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={agreedToLegal}
-                    onClick={() => setAgreedToLegal((s) => !s)}
-                    disabled={loading}
-                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-                      agreedToLegal
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-white/20 bg-white/[0.04] hover:border-white/40"
-                    }`}
-                  >
-                    {agreedToLegal && <Check className="h-3 w-3" />}
-                  </button>
-                  <span className="text-xs leading-relaxed text-muted-foreground/80">
-                    By creating an account, you agree to our{" "}
-                    <Link href="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
-                      Terms & Conditions
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy" target="_blank" className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors">
-                      Privacy Policy
-                    </Link>
-                    .
-                  </span>
-                </label>
-              </div>
-            )}
-
             <motion.button
               type="submit"
-              disabled={loading || oauthLoading !== null || (isSignUp && !agreedToLegal)}
-              whileHover={{ scale: loading ? 1 : 1.01 }}
+              disabled={loading || (isSignUp && !agreedToLegal)}
+              whileHover={{ scale: loading ? 1 : 1.005 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="relative mt-5 w-full overflow-hidden rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"
+              className="mt-5 w-full rounded-xl bg-[oklch(0.75_0.1_85)] py-2.5 text-sm font-medium text-[oklch(0.073_0.008_75)] transition-all hover:bg-[oklch(0.78_0.1_85)] disabled:opacity-50"
             >
               <span className="flex items-center justify-center gap-2">
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isSignUp ? "Create account" : "Sign in"}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {loading ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
               </span>
             </motion.button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground/70">
-            {isSignUp ? "Already have an account? " : "New to Lumora? "}
-            <Link href={isSignUp ? "/sign-in" : "/sign-up"} className="font-medium text-foreground hover:text-foreground/80 transition-colors">
+          <p className="mt-6 text-center text-xs text-[oklch(0.53_0.015_75)]">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+            <Link href={isSignUp ? "/sign-in" : "/sign-up"} className="font-medium text-[oklch(0.91_0.01_75)] hover:text-[oklch(0.75_0.1_85)] transition-colors underline underline-offset-2">
               {isSignUp ? "Sign in" : "Create one"}
             </Link>
           </p>
         </div>
       </div>
     </motion.div>
-  )
-}
-
-function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-        {icon}
-        {label}
-      </span>
-      {children}
-    </label>
   )
 }

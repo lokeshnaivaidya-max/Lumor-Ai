@@ -1,92 +1,103 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { LumoraMark } from "./lumora-mark"
 import { AccountMenu } from "./auth/account-menu"
-import { LayoutDashboard, Briefcase, Star, Bell, MessageSquare, BarChart3, FileText, Settings, TrendingUp, ChevronLeft } from "lucide-react"
+import { ThemeToggle } from "./theme-toggle"
+import { ChevronDown, LayoutDashboard, Briefcase, Star, BarChart3, TrendingUp, MessageSquare, FileText, Bell } from "lucide-react"
 
-const NAV_LINKS = [
+const PRIMARY_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Markets", href: "/markets", icon: BarChart3 },
   { label: "Portfolio", href: "/portfolio", icon: Briefcase },
   { label: "Watchlist", href: "/watchlist", icon: Star },
-  { label: "Notifications", href: "/notifications", icon: Bell },
-  { label: "AI Chat", href: "/chat", icon: MessageSquare },
-  { label: "Trade Planner", href: "/trade-planner", icon: TrendingUp },
   { label: "Compare", href: "/compare", icon: BarChart3 },
+]
+
+const MORE_LINKS = [
+  { label: "Trade Planner", href: "/trade-planner", icon: TrendingUp },
+  { label: "AI Chat", href: "/chat", icon: MessageSquare },
   { label: "Saved Analysis", href: "/saved-analysis", icon: FileText },
-  { label: "Settings", href: "/profile", icon: Settings },
+  { label: "Notifications", href: "/notifications", icon: Bell },
 ]
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+
+  function isActive(href: string) {
+    if (href === "/dashboard") return pathname === href
+    return pathname.startsWith(href + "/") || pathname === href
+  }
 
   return (
-    <motion.aside
-      layout
-      className={`relative z-30 flex h-screen flex-col glass-panel border-r-0 transition-all duration-500 ${
-        collapsed ? "w-[68px]" : "w-[240px]"
-      }`}
-    >
-      <div className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-4">
-        <Link href="/" className="shrink-0">
-          <LumoraMark className="h-7 w-7" />
+    <header className="dm-nav">
+      <div className="dm-nav__section">
+        <Link href="/" className="mr-3 flex items-center gap-2">
+          <LumoraMark className="h-5 w-5" />
+          <span className="font-heading text-sm font-semibold tracking-tight text-[oklch(0.91_0.01_75)]">Lumora</span>
         </Link>
-        {!collapsed && (
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="font-heading text-sm font-semibold tracking-tight"
-          >
-            Lumora
-          </motion.span>
-        )}
-      </div>
-
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-        {NAV_LINKS.map((link) => {
-          const isActive = pathname === link.href || pathname.startsWith(link.href + "/")
-          const Icon = link.icon
+        {PRIMARY_LINKS.map((link) => {
+          const active = isActive(link.href)
           return (
-            <Link key={link.href} href={link.href}
-              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 ${
-                isActive ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground/90"
-              }`}
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`dm-nav__link ${active ? "dm-nav__link--active" : ""}`}
             >
-              {isActive && (
-                <motion.span
-                  layoutId="sidebar-active-pill"
-                  className="absolute inset-0 rounded-xl bg-white/[0.06] border border-white/[0.06]"
-                  transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                />
-              )}
-              <span className="relative z-10 flex h-4 w-4 items-center justify-center">
-                <Icon className="h-4 w-4" />
-              </span>
-              {!collapsed && (
-                <span className="relative z-10 truncate">{link.label}</span>
-              )}
+              {link.label}
             </Link>
           )
         })}
-      </nav>
-
-      <div className="border-t border-white/[0.04] p-3">
-        <div className={collapsed ? "flex justify-center" : ""}>
-          <AccountMenu />
+        <div className="relative" ref={moreRef}>
+          <button
+            onClick={() => setMoreOpen((o) => !o)}
+            className="dm-nav__link inline-flex items-center gap-1"
+          >
+            More <ChevronDown className="h-3 w-3" />
+          </button>
+          <AnimatePresence>
+            {moreOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute left-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-[oklch(0.91_0.01_75_/_0.08)] bg-[oklch(0.073_0.008_75_/_0.95)] p-1.5 shadow-2xl backdrop-blur-2xl"
+              >
+                {MORE_LINKS.map((link) => {
+                  const active = isActive(link.href)
+                  const Icon = link.icon
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMoreOpen(false)}
+                      className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors ${
+                        active
+                          ? "bg-[oklch(0.75_0.1_85_/_0.1)] text-[oklch(0.91_0.01_75)]"
+                          : "text-[oklch(0.53_0.015_75)] hover:bg-[oklch(0.91_0.01_75_/_0.04)] hover:text-[oklch(0.91_0.01_75)]"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </Link>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      <button onClick={() => setCollapsed((c) => !c)}
-        className="absolute -right-3 top-1/2 z-20 flex h-6 w-6 items-center justify-center rounded-full glass-btn text-muted-foreground/50 p-0 shadow-lg"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        <ChevronLeft className={`h-3 w-3 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
-      </button>
-    </motion.aside>
+      <div className="dm-nav__section">
+        <ThemeToggle />
+        <AccountMenu />
+      </div>
+    </header>
   )
 }

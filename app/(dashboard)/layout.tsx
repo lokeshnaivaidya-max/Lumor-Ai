@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/session"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
-
 export const dynamic = "force-dynamic"
 
 export default async function DashboardLayout({
@@ -12,17 +11,16 @@ export default async function DashboardLayout({
 }) {
   const user = await getCurrentUser()
   if (!user) redirect("/sign-in")
-  // A session must only exist for verified users now, but guard anyway.
   if (!user.emailVerified) redirect("/verify-email")
 
   return (
     <>
-      <div className="flex min-h-screen">
-        <DashboardSidebar />
-        <main className="relative z-10 flex-1 overflow-y-auto">
+      <DashboardSidebar />
+      <main className="relative min-h-screen pt-13">
+        <div className="relative z-10 mx-auto max-w-7xl px-6 py-8 lg:px-10 lg:py-10">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </>
   )
 }

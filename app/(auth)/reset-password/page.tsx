@@ -28,6 +28,13 @@ function ResetPasswordInner() {
   const [sendingOtp, setSendingOtp] = useState(false)
   const [needsEmail, setNeedsEmail] = useState(!emailFromUrl)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const sendingRef = useRef(false)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   useEffect(() => {
     if (resendCooldown <= 0) return
@@ -41,22 +48,24 @@ function ResetPasswordInner() {
   }, [resendCooldown])
 
   const handleSendOtp = useCallback(async (targetEmail: string) => {
-    if (!targetEmail) return
+    if (!targetEmail || sendingRef.current) return
+    sendingRef.current = true
     setSendingOtp(true)
     setError(null)
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "forget-password" })
       if (error) throw new Error(error.message || "Failed to send reset code")
-      setResendCooldown(RESEND_COOLDOWN)
+      if (mountedRef.current) setResendCooldown(RESEND_COOLDOWN)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send code")
+      if (mountedRef.current) setError(err instanceof Error ? err.message : "Failed to send code")
     } finally {
-      setSendingOtp(false)
+      if (mountedRef.current) setSendingOtp(false)
+      sendingRef.current = false
     }
   }, [])
 
   const handleResend = () => {
-    if (resendCooldown > 0 || sendingOtp) return
+    if (resendCooldown > 0 || sendingOtp || sendingRef.current) return
     handleSendOtp(email)
   }
 
@@ -100,12 +109,14 @@ function ResetPasswordInner() {
         if (error.message?.toLowerCase().includes("expired")) throw new Error("Code expired. Request a new one.")
         throw new Error(error.message || "Invalid code")
       }
-      setSuccess(true)
-      setTimeout(() => { router.push("/dashboard"); router.refresh() }, 1500)
+      if (mountedRef.current) {
+        setSuccess(true)
+        setTimeout(() => { mountedRef.current && (router.push("/dashboard"), router.refresh()) }, 1500)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed")
+      if (mountedRef.current) setError(err instanceof Error ? err.message : "Verification failed")
     } finally {
-      setLoading(false)
+      if (mountedRef.current) setLoading(false)
     }
   }
 
@@ -115,19 +126,19 @@ function ResetPasswordInner() {
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}>
           <CheckCircle2 className="h-14 w-14 text-emerald" />
         </motion.div>
-        <h2 className="mt-5 font-heading text-lg font-semibold text-foreground">Password reset!</h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">Redirecting to your dashboard…</p>
+        <h2 className="dm-heading dm-heading--small mt-5">Password reset!</h2>
+        <p className="dm-body mt-1.5">Redirecting to your dashboard…</p>
       </motion.div>
     )
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-      <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground/60 hover:text-foreground transition-colors">
+      <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.55 0.18 255 / 0.06)" }} />
+      <div className="dm-card dm-card--inset overflow-hidden">
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px] bg-primary/[0.04]" />
         <div className="relative">
           <div className="flex items-center justify-center gap-2 mb-6">
             <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
@@ -135,11 +146,11 @@ function ResetPasswordInner() {
 
           {needsEmail ? (
             <>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground text-center">Reset your password</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground text-center">Enter your email to receive a reset code.</p>
+              <h1 className="dm-heading dm-heading--small text-center">Reset your password</h1>
+              <p className="dm-body mt-1.5 text-center">Enter your email to receive a reset code.</p>
               <div className="mt-6">
                 <label className="flex flex-col gap-1">
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                  <span className="dm-meta flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5" /> Email
                   </span>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
@@ -167,20 +178,20 @@ function ResetPasswordInner() {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground text-center">Reset your password</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground text-center">
+              <h1 className="dm-heading dm-heading--small text-center">Reset your password</h1>
+              <p className="dm-body mt-1.5 text-center">
                 Code sent to <strong className="text-foreground">{email}</strong>
               </p>
 
-              <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-blue/20 bg-blue/[0.04] px-4 py-3 text-xs leading-relaxed text-blue/90 text-left">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue/70" />
+              <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-primary/[0.06] px-4 py-3 text-xs leading-relaxed text-primary text-left">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
                 <div>
                   <p>
                     Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
                     <strong>Junk</strong> folder. For some email providers, verification emails may be
                     filtered there.
                   </p>
-                  <p className="mt-1.5 text-[11px] text-blue/60">
+                  <p className="mt-1.5 text-[11px] text-primary/60">
                     If you still don&apos;t receive the email after a minute, you can request a new
                     verification code.
                   </p>
@@ -299,7 +310,7 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="h-64 w-full max-w-sm animate-pulse rounded-3xl bg-white/5 backdrop-blur-2xl" />}>
+    <Suspense fallback={<div className="dm-card dm-card--inset h-64 w-full max-w-sm animate-pulse" />}>
       <ResetPasswordInner />
     </Suspense>
   )

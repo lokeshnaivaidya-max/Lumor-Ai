@@ -47,49 +47,6 @@ type AnalysisResult = {
   positionSizing?: string
 }
 
-function SpotlightFollow({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const rawX = useMotionValue(-500)
-  const rawY = useMotionValue(-500)
-  const x = useSpring(rawX, { stiffness: 65, damping: 25, mass: 0.8 })
-  const y = useSpring(rawY, { stiffness: 65, damping: 25, mass: 0.8 })
-
-  const handleMove = useCallback((e: React.MouseEvent) => {
-    const r = ref.current?.getBoundingClientRect()
-    if (r) { rawX.set(e.clientX - r.left); rawY.set(e.clientY - r.top) }
-  }, [rawX, rawY])
-
-  return (
-    <div ref={ref} onMouseMove={handleMove} className="relative">
-      <motion.div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
-        <motion.div
-          className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ x, y, background: "radial-gradient(circle at center, oklch(0.55 0.18 255 / 0.06), transparent 60%)" }}
-        />
-        <motion.div
-          className="absolute left-0 top-0 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ x, y, background: "radial-gradient(circle at center, oklch(0.62 0.16 168 / 0.04), transparent 60%)" }}
-        />
-      </motion.div>
-      {children}
-    </div>
-  )
-}
-
-function GlassCard({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) {
-  return (
-    <div className={`group relative overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl transition-all duration-300 hover:border-white/30 hover:bg-white/20 hover:shadow-xl ${className}`}>
-      {glow && (
-        <div className="pointer-events-none absolute -inset-1 rounded-[30px] opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "linear-gradient(135deg, oklch(0.55 0.18 255 / 0.15), oklch(0.62 0.16 168 / 0.1))" }}
-        />
-      )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[28px]" />
-      <div className="relative">{children}</div>
-    </div>
-  )
-}
-
 function RecommendationBadge({ rec }: { rec: "Buy" | "Wait" }) {
   const isBuy = rec === "Buy"
   return (
@@ -116,13 +73,13 @@ function RecommendationBadge({ rec }: { rec: "Buy" | "Wait" }) {
 
 function ConfidenceGauge({ score }: { score: number }) {
   const angle = (score / 100) * 180
-  const color = score >= 70 ? "oklch(0.62 0.16 168)" : score >= 40 ? "oklch(0.75 0.12 75)" : "oklch(0.58 0.18 22)"
+  const color = score >= 70 ? "#34d399" : score >= 40 ? "#fbbf24" : "#f87171"
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative flex items-center justify-center">
         <svg width="120" height="68" viewBox="0 0 120 68" className="overflow-visible">
-          <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="oklch(0.85 0.01 85 / 0.3)" strokeWidth="8" strokeLinecap="round" />
+          <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="currentColor" className="text-border" strokeWidth="8" strokeLinecap="round" />
           <motion.path
             d="M 10 60 A 50 50 0 0 1 110 60"
             fill="none"
@@ -154,7 +111,7 @@ function ConfidenceGauge({ score }: { score: number }) {
           {score}%
         </motion.span>
       </div>
-      <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confidence</span>
+      <span className="dm-meta uppercase">Confidence</span>
     </div>
   )
 }
@@ -169,7 +126,7 @@ function ProbabilityBars({ profit, loss }: { profit: number; loss: number }) {
           </span>
           <span className="font-mono font-bold text-emerald tabular-nums">{profit}%</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-white/30">
+        <div className="h-2.5 overflow-hidden rounded-full bg-border">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-emerald/60 to-emerald"
             initial={{ width: 0 }}
@@ -185,7 +142,7 @@ function ProbabilityBars({ profit, loss }: { profit: number; loss: number }) {
           </span>
           <span className="font-mono font-bold text-neg tabular-nums">{loss}%</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-white/30">
+        <div className="h-2.5 overflow-hidden rounded-full bg-border">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-neg/60 to-neg"
             initial={{ width: 0 }}
@@ -226,9 +183,7 @@ function RiskRewardVisual({ ratio }: { ratio: string }) {
         </motion.div>
       </div>
       <div className="text-center">
-        <span className="font-heading text-sm font-semibold text-foreground">
-          {ratio}
-        </span>
+        <span className="dm-heading text-sm font-semibold">{ratio}</span>
       </div>
     </div>
   )
@@ -373,6 +328,8 @@ export function TradePlannerClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <hr className="dm-rule dm-rule--gold dm-animate" />
+
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -380,16 +337,12 @@ export function TradePlannerClient() {
         className="mb-10"
       >
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-[28px] bg-blue/10 border border-white/20">
-            <BarChart3 className="h-6 w-6 text-blue" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-[28px] bg-gold/10">
+            <BarChart3 className="h-6 w-6 text-gold" />
           </div>
           <div>
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-              AI Trade Planner
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Plan, analyze, and optimize your trades with AI-powered insights
-            </p>
+            <h1 className="dm-heading dm-animate">AI Trade Planner</h1>
+            <p className="dm-body dm-animate dm-animate--delay-1">Plan, analyze, and optimize your trades with AI-powered insights</p>
           </div>
         </div>
       </motion.div>
@@ -402,313 +355,286 @@ export function TradePlannerClient() {
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-5 space-y-6"
         >
-          <SpotlightFollow>
-            <GlassCard className="p-6">
-              <div className="space-y-5">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span className="font-heading text-sm font-semibold tracking-tight">Trade Details</span>
-                </div>
+          <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1 p-6">
+            <div className="space-y-5">
+              <div className="flex items-center gap-2 border-b border-border pb-4">
+                <span className="dm-heading text-sm">Trade Details</span>
+              </div>
 
+              <div>
+                <label className="dm-meta mb-1.5 block">Symbol</label>
+                <SymbolSearch onSelect={(r) => setSymbol(r.symbol)} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Symbol
-                  </label>
-                  <SymbolSearch onSelect={(r) => setSymbol(r.symbol)} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      Buy Price
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={buyPrice}
-                      onChange={(e) => setBuyPrice(e.target.value)}
-                      placeholder="0.00"
-                      className="glass-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      step="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      placeholder="0"
-                      className="glass-input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Budget (auto-calculated)
-                  </label>
+                  <label className="dm-meta mb-1.5 block">Buy Price</label>
                   <input
                     type="number"
                     step="any"
-                    value={budget || computedBudget}
-                    onChange={(e) => handleBudgetChange(e.target.value)}
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(e.target.value)}
                     placeholder="0.00"
-                    className="glass-input text-blue font-semibold"
+                    className="glass-input"
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      Target Price
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={target}
-                      onChange={(e) => setTarget(e.target.value)}
-                      placeholder="Optional"
-                      className="glass-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      Stop Loss
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={stopLoss}
-                      onChange={(e) => setStopLoss(e.target.value)}
-                      placeholder="Optional"
-                      className="glass-input"
-                    />
-                  </div>
+                <div>
+                  <label className="dm-meta mb-1.5 block">Quantity</label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="0"
+                    className="glass-input"
+                  />
                 </div>
-
-                {/* Holding Period */}
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Holding Period
-                  </label>
-                  <button
-                    onClick={() => setShowHoldingDropdown(!showHoldingDropdown)}
-                    className="glass-input flex items-center justify-between text-left"
-                  >
-                    <span>{HOLDING_OPTIONS.find((o) => o.value === holdingPeriod)?.label}</span>
-                    <motion.div animate={{ rotate: showHoldingDropdown ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </motion.div>
-                  </button>
-                  <AnimatePresence>
-                    {showHoldingDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-white/20 bg-white/20 backdrop-blur-2xl shadow-xl"
-                      >
-                        {HOLDING_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => { setHoldingPeriod(opt.value); setShowHoldingDropdown(false) }}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-white/10 ${
-                              holdingPeriod === opt.value ? "text-blue font-semibold" : "text-muted-foreground"
-                            }`}
-                          >
-                            <Clock className="h-3.5 w-3.5" />
-                            {opt.label}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Risk Level */}
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Risk Level
-                  </label>
-                  <button
-                    onClick={() => setShowRiskDropdown(!showRiskDropdown)}
-                    className="glass-input flex items-center justify-between text-left"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${
-                        riskLevel === "Low" ? "bg-emerald" : riskLevel === "Medium" ? "bg-gold" : "bg-neg"
-                      }`} />
-                      {riskLevel}
-                    </span>
-                    <motion.div animate={{ rotate: showRiskDropdown ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </motion.div>
-                  </button>
-                  <AnimatePresence>
-                    {showRiskDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-white/20 bg-white/20 backdrop-blur-2xl shadow-xl"
-                      >
-                        {RISK_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => { setRiskLevel(opt.value); setShowRiskDropdown(false) }}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-white/10 ${
-                              riskLevel === opt.value ? "text-blue font-semibold" : "text-muted-foreground"
-                            }`}
-                          >
-                            <span className={`h-2 w-2 rounded-full ${
-                              opt.value === "Low" ? "bg-emerald" : opt.value === "Medium" ? "bg-gold" : "bg-neg"
-                            }`} />
-                            <span>{opt.label}</span>
-                            <span className="text-xs text-muted-foreground ml-auto">{opt.desc}</span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Natural Language */}
-                <div className="border-t border-white/10 pt-4">
-                  <label className="mb-1.5 block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Describe your trade plan
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={nlInput}
-                      onChange={(e) => setNlInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleNlParse()
-                      }}
-                      placeholder="e.g. I want to buy at ₹999, my budget is ₹50,000..."
-                      className="glass-input flex-1 text-sm"
-                    />
-                    <button
-                      onClick={handleNlParse}
-                      className="glass-btn glass-btn-soft shrink-0"
-                      title="Parse natural language"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <p className="mt-1.5 text-[10px] text-muted-foreground">
-                    Try: &ldquo;Buy at ₹999&rdquo; &middot; &ldquo;Budget ₹50,000&rdquo; &middot; &ldquo;I want 59 shares&rdquo;
-                  </p>
-                </div>
-
-                <motion.button
-                  onClick={handleAnalyze}
-                  disabled={!formValid || loading}
-                  whileHover={formValid && !loading ? { scale: 1.02 } : {}}
-                  whileTap={formValid && !loading ? { scale: 0.98 } : {}}
-                  className={`glass-btn glass-btn-primary w-full mt-2 ${
-                    !formValid || loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      Analyze Trade Plan
-                    </>
-                  )}
-                </motion.button>
               </div>
-            </GlassCard>
-          </SpotlightFollow>
+
+              <div>
+                <label className="dm-meta mb-1.5 block">Budget (auto-calculated)</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={budget || computedBudget}
+                  onChange={(e) => handleBudgetChange(e.target.value)}
+                  placeholder="0.00"
+                  className="glass-input font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="dm-meta mb-1.5 block">Target Price</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                    placeholder="Optional"
+                    className="glass-input"
+                  />
+                </div>
+                <div>
+                  <label className="dm-meta mb-1.5 block">Stop Loss</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={stopLoss}
+                    onChange={(e) => setStopLoss(e.target.value)}
+                    placeholder="Optional"
+                    className="glass-input"
+                  />
+                </div>
+              </div>
+
+              {/* Holding Period */}
+              <div className="relative">
+                <label className="dm-meta mb-1.5 block">Holding Period</label>
+                <button
+                  onClick={() => setShowHoldingDropdown(!showHoldingDropdown)}
+                  className="glass-input flex items-center justify-between text-left"
+                >
+                  <span>{HOLDING_OPTIONS.find((o) => o.value === holdingPeriod)?.label}</span>
+                  <motion.div animate={{ rotate: showHoldingDropdown ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {showHoldingDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+                    >
+                      {HOLDING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { setHoldingPeriod(opt.value); setShowHoldingDropdown(false) }}
+                          className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-foreground/10 ${
+                            holdingPeriod === opt.value ? "text-gold font-semibold" : "text-muted-foreground"
+                          }`}
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Risk Level */}
+              <div className="relative">
+                <label className="dm-meta mb-1.5 block">Risk Level</label>
+                <button
+                  onClick={() => setShowRiskDropdown(!showRiskDropdown)}
+                  className="glass-input flex items-center justify-between text-left"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${
+                      riskLevel === "Low" ? "bg-emerald" : riskLevel === "Medium" ? "bg-gold" : "bg-neg"
+                    }`} />
+                    {riskLevel}
+                  </span>
+                  <motion.div animate={{ rotate: showRiskDropdown ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {showRiskDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+                    >
+                      {RISK_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { setRiskLevel(opt.value); setShowRiskDropdown(false) }}
+                          className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-foreground/10 ${
+                            riskLevel === opt.value ? "text-gold font-semibold" : "text-muted-foreground"
+                          }`}
+                        >
+                          <span className={`h-2 w-2 rounded-full ${
+                            opt.value === "Low" ? "bg-emerald" : opt.value === "Medium" ? "bg-gold" : "bg-neg"
+                          }`} />
+                          <span>{opt.label}</span>
+                          <span className="dm-meta ml-auto">{opt.desc}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Natural Language */}
+              <hr className="dm-rule" />
+              <div>
+                <label className="dm-meta mb-1.5 block">Describe your trade plan</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nlInput}
+                    onChange={(e) => setNlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleNlParse()
+                    }}
+                    placeholder="e.g. I want to buy at ₹999, my budget is ₹50,000..."
+                    className="glass-input flex-1 text-sm"
+                  />
+                  <button
+                    onClick={handleNlParse}
+                    className="lm-btn shrink-0"
+                    title="Parse natural language"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="dm-meta mt-1.5">
+                  Try: &ldquo;Buy at ₹999&rdquo; &middot; &ldquo;Budget ₹50,000&rdquo; &middot; &ldquo;I want 59 shares&rdquo;
+                </p>
+              </div>
+
+              <motion.button
+                onClick={handleAnalyze}
+                disabled={!formValid || loading}
+                whileHover={formValid && !loading ? { scale: 1.02 } : {}}
+                whileTap={formValid && !loading ? { scale: 0.98 } : {}}
+                className={`lm-btn lm-btn--gold w-full mt-2 ${
+                  !formValid || loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>Analyze Trade Plan</>
+                )}
+              </motion.button>
+            </div>
+          </div>
 
           {/* Bonus Calculators */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-                    <span className="font-heading text-xs font-semibold tracking-tight text-foreground/80">Bonus Calculators</span>
+              <span className="dm-heading text-xs">Bonus Calculators</span>
             </div>
             {bPrice > 0 && qty > 0 && (
               <>
                 {tgt > 0 && (
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                         <TrendingUp className="h-3.5 w-3.5 text-emerald" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[10px] tracking-wider text-muted-foreground uppercase">Profit</span>
+                        <span className="dm-meta uppercase">Profit</span>
                         <p className="font-mono text-sm font-semibold text-emerald tabular-nums">
                           +{profitAmt.toFixed(2)} ({profitPct.toFixed(2)}%)
                         </p>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                 )}
                 {sl > 0 && (
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neg/10">
                         <TrendingDown className="h-3.5 w-3.5 text-neg" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[10px] tracking-wider text-muted-foreground uppercase">Loss</span>
+                        <span className="dm-meta uppercase">Loss</span>
                         <p className="font-mono text-sm font-semibold text-neg tabular-nums">
                           -{lossAmt.toFixed(2)} ({lossPct.toFixed(2)}%)
                         </p>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                 )}
-                <GlassCard className="p-4">
+                <div className="dm-card dm-card--inset p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Position Size</p>
+                      <p className="dm-meta uppercase">Position Size</p>
                       <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
                         {qty} shares x {bPrice} = {totCost.toFixed(2)}
                         {budget ? ` (${posSizePct.toFixed(1)}% of budget)` : ""}
                       </p>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
                 {tgt > 0 && sl > 0 && (
                   <>
-                    <GlassCard className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Risk/Reward Ratio</p>
-                        <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                          1:{rrRatio}
-                        </p>
+                    <div className="dm-card dm-card--inset p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="dm-meta uppercase">Risk/Reward Ratio</p>
+                          <p className="font-mono text-sm font-semibold text-foreground tabular-nums">1:{rrRatio}</p>
+                        </div>
                       </div>
                     </div>
-                    </GlassCard>
-                    <GlassCard className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] tracking-wider text-muted-foreground uppercase">Break-even Price</p>
-                        <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                          {breakevenPrice.toFixed(2)}
-                        </p>
+                    <div className="dm-card dm-card--inset p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="dm-meta uppercase">Break-even Price</p>
+                          <p className="font-mono text-sm font-semibold text-foreground tabular-nums">{breakevenPrice.toFixed(2)}</p>
+                        </div>
                       </div>
                     </div>
-                    </GlassCard>
                   </>
                 )}
               </>
             )}
             {(!bPrice || !qty) && (
-              <GlassCard className="p-4">
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  Enter buy price & quantity to see bonus calculators
-                </p>
-              </GlassCard>
+              <div className="dm-card dm-card--inset p-4">
+                <p className="dm-body text-center py-2 text-muted-foreground">Enter buy price & quantity to see bonus calculators</p>
+              </div>
             )}
           </div>
         </motion.div>
@@ -729,7 +655,7 @@ export function TradePlannerClient() {
             >
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neg" />
-                <p className="text-sm text-neg">{error}</p>
+                <p className="dm-body text-neg">{error}</p>
               </div>
             </motion.div>
           )}
@@ -738,38 +664,36 @@ export function TradePlannerClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-[32px] border border-white/20 bg-white/15 backdrop-blur-xl p-12 text-center"
+              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 dm-card dm-card--inset p-12 text-center"
             >
-              <h3 className="font-heading text-lg font-semibold text-foreground">Ready to Plan</h3>
-              <p className="max-w-sm text-sm text-muted-foreground">
+              <h3 className="dm-heading">Ready to Plan</h3>
+              <p className="dm-body max-w-sm text-muted-foreground">
                 Fill in your trade details on the left and click Analyze to get AI-powered insights on your trade plan.
               </p>
             </motion.div>
           )}
 
           {loading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 rounded-[32px] border border-white/20 bg-white/15 backdrop-blur-xl p-12"
-              >
-                <div className="space-y-2 text-center">
-                  <h3 className="font-heading text-lg font-semibold text-foreground">Analyzing Your Trade Plan</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Calculating risk metrics and generating AI insights...
-                  </p>
-                </div>
-                <div className="flex gap-1.5">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="h-2 w-2 rounded-full bg-blue"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 dm-card dm-card--inset p-12"
+            >
+              <div className="space-y-2 text-center">
+                <h3 className="dm-heading">Analyzing Your Trade Plan</h3>
+                <p className="dm-body text-muted-foreground">Calculating risk metrics and generating AI insights...</p>
+              </div>
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="h-2 w-2 rounded-full bg-gold"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
+              </div>
+            </motion.div>
           )}
 
           <AnimatePresence>
@@ -782,140 +706,110 @@ export function TradePlannerClient() {
                 className="space-y-4"
               >
                 {/* Recommendation */}
-                <GlassCard glow className="p-5">
+                <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <RecommendationBadge rec={result.recommendation} />
                       <div>
-                        <p className="text-sm font-medium text-foreground">{result.recommendationReason}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Better Entry: {result.betterEntry}
-                        </p>
+                        <p className="dm-body font-medium">{result.recommendationReason}</p>
+                        <p className="dm-meta mt-0.5">Better Entry: {result.betterEntry}</p>
                       </div>
                     </div>
                     <ConfidenceGauge score={result.confidenceScore} />
                   </div>
-                </GlassCard>
+                </div>
 
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue/10">
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          Investment
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">Investment</p>
                         <AnimatedValue value={result.investmentRequired} prefix="₹" className="!text-lg" />
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                         <ArrowUpRight className="h-4 w-4 text-emerald" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          Est. Profit
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">Est. Profit</p>
                         <AnimatedValue value={result.estimatedProfit} prefix="₹" className="!text-lg !text-emerald" />
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-neg/10">
                         <ArrowDownRight className="h-4 w-4 text-neg" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          Est. Loss
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">Est. Loss</p>
                         <AnimatedValue value={Math.abs(result.estimatedLoss)} prefix="₹" className="!text-lg !text-neg" />
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet/10">
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          Target
-                        </p>
-                        <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">
-                          {result.suggestedTarget}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">Target</p>
+                        <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">{result.suggestedTarget}</p>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/10">
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          Stop Loss
-                        </p>
-                        <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">
-                          {result.suggestedStopLoss}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">Stop Loss</p>
+                        <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">{result.suggestedStopLoss}</p>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-4">
+                  <div className="dm-card dm-card--inset p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                         <RefreshCw className="h-4 w-4 text-emerald" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          R:R
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="dm-meta uppercase">R:R</p>
                         <div className="mt-1">
                           <RiskRewardVisual ratio={result.riskRewardRatio} />
                         </div>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                 </div>
 
                 {/* Probability & AI Explanation */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <GlassCard className="p-5">
-                    <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-3">
-                      <BarChart3 className="h-4 w-4 text-blue" />
-                      <span className="font-heading text-xs font-semibold tracking-tight text-foreground">
-                        Probability
-                      </span>
+                  <div className="dm-card dm-card--inset p-5">
+                    <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
+                      <BarChart3 className="h-4 w-4 text-gold" />
+                      <span className="dm-heading text-xs">Probability</span>
                     </div>
                     <ProbabilityBars profit={result.probabilityOfProfit} loss={result.probabilityOfLoss} />
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-5">
-                    <div className="border-b border-white/10 pb-3 mb-3">
-                      <span className="font-heading text-xs font-semibold tracking-tight text-foreground">
-                        AI Explanation
-                      </span>
+                  <div className="dm-card dm-card--inset p-5">
+                    <div className="border-b border-border pb-3 mb-3">
+                      <span className="dm-heading text-xs">AI Explanation</span>
                     </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {result.beginnerExplanation}
-                    </p>
-                  </GlassCard>
+                    <p className="dm-body leading-relaxed text-muted-foreground">{result.beginnerExplanation}</p>
+                  </div>
                 </div>
 
                 <motion.button
                   onClick={handleAnalyze}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="glass-btn glass-btn-ghost w-full"
+                  className="lm-btn w-full"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Re-analyze Trade Plan
