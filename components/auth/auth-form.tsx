@@ -58,6 +58,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
     try {
       if (isSignUp) {
+        console.log("[OTP-TRACE] >>> auth-form handleSubmit signUp START", { email, stack: new Error().stack })
         const result = await (authClient.signUp.email as any)({
           email, password, name, agreedToLegal: true, acceptedTerms: true,
           acceptedPrivacyPolicy: true, acceptedLegalVersion: "1.0",

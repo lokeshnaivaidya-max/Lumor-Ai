@@ -64,6 +64,8 @@ export async function POST(request: Request) {
   const email = body.email as string | undefined
   const normalizedEmail = email ? normalizeEmail(email) : undefined
 
+  console.log("[OTP-TRACE] SERVER POST", { path, email: normalizedEmail, ua: request.headers.get("user-agent")?.slice(0, 40) })
+
   const ip = clientIp(request)
 
   // ── Sign-up ──────────────────────────────────────────────────

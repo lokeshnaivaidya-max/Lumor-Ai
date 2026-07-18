@@ -55,8 +55,10 @@ const _auth = betterAuth({
       otpLength: 6,
       expiresIn: 600,
       async sendVerificationOTP({ email, otp, type }) {
+        console.log("[OTP-TRACE] >>> Better Auth sendVerificationOTP callback FIRED", { email, type, stack: new Error().stack })
         const emailType = type === "forget-password" ? "reset" : "verification"
         await sendOtpEmail({ email, otp, type: emailType })
+        console.log("[OTP-TRACE] <<< Better Auth sendVerificationOTP callback DONE", { email, type })
       },
     }),
   ],

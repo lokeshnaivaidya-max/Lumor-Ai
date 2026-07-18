@@ -40,10 +40,13 @@ function VerifyEmailInner() {
     if (sendingRef.current) return
     sendingRef.current = true
     sentForEmail.current = targetEmail
+    console.log("[OTP-TRACE] requestOtp called", { targetEmail, allowResend, stack: new Error().stack })
     setSendingOtp(true)
     setError(null)
     try {
+      console.log("[OTP-TRACE] >>> authClient.emailOtp.sendVerificationOtp BEFORE", { targetEmail, type: "email-verification", stack: new Error().stack })
       const { error } = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "email-verification" })
+      console.log("[OTP-TRACE] <<< authClient.emailOtp.sendVerificationOtp AFTER", { targetEmail, error })
       if (error) throw new Error(error.message || "Failed to send verification code")
       if (mountedRef.current) {
         setResendCooldown(RESEND_COOLDOWN)

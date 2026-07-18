@@ -53,7 +53,9 @@ function ResetPasswordInner() {
     setSendingOtp(true)
     setError(null)
     try {
+      console.log("[OTP-TRACE] >>> reset-page sendVerificationOtp BEFORE", { targetEmail, type: "forget-password", stack: new Error().stack })
       const { error } = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "forget-password" })
+      console.log("[OTP-TRACE] <<< reset-page sendVerificationOtp AFTER", { targetEmail, error })
       if (error) throw new Error(error.message || "Failed to send reset code")
       if (mountedRef.current) setResendCooldown(RESEND_COOLDOWN)
     } catch (err) {
