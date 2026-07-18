@@ -51,7 +51,7 @@ export function DashboardSidebar() {
       }`}
       style={{ transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}
     >
-      <div className="nav-glass flex h-full flex-col border-r border-[var(--glass-border)]">
+      <div className="flex h-full flex-col border-r" style={{ background: "var(--bg-surface)", borderColor: "var(--glass-border)" }}>
         <div className="flex items-center gap-2 border-b border-[var(--glass-border)] px-4 py-3.5">
           {!collapsed && (
             <motion.span

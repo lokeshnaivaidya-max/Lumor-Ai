@@ -18,16 +18,14 @@ export default function GlobalError({
     <html lang="en" className="dark-root dark">
       <body className="antialiased">
         <AmbientBackground />
-        <div className="lm-scene">
-          <div className="lm-light" />
-          <div className="relative z-10 flex flex-col items-center text-center max-w-md">
-            <p className="dm-meta mb-4">Something went wrong</p>
-            <h1 className="dm-heading mb-4">Unexpected error</h1>
-            <p className="dm-body mb-8 text-center">
-              Lumora encountered an unexpected issue. Our team has been notified.
-              Please try again.
+        <div className="scene">
+          <div className="relative z-10 flex flex-col items-center text-center" style={{ maxWidth: 480 }}>
+            <p className="meta mb-5">Something went wrong</p>
+            <h1 className="heading mb-5">Unexpected error</h1>
+            <p className="body mb-8 text-center">
+              Lumora encountered an unexpected issue. Our team has been notified. Please try again.
             </p>
-            <button onClick={reset} className="lm-btn lm-btn--gold">
+            <button onClick={reset} className="btn btn--gold">
               Try again
             </button>
           </div>
