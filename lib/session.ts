@@ -1,11 +1,12 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { db } from "@/lib/db"
+import { db, ensureAuthSchema } from "@/lib/db"
 import { user } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 
 /** Returns the full session (or null) for server components / route handlers. */
 export async function getSession() {
+  await ensureAuthSchema()
   return auth.api.getSession({ headers: await headers() })
 }
 

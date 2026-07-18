@@ -411,14 +411,11 @@ body { background: var(--bg); min-height: 100vh; }
 }
 
 .hero-title {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 40%, #e8d5c0 60%, var(--gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--gold);
   filter: drop-shadow(0 0 40px var(--gold-glow));
 }
 .dark .hero-title {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 35%, #f0dfb0 55%, var(--gold) 100%);
+  color: var(--gold);
   filter: drop-shadow(0 0 60px var(--gold-glow));
 }
 

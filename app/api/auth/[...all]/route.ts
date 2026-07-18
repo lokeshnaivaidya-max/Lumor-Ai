@@ -1,13 +1,16 @@
 import { auth } from "@/lib/auth"
 import { toNextJsHandler } from "better-auth/next-js"
-import { db } from "@/lib/db"
+import { db, ensureAuthSchema } from "@/lib/db"
 import { user } from "@/lib/db/schema"
 import { eq, and, lt, sql } from "drizzle-orm"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
 const betterHandler = toNextJsHandler(auth.handler)
 
-export const GET = betterHandler.GET
+export const GET = async (req: Request) => {
+  await ensureAuthSchema()
+  return betterHandler.GET(req)
+}
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
@@ -33,6 +36,7 @@ function error(msg: string, status: number): Response {
 }
 
 export async function POST(request: Request) {
+  await ensureAuthSchema()
   const url = new URL(request.url)
   const path = url.pathname
   const body = await request.clone().json().catch(() => ({}))
