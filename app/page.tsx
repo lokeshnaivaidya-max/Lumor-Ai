@@ -2,7 +2,7 @@ import Link from "next/link"
 import { LandingNav } from "@/components/landing-nav"
 import { HeroParallax } from "@/components/hero-parallax"
 import { StatsSection } from "@/components/stats-section"
-import { SceneReveal, CardReveal } from "@/components/reveal"
+import { FadeScale, FadeUp, SlideLeft, SlideRight, CardReveal } from "@/components/reveal"
 
 const EXCHANGES = [
   ["NYSE", "USA"], ["NASDAQ", "USA"], ["NSE", "India"], ["BSE", "India"],
@@ -38,75 +38,73 @@ export default async function HomePage() {
     <>
       <LandingNav />
 
-      {/* Hero */}
-      <section className="scene" style={{ background: "var(--bg-deep)" }}>
+      {/* Hero — full cinematic entrance */}
+      <section className="relative">
         <HeroParallax />
       </section>
 
-      {/* Stats / Proof */}
+      {/* Stats / Proof — scale reveal */}
       <section className="scene" id="reach" style={{ background: "var(--bg-surface)" }}>
-        <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <SceneReveal>
-            <p className="subheading mb-6">Global coverage</p>
-            <StatsSection />
-          </SceneReveal>
-          <SceneReveal delay={0.2}>
-            <div className="mt-12">
-              <p className="meta mb-4">Supported exchanges</p>
-              <div className="flex flex-wrap gap-3">
-                {EXCHANGES.map(([ex, country]) => (
-                  <span
-                    key={ex}
-                    className="glass-card flex items-center gap-2 rounded-lg px-3 py-1.5"
-                  >
-                    <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
-                    <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{country}</span>
-                  </span>
-                ))}
-              </div>
+        <FadeScale>
+          <p className="subheading mb-6">Global coverage</p>
+          <StatsSection />
+        </FadeScale>
+
+        <SlideLeft delay={0.2}>
+          <div className="mt-12">
+            <p className="meta mb-4">Supported exchanges</p>
+            <div className="flex flex-wrap gap-3">
+              {EXCHANGES.map(([ex, country]) => (
+                <span
+                  key={ex}
+                  className="glass-card flex items-center gap-2 rounded-lg px-3 py-1.5"
+                >
+                  <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
+                  <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{country}</span>
+                </span>
+              ))}
             </div>
-          </SceneReveal>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="scene" id="offerings" style={{ background: "var(--bg-deep)" }}>
-        <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <SceneReveal>
-            <p className="subheading">Platform capabilities</p>
-          </SceneReveal>
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {CAPABILITIES.map((item, i) => (
-              <CardReveal key={item.number} delay={0.1 + i * 0.08}>
-                {item.number && (
-                  <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
-                )}
-                <h3 className="heading--small mt-3">{item.title}</h3>
-                <p className="body mt-2">{item.desc}</p>
-              </CardReveal>
-            ))}
           </div>
+        </SlideLeft>
+      </section>
+
+      {/* Features — staggered alternating cards */}
+      <section className="scene" id="offerings" style={{ background: "var(--bg-deep)" }}>
+        <FadeUp>
+          <p className="subheading">Platform capabilities</p>
+        </FadeUp>
+
+        <div className="relative mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+          {/* Gold divider line behind cards */}
+          <div className="absolute left-1/2 top-0 hidden h-full w-px md:block" style={{ background: "linear-gradient(180deg, transparent, rgba(212,168,83,0.08), transparent)" }} />
+
+          {CAPABILITIES.map((item, i) => (
+            <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
+              {item.number && (
+                <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
+              )}
+              <h3 className="heading--small mt-3">{item.title}</h3>
+              <p className="body mt-2">{item.desc}</p>
+            </CardReveal>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — centered full reveal */}
       <section className="scene" style={{ background: "var(--bg-surface)" }}>
-        <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center text-center">
-          <SceneReveal>
-            <div
-              className="mb-6 h-px w-10"
-              style={{ background: "linear-gradient(90deg, transparent, var(--gold), transparent)", opacity: 0.6 }}
-            />
+        <FadeScale delay={0.1}>
+          <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
+            <div className="scene-line mb-6" />
             <h2 className="title mb-4">Ready to see the market clearly?</h2>
-            <p className="body text-center mx-auto mb-8">
+            <p className="body text-center mb-8">
               Join Lumora and transform how you understand global markets.
             </p>
             <div className="flex gap-3">
               <Link href="/sign-up" className="btn btn--gold">Get started free</Link>
               <Link href="/markets" className="btn">Explore dashboard</Link>
             </div>
-          </SceneReveal>
-        </div>
+          </div>
+        </FadeScale>
       </section>
 
       {/* Footer */}
