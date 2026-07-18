@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { LumoraMark } from "./lumora-mark"
 import { AccountMenu } from "./auth/account-menu"
 import { ThemeToggle } from "./theme-toggle"
 import { useSession } from "@/lib/auth-client"
@@ -41,59 +40,44 @@ export function Navbar() {
     return () => { document.body.style.overflow = "" }
   }, [mobileOpen])
 
-  const handleNavClick = (href: string) => {
-    setMobileOpen(false)
-    if (href.startsWith("#")) {
-      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" })
-    }
-  }
-
   return (
     <motion.header
-      initial={{ y: -90, opacity: 0 }}
+      initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4"
     >
       <nav
-        className={`relative flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-all duration-700 ${
-          scrolled
-            ? "glass-strong shadow-xl shadow-black/20"
-            : "glass shadow-lg shadow-black/10"
+        className={`glass-nav flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-all duration-500 ${
+          scrolled ? "shadow-lg" : ""
         }`}
       >
-        <Link href="/" className="flex items-center gap-2.5 pl-1.5">
-          <LumoraMark className="h-6 w-6" />
-          <span className="font-heading text-sm font-semibold tracking-tight">Lumora</span>
+        <Link href="/" className="flex items-center gap-2 pl-2">
+          <span className="font-serif text-sm italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </Link>
 
         <div className="hidden items-center gap-0.5 md:flex">
           {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => handleNavClick(l.href)}
-              className="rounded-full px-3.5 py-1.5 text-[13px] text-muted-foreground/70 transition-all duration-300 hover:bg-white/5 hover:text-foreground"
-            >
+            <Link key={l.href} href={l.href} className="nav-link">
               {l.label}
             </Link>
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <ThemeToggle />
           <div className="hidden md:block">
             <AccountMenu />
           </div>
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-white/10 hover:text-foreground md:hidden"
+            className="btn btn--icon md:hidden"
             aria-label="Menu"
           >
             {mobileOpen ? (
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
             ) : (
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             )}
           </button>
         </div>
@@ -104,21 +88,22 @@ export function Navbar() {
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-0 right-0 top-full mt-3 overflow-hidden rounded-2xl glass-strong p-2 shadow-2xl"
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-dialog absolute left-0 right-0 top-full mt-3 overflow-hidden p-2"
+              style={{ borderRadius: "1rem" }}
             >
               <div className="flex flex-col gap-0.5">
                 {links.map((l) => (
                   <Link
                     key={l.href}
                     href={l.href}
-                    onClick={() => handleNavClick(l.href)}
-                    className="rounded-xl px-3.5 py-2.5 text-sm text-muted-foreground/70 transition-colors hover:bg-white/5 hover:text-foreground"
+                    onClick={() => setMobileOpen(false)}
+                    className="nav-link rounded-lg px-3.5 py-2.5 text-sm"
                   >
                     {l.label}
                   </Link>
                 ))}
-                <div className="my-1.5 h-px divider-gradient" />
+                <div className="divider my-1.5" />
                 <div className="px-2 py-1">
                   <AccountMenu />
                 </div>

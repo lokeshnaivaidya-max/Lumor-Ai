@@ -3,13 +3,13 @@
 import { useRef, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { Globe, Database, Shield, TrendingUp, ChevronDown } from "lucide-react"
+import { TrendingUp, Globe, Database, Shield } from "lucide-react"
 
 const FEATURES = [
   { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data, one unified feed", color: "#7a9ec4" },
   { icon: Database, label: "12K+ Instruments", desc: "Stocks, ETFs, indices, crypto", color: "#c4956a" },
-  { icon: Shield, label: "Portfolio Tracking", desc: "Live holdings & risk metrics", color: "#4a9e7a" },
-  { icon: TrendingUp, label: "AI Trade Planning", desc: "Risk/reward with confidence scoring", color: "#c97a7a" },
+  { icon: Shield, label: "Portfolio Tracking", desc: "Live holdings & risk metrics", color: "#6b9e7a" },
+  { icon: TrendingUp, label: "AI Trade Planning", desc: "Risk/reward with confidence scoring", color: "#7aadad" },
 ]
 
 function TiltCard({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -50,24 +50,14 @@ function TiltCard({ children, className = "", style }: { children: React.ReactNo
 export function HeroParallax() {
   return (
     <div className="hero-section relative z-10 flex min-h-screen w-full flex-col items-center justify-center">
-      <div className="hero-orb hero-orb--1" />
-      <div className="hero-orb hero-orb--2" />
-      <div className="hero-orb hero-orb--3" />
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
 
       <div className="relative z-10 flex flex-col items-center px-4">
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="scene-line mb-8 origin-left"
-        />
-
         <motion.p
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="subheading mb-5"
+          className="subheading mb-4"
         >
           AI-Powered Market Intelligence
         </motion.p>
@@ -85,7 +75,7 @@ export function HeroParallax() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="body mt-5 text-center"
+          className="body mt-4 text-center"
           style={{ maxWidth: 440 }}
         >
           Your window into global markets — real-time data, AI-driven clarity.
@@ -136,27 +126,6 @@ export function HeroParallax() {
           </Link>
         </motion.div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-      >
-        <motion.p
-          className="meta"
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          Scroll
-        </motion.p>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ChevronDown className="h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
-        </motion.div>
-      </motion.div>
     </div>
   )
 }

@@ -14,8 +14,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Search,
-  ScrollText,
 } from "lucide-react"
 import { useState } from "react"
 import { authClient } from "@/lib/auth-client"
@@ -51,14 +49,15 @@ export function DashboardSidebar() {
       }`}
       style={{ transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}
     >
-      <div className="flex h-full flex-col border-r" style={{ background: "var(--bg-surface)", borderColor: "var(--glass-border)" }}>
-        <div className="flex items-center gap-2 border-b border-[var(--glass-border)] px-4 py-3.5">
+      <div className="flex h-full flex-col border-r" style={{ background: "var(--surface)", borderColor: "var(--glass-border)" }}>
+        <div className="flex items-center gap-2 border-b px-4 py-3.5" style={{ borderColor: "var(--glass-border)" }}>
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="font-serif text-sm italic text-[var(--text-primary)]"
+              className="font-serif text-sm italic"
+              style={{ color: "var(--text-primary)" }}
             >
               Lumora
             </motion.span>
@@ -92,7 +91,7 @@ export function DashboardSidebar() {
           })}
         </nav>
 
-        <div className="border-t border-[var(--glass-border)] p-2">
+        <div className="border-t p-2" style={{ borderColor: "var(--glass-border)" }}>
           <button onClick={handleLogout} className="sidebar-link w-full">
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Sign out</span>}

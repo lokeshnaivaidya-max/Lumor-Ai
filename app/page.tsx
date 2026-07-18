@@ -3,7 +3,7 @@ import { LandingNav } from "@/components/landing-nav"
 import { HeroParallax } from "@/components/hero-parallax"
 import { StatsSection } from "@/components/stats-section"
 import { HowItWorks } from "@/components/how-it-works"
-import { FadeScale, FadeUp, SlideLeft, CardReveal } from "@/components/reveal"
+import { FadeScale, FadeUp, CardReveal } from "@/components/reveal"
 
 const EXCHANGES = [
   ["NYSE", "USA"], ["NASDAQ", "USA"], ["NSE", "India"], ["BSE", "India"],
@@ -20,7 +20,7 @@ const CAPABILITIES = [
   {
     number: "02",
     title: "AI-Powered Analysis",
-    desc: "Every insight explained in plain language. Know the why behind the move.",
+    desc: "Every insight explained in plain language. Know why behind the move.",
   },
   {
     number: "03",
@@ -45,66 +45,56 @@ export default async function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="slide-section" style={{ background: "var(--bg-alt)" }}>
-        <div className="slide-accent" />
+      <section className="scene" style={{ background: "var(--bg-alt)" }}>
         <FadeScale>
           <HowItWorks />
         </FadeScale>
       </section>
 
-      {/* Stats / Reach */}
-      <section className="slide-section" id="reach">
-        <div className="slide-accent" />
-        <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <FadeScale>
-            <p className="subheading mb-6">Global coverage</p>
-            <StatsSection />
-          </FadeScale>
+      {/* Stats + Exchanges */}
+      <section className="scene" id="reach">
+        <FadeScale>
+          <p className="subheading mb-6 text-center">Global coverage</p>
+          <StatsSection />
+        </FadeScale>
 
-          <SlideLeft delay={0.2}>
-            <div className="mt-10">
-              <p className="meta mb-4">Supported exchanges</p>
-              <div className="flex flex-wrap gap-2">
-                {EXCHANGES.map(([ex, country]) => (
-                  <span key={ex} className="badge-pill">
-                    <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
-                    <span className="text-[10px]">{country}</span>
-                  </span>
-                ))}
-              </div>
+        <FadeUp delay={0.2}>
+          <div className="mt-10">
+            <p className="meta mb-4">Supported exchanges</p>
+            <div className="flex flex-wrap gap-2">
+              {EXCHANGES.map(([ex, country]) => (
+                <span key={ex} className="pill">
+                  <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
+                  <span className="text-[10px]">{country}</span>
+                </span>
+              ))}
             </div>
-          </SlideLeft>
-        </div>
+          </div>
+        </FadeUp>
       </section>
 
       {/* Capabilities */}
-      <section className="slide-section" id="offerings" style={{ background: "var(--bg-alt)" }}>
-        <div className="slide-accent" />
-        <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <FadeUp>
-            <p className="subheading">Platform capabilities</p>
-          </FadeUp>
+      <section className="scene" id="offerings" style={{ background: "var(--bg-alt)" }}>
+        <FadeUp>
+          <p className="subheading">Platform capabilities</p>
+        </FadeUp>
 
-          <div className="relative mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {CAPABILITIES.map((item, i) => (
-              <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
-                {item.number && (
-                  <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
-                )}
-                <h3 className="heading--small mt-3">{item.title}</h3>
-                <p className="body mt-2">{item.desc}</p>
-              </CardReveal>
-            ))}
-          </div>
+        <div className="relative mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {CAPABILITIES.map((item, i) => (
+            <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
+              <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
+              <h3 className="heading-sm mt-3">{item.title}</h3>
+              <p className="body mt-2">{item.desc}</p>
+            </CardReveal>
+          ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="slide-section">
-        <div className="slide-accent" />
+      <section className="scene">
         <FadeScale delay={0.1}>
           <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
-            <div className="scene-line mb-6" />
+            <div className="divider--gold mb-6" style={{ width: 32, height: 1, alignSelf: "center" }} />
             <h2 className="title mb-4">Ready to see clearly?</h2>
             <p className="body text-center mb-8">
               Join Lumora and transform how you understand global markets.

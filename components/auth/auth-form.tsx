@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import { authClient } from "@/lib/auth-client"
-import { LumoraMark } from "@/components/lumora-mark"
 import { GoogleIcon, YahooIcon, AppleIcon } from "./provider-icons"
-import { Loader2, Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from "lucide-react"
+import { Loader2, Eye, EyeOff, AlertCircle, Check } from "lucide-react"
 import { recordAgreement } from "@/app/actions/agreement"
 
 type Provider = "google" | "yahoo" | "apple"
@@ -52,7 +51,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
     }
 
     if (isSignUp && !agreedToLegal) {
-      setError("You must agree to the Terms & Conditions and Privacy Policy to create an account.")
+      setError("You must agree to the Terms & Conditions and Privacy Policy.")
       setLoading(false)
       return
     }
@@ -109,11 +108,11 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       className="w-full max-w-sm"
     >
       <div className="glass-dialog rounded-3xl p-8">
-        <div className="flex items-center gap-2 mb-6">
-          <span className="font-serif text-base italic text-[var(--text-primary)]">Lumora</span>
+        <div className="mb-6">
+          <span className="font-serif text-lg italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </div>
 
-        <h1 className="heading heading--small">
+        <h1 className="heading">
           {isSignUp ? "Create your account" : "Welcome back"}
         </h1>
         <p className="body mt-1.5">
@@ -134,7 +133,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                   transition={{ duration: 0.4, delay: 0.1 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => handleOAuth(p)}
                   disabled={oauthLoading === p}
-                  className="glass-hover btn w-full justify-center"
+                  className="btn w-full justify-center"
                 >
                   {oauthLoading === p ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -147,10 +146,10 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
             })}
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: "var(--glass-border)" }} />
+                <div className="w-full divider" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 text-xs" style={{ color: "var(--text-tertiary)", background: "var(--depth-overlay)" }}>
+                <span className="px-3 text-xs" style={{ color: "var(--text-tertiary)", background: "var(--surface)" }}>
                   or continue with email
                 </span>
               </div>
@@ -160,56 +159,70 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {isSignUp && (
-            <div>
-              <label className="meta flex items-center gap-1.5 mb-1.5">
-                <User className="h-3 w-3" /> Name
-              </label>
-              <input type="text" required value={name}
+            <div className="field">
+              <input
+                type="text"
+                required
+                value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name" className="glass-input w-full"
-                autoComplete="name" />
+                placeholder=" "
+                className="field__input"
+                autoComplete="name"
+              />
+              <label className="field__label">Full name</label>
             </div>
           )}
 
-          <div>
-            <label className="meta flex items-center gap-1.5 mb-1.5">
-              <Mail className="h-3 w-3" /> Email
-            </label>
-            <input type="email" required value={email}
+          <div className="field">
+            <input
+              type="email"
+              required
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com" className="glass-input w-full"
-              autoComplete="email" />
+              placeholder=" "
+              className="field__input"
+              autoComplete="email"
+            />
+            <label className="field__label">Email address</label>
           </div>
 
-          <div>
-            <label className="meta flex items-center gap-1.5 mb-1.5">
-              <Lock className="h-3 w-3" /> Password
-            </label>
-            <div className="relative">
-              <input type={showPassword ? "text" : "password"} required minLength={8}
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder={isSignUp ? "At least 8 characters" : "Your password"}
-                className="glass-input w-full pr-10" autoComplete={isSignUp ? "new-password" : "current-password"} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 transition-colors"
-                style={{ color: "var(--text-tertiary)" }}
-                aria-label={showPassword ? "Hide password" : "Show password"}>
-                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </button>
-            </div>
+          <div className="field">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder=" "
+              className="field__input pr-10"
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+            />
+            <label className="field__label">Password</label>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+              style={{ color: "var(--text-tertiary)" }}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </button>
           </div>
 
           {isSignUp && (
             <label className="flex items-start gap-2.5 cursor-pointer">
-              <input type="checkbox" checked={agreedToLegal}
+              <input
+                type="checkbox"
+                checked={agreedToLegal}
                 onChange={(e) => setAgreedToLegal(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-[var(--glass-border)] bg-transparent"
-                style={{ accentColor: "var(--gold)" }} />
+                className="mt-0.5 h-4 w-4 rounded"
+                style={{ accentColor: "var(--gold)" }}
+              />
               <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
                 I agree to the{" "}
-                <Link href="/terms" className="text-[var(--gold)] hover:underline">Terms &amp; Conditions</Link>
+                <Link href="/terms" style={{ color: "var(--gold)" }}>Terms</Link>
                 {" "}and{" "}
-                <Link href="/privacy" className="text-[var(--gold)] hover:underline">Privacy Policy</Link>.
+                <Link href="/privacy" style={{ color: "var(--gold)" }}>Privacy Policy</Link>.
               </span>
             </label>
           )}
@@ -217,22 +230,20 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -4, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: -4, height: 0 }}
-                className="flex items-start gap-2 rounded-xl px-3.5 py-2.5 text-xs"
-                style={{ background: "rgba(244, 63, 94, 0.06)", border: "1px solid rgba(244, 63, 94, 0.2)", color: "var(--rose)" }}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="alert alert--error"
               >
-                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--rose)" }} />
+                <span>{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <motion.button
+          <button
             type="submit"
             disabled={loading}
-            whileHover={{ scale: loading ? 1 : 1.01 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
             className="btn btn--gold w-full justify-center"
           >
             {loading ? (
@@ -242,19 +253,19 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
             ) : (
               "Sign in"
             )}
-          </motion.button>
+          </button>
         </form>
 
         <p className="mt-5 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
           {isSignUp ? (
             <>Already have an account?{" "}
-              <Link href="/sign-in" className="text-[var(--gold)] hover:underline">Sign in</Link>
+              <Link href="/sign-in" style={{ color: "var(--gold)" }}>Sign in</Link>
             </>
           ) : (
             <>
-              <Link href="/forgot-password" className="text-[var(--gold)] hover:underline">Forgot password?</Link>
+              <Link href="/forgot-password" style={{ color: "var(--gold)" }}>Forgot password?</Link>
               <span className="mx-2">&middot;</span>
-              <Link href="/sign-up" className="text-[var(--gold)] hover:underline">Create account</Link>
+              <Link href="/sign-up" style={{ color: "var(--gold)" }}>Create account</Link>
             </>
           )}
         </p>

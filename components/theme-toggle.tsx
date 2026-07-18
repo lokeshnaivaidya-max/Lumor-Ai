@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "./theme-provider"
-import { Moon, Sun, Monitor } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 
-const icons = { dark: Moon, light: Sun, system: Monitor }
+const icons = { dark: Moon, light: Sun, system: Sun }
 const labels = { dark: "Dark", light: "Light", system: "System" }
 
 export function ThemeToggle() {
@@ -15,7 +15,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={cycleTheme}
-      className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground/50 transition-all duration-300 hover:bg-white/5 hover:text-foreground"
+      className="btn btn--icon"
       aria-label={`Theme: ${labels[theme]}. Click to switch.`}
     >
       <AnimatePresence mode="wait">
@@ -26,7 +26,7 @@ export function ThemeToggle() {
           exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-3.5 w-3.5" />
         </motion.span>
       </AnimatePresence>
     </button>
