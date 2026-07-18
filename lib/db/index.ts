@@ -65,10 +65,21 @@ CREATE TABLE IF NOT EXISTS "verification" (
   "createdAt" timestamp DEFAULT now(),
   "updatedAt" timestamp DEFAULT now()
 );
-ALTER TABLE "account" ADD CONSTRAINT IF NOT EXISTS "account_userId_user_id_fk"
-  FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "session" ADD CONSTRAINT IF NOT EXISTS "session_userId_user_id_fk"
-  FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'account_userId_user_id_fk'
+  ) THEN
+    ALTER TABLE "account" ADD CONSTRAINT "account_userId_user_id_fk"
+      FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'session_userId_user_id_fk'
+  ) THEN
+    ALTER TABLE "session" ADD CONSTRAINT "session_userId_user_id_fk"
+      FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+  END IF;
+END $$;
 `
 
 let schemaReady: Promise<void> | null = null
