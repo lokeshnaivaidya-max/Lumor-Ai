@@ -14,31 +14,24 @@ const EXCHANGES = [
 const CAPABILITIES = [
   {
     number: "01",
-    title: "Multi-Exchange Coverage",
-    desc: "Real-time data from over 60 exchanges across 40+ countries. One unified feed.",
+    title: "Multi-Exchange Data",
+    desc: "Real-time feeds from 60+ exchanges across 40+ countries. One connection.",
   },
   {
     number: "02",
     title: "AI-Powered Analysis",
-    desc: "Every insight explained in plain language. Know not just what, but why.",
+    desc: "Every insight explained in plain language. Know the why behind the move.",
   },
   {
     number: "03",
-    title: "Portfolio Intelligence",
-    desc: "Track holdings, watchlists, and risk metrics. Decisions backed by data.",
+    title: "Portfolio Oversight",
+    desc: "Track holdings, watchlists, and risk — all in one place.",
   },
   {
     number: "04",
     title: "Smart Trade Planning",
-    desc: "AI-assisted trade plans with risk/reward analysis and confidence scoring.",
+    desc: "AI-assisted plans with clear risk/reward and confidence scoring.",
   },
-]
-
-const SOCIAL_PROOF = [
-  { value: "60+", label: "Global exchanges" },
-  { value: "40+", label: "Countries covered" },
-  { value: "12K+", label: "Trackable instruments" },
-  { value: "500B+", label: "Data points served" },
 ]
 
 export default async function HomePage() {
@@ -52,36 +45,16 @@ export default async function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="scene" style={{ background: "var(--bg-surface)" }}>
-        <div className="section-accent" />
+      <section className="slide-section" style={{ background: "var(--bg-alt)" }}>
+        <div className="slide-accent" />
         <FadeScale>
           <HowItWorks />
         </FadeScale>
       </section>
 
-      {/* Social proof / Stats */}
-      <section className="scene bg-grid" style={{ background: "var(--bg-deep)" }}>
-        <div className="section-accent" />
-
-        <FadeUp>
-          <p className="subheading text-center">Trusted by traders worldwide</p>
-        </FadeUp>
-
-        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-10">
-          {SOCIAL_PROOF.map((s, i) => (
-            <FadeScale key={s.label} delay={0.1 + i * 0.06}>
-              <div className="flex flex-col items-center text-center">
-                <p className="stat-number">{s.value}</p>
-                <p className="stat-label mt-1.5">{s.label}</p>
-              </div>
-            </FadeScale>
-          ))}
-        </div>
-      </section>
-
-      {/* Stats / Exchanges */}
-      <section className="scene" id="reach" style={{ background: "var(--bg-surface)" }}>
-        <div className="section-accent" />
+      {/* Stats / Reach */}
+      <section className="slide-section" id="reach">
+        <div className="slide-accent" />
         <div className="relative z-10 mx-auto w-full max-w-5xl">
           <FadeScale>
             <p className="subheading mb-6">Global coverage</p>
@@ -89,13 +62,13 @@ export default async function HomePage() {
           </FadeScale>
 
           <SlideLeft delay={0.2}>
-            <div className="mt-12">
+            <div className="mt-10">
               <p className="meta mb-4">Supported exchanges</p>
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2">
                 {EXCHANGES.map(([ex, country]) => (
-                  <span key={ex} className="exchange-badge">
+                  <span key={ex} className="badge-pill">
                     <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
-                    <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{country}</span>
+                    <span className="text-[10px]">{country}</span>
                   </span>
                 ))}
               </div>
@@ -105,17 +78,14 @@ export default async function HomePage() {
       </section>
 
       {/* Capabilities */}
-      <section className="scene" id="offerings" style={{ background: "var(--bg-deep)" }}>
-        <div className="section-accent" />
+      <section className="slide-section" id="offerings" style={{ background: "var(--bg-alt)" }}>
+        <div className="slide-accent" />
         <div className="relative z-10 mx-auto w-full max-w-5xl">
           <FadeUp>
             <p className="subheading">Platform capabilities</p>
           </FadeUp>
 
-          <div className="relative mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="absolute left-1/2 top-0 hidden h-full w-px md:block" style={{
-              background: "linear-gradient(180deg, transparent, rgba(212,168,83,0.08), transparent)",
-            }} />
+          <div className="relative mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
             {CAPABILITIES.map((item, i) => (
               <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
                 {item.number && (
@@ -130,12 +100,12 @@ export default async function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="scene" style={{ background: "var(--bg-surface)" }}>
-        <div className="section-accent" />
+      <section className="slide-section">
+        <div className="slide-accent" />
         <FadeScale delay={0.1}>
           <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
             <div className="scene-line mb-6" />
-            <h2 className="title mb-4">Ready to see the market clearly?</h2>
+            <h2 className="title mb-4">Ready to see clearly?</h2>
             <p className="body text-center mb-8">
               Join Lumora and transform how you understand global markets.
             </p>
@@ -148,8 +118,8 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-14" style={{ borderColor: "var(--glass-border)", background: "var(--bg-deep)" }}>
-        <div className="mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
+      <footer style={{ borderTop: "1px solid var(--glass-border)", background: "var(--bg)" }}>
+        <div className="mx-auto flex max-w-4xl flex-col items-center px-6 py-14 text-center">
           <p className="font-serif text-2xl italic" style={{ color: "var(--text-primary)" }}>Lumora</p>
           <p className="meta mt-2">AI-powered global market intelligence</p>
           <div className="mt-6 flex gap-6">
@@ -157,7 +127,7 @@ export default async function HomePage() {
             <Link href="/terms" className="nav-link">Terms</Link>
             <Link href="/markets" className="nav-link">Markets</Link>
           </div>
-          <div className="mt-8 w-full max-w-xs border-t pt-6" style={{ borderColor: "var(--glass-border)" }}>
+          <div className="mt-8 w-full max-w-xs pt-6" style={{ borderTop: "1px solid var(--glass-border)" }}>
             <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
               Designed &amp; developed by Lokesh &middot;{" "}
               <a href="mailto:lumora.verify@gmail.com" style={{ color: "var(--gold)" }}>lumora.verify@gmail.com</a>

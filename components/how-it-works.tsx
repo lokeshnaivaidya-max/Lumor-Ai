@@ -1,25 +1,25 @@
 "use client"
 
-import { Search, BarChart3, Sparkles, ArrowRight } from "lucide-react"
+import { Search, LayoutDashboard, Lightbulb } from "lucide-react"
 
 const STEPS = [
   {
     icon: Search,
     title: "Search any market",
-    desc: "Type a ticker or company name. Lumora pulls live data from 60+ global exchanges instantly.",
-    color: "#5b8dff",
+    desc: "Type a ticker or company name. Lumora pulls live data from 60+ exchanges instantly.",
+    color: "#7a9ec4",
   },
   {
-    icon: BarChart3,
+    icon: LayoutDashboard,
     title: "Review the data",
-    desc: "See prices, charts, fundamentals, and news — all unified in one clear dashboard.",
-    color: "#3bce8e",
+    desc: "See prices, fundamentals, news — all unified in one clean dashboard.",
+    color: "#c4956a",
   },
   {
-    icon: Sparkles,
-    title: "Get AI insights",
+    icon: Lightbulb,
+    title: "Understand the story",
     desc: "Lumora explains what the data means in plain language. No jargon, no noise.",
-    color: "#d4a853",
+    color: "#4a9e7a",
   },
 ]
 
@@ -32,33 +32,30 @@ export function HowItWorks() {
         From ticker to insight in seconds. No terminal experience needed.
       </p>
 
-      <div className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-6">
+      <div className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
         {STEPS.map((step, i) => (
           <div key={step.title} className="relative flex flex-col items-center text-center">
-            {/* Connector line */}
             {i < STEPS.length - 1 && (
               <div className="absolute left-[60%] top-8 hidden h-px w-[80%] md:block" style={{
-                background: "linear-gradient(90deg, rgba(212,168,83,0.15), transparent)",
+                background: "linear-gradient(90deg, rgba(196,149,106,0.12), transparent)",
               }} />
             )}
 
-            {/* Step number */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{
-              background: "rgba(212,168,83,0.08)",
-              border: "1px solid rgba(212,168,83,0.15)",
+            <div className="flex h-7 w-7 items-center justify-center rounded-full" style={{
+              background: "rgba(196,149,106,0.08)",
+              border: "1px solid rgba(196,149,106,0.12)",
             }}>
-              <span className="text-[11px] font-semibold" style={{ color: "var(--gold)" }}>{i + 1}</span>
+              <span className="text-[10px] font-semibold" style={{ color: "var(--gold)" }}>{i + 1}</span>
             </div>
 
-            {/* Icon */}
-            <div className="mt-5 flex h-14 w-14 items-center justify-center rounded-2xl" style={{
+            <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-xl" style={{
               background: `${step.color}10`,
               border: `1px solid ${step.color}15`,
             }}>
-              <step.icon className="h-6 w-6" style={{ color: step.color }} />
+              <step.icon className="h-5 w-5" style={{ color: step.color }} />
             </div>
 
-            <h3 className="heading--small mt-5">{step.title}</h3>
+            <h3 className="heading--small mt-4">{step.title}</h3>
             <p className="body mt-2 text-center">{step.desc}</p>
           </div>
         ))}

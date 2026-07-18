@@ -3,13 +3,13 @@
 import { useRef, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { TrendingUp, BarChart3, Globe, Sparkles, ChevronDown } from "lucide-react"
+import { Globe, Database, Shield, TrendingUp, ChevronDown } from "lucide-react"
 
 const FEATURES = [
-  { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data across 40+ countries", color: "#5b8dff" },
-  { icon: BarChart3, label: "Portfolio Tracking", desc: "Live holdings, watchlists, risk metrics", color: "#3bce8e" },
-  { icon: Sparkles, label: "AI Analysis", desc: "Clear insights with transparent reasoning", color: "#d4a853" },
-  { icon: TrendingUp, label: "Trade Planning", desc: "Risk/reward analysis + confidence scoring", color: "#e85a6f" },
+  { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data, one unified feed", color: "#7a9ec4" },
+  { icon: Database, label: "12K+ Instruments", desc: "Stocks, ETFs, indices, crypto", color: "#c4956a" },
+  { icon: Shield, label: "Portfolio Tracking", desc: "Live holdings & risk metrics", color: "#4a9e7a" },
+  { icon: TrendingUp, label: "AI Trade Planning", desc: "Risk/reward with confidence scoring", color: "#c97a7a" },
 ]
 
 function TiltCard({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -53,14 +53,12 @@ export function HeroParallax() {
       <div className="hero-orb hero-orb--1" />
       <div className="hero-orb hero-orb--2" />
       <div className="hero-orb hero-orb--3" />
-
-      {/* Grid overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
 
       <div className="relative z-10 flex flex-col items-center px-4">
         <motion.div
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 0.4 }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="scene-line mb-8 origin-left"
         />
@@ -69,7 +67,7 @@ export function HeroParallax() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="subheading mb-6"
+          className="subheading mb-5"
         >
           AI-Powered Market Intelligence
         </motion.p>
@@ -88,31 +86,31 @@ export function HeroParallax() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           className="body mt-5 text-center"
-          style={{ maxWidth: 480 }}
+          style={{ maxWidth: 440 }}
         >
-          Your intelligent window into global markets — powered by real-time data and AI-driven analysis.
+          Your window into global markets — real-time data, AI-driven clarity.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-12 grid grid-cols-2 gap-3"
+          className="mt-10 grid grid-cols-2 gap-2.5"
         >
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.label}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
-              <TiltCard className="glass-card glass-card--glow rounded-xl px-4 py-3.5" style={{ minWidth: 180 }}>
+              <TiltCard className="glass-card rounded-xl px-4 py-3" style={{ minWidth: 170 }}>
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg"
                     style={{ background: `${f.color}12` }}
                   >
-                    <f.icon className="h-4.5 w-4.5" style={{ color: f.color }} />
+                    <f.icon className="h-4 w-4" style={{ color: f.color }} />
                   </div>
                   <div>
                     <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{f.label}</span>
@@ -128,7 +126,7 @@ export function HeroParallax() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-10 flex gap-3"
+          className="mt-8 flex gap-3"
         >
           <Link href="/sign-up" className="btn btn--gold btn--lg">
             Get started free

@@ -4,6 +4,7 @@ import { Sora, Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AmbientBackground } from "@/components/ambient-background"
 import { PageTransition } from "@/components/page-transition"
+import { EntranceScreen } from "@/components/entrance-screen"
 import type { ReactNode } from "react"
 import "./globals.css"
 
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#08080c",
+  themeColor: "#faf6f0",
   width: "device-width",
   initialScale: 1,
 }
@@ -75,6 +76,7 @@ export default async function RootLayout({
     >
       <body className="antialiased">
         <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>
+          <EntranceScreen />
           <AmbientBackground />
           <PageTransition>{children}</PageTransition>
         </ThemeProvider>
