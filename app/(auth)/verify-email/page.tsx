@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, RefreshCw, Mail, SendHorizonal, Info } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, RefreshCw, Mail, SendHorizonal, Info, ShieldCheck } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 const RESEND_COOLDOWN = 60
@@ -30,10 +30,16 @@ function VerifyEmailInner() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const sendingRef = useRef(false)
   const mountedRef = useRef(true)
+  // Tracks the email an OTP has already been requested for, so the same
+  // email is never requested twice (guards React double-invoke / remounts).
+  const sentForEmail = useRef<string | null>(null)
 
-  const handleSendOtp = useCallback(async (targetEmail: string) => {
-    if (!targetEmail || sendingRef.current) return
+  const requestOtp = useCallback(async (targetEmail: string, allowResend = false) => {
+    if (!targetEmail) return
+    if (!allowResend && sentForEmail.current === targetEmail) return
+    if (sendingRef.current) return
     sendingRef.current = true
+    sentForEmail.current = targetEmail
     setSendingOtp(true)
     setError(null)
     try {
@@ -58,10 +64,10 @@ function VerifyEmailInner() {
     return () => { mountedRef.current = false }
   }, [])
 
+  // Send exactly one OTP when the page first loads with an email from sign-up.
   useEffect(() => {
-    if (!emailFromUrl || sendingRef.current) return
-    handleSendOtp(emailFromUrl)
-  }, [emailFromUrl, handleSendOtp])
+    if (emailFromUrl) requestOtp(emailFromUrl)
+  }, [emailFromUrl, requestOtp])
 
   useEffect(() => {
     if (resendCooldown <= 0) return
@@ -88,7 +94,7 @@ function VerifyEmailInner() {
 
   const handleResend = () => {
     if (resendCooldown > 0 || sendingOtp || sendingRef.current) return
-    handleSendOtp(email)
+    requestOtp(email, true)
     showToast("New verification code sent. Please check your Inbox and Spam folder.")
   }
 
@@ -151,190 +157,197 @@ function VerifyEmailInner() {
 
   if (success) {
     return (
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}>
-          <CheckCircle2 className="h-14 w-14 text-emerald" />
-        </motion.div>
-        <h2 className="dm-heading dm-heading--small mt-5">Email verified!</h2>
-        <p className="dm-body mt-1.5">Redirecting to your dashboard…</p>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
+        <div className="glass-dialog rounded-3xl p-8 sm:p-10 text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald/10"
+          >
+            <CheckCircle2 className="h-8 w-8 text-emerald" />
+          </motion.div>
+          <h2 className="heading mt-5">Email verified</h2>
+          <p className="body mt-1.5">Redirecting to your dashboard…</p>
+        </div>
       </motion.div>
     )
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-      <Link href={emailFromUrl ? "/sign-up" : "/sign-in"} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="w-full max-w-sm">
+      <Link
+        href={emailFromUrl ? "/sign-up" : "/sign-in"}
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-      <div className="dm-card dm-card--inset overflow-hidden">
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px] bg-primary/[0.04]" />
-        <div className="relative">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
-          </div>
 
-          <h1 className="dm-heading dm-heading--small text-center">Verify your email</h1>
-          <p className="dm-body mt-1.5 text-center">
-            {editingEmail ? "Enter your email address" : (
-              <>Enter the code sent to{" "}
-                <button onClick={() => setEditingEmail(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-foreground/80">
-                  {email || "your email"}
-                </button>
-              </>
-            )}
-          </p>
+      <div className="glass-dialog rounded-3xl p-8 sm:p-10">
+        <div className="mb-6">
+          <span className="font-serif text-lg italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
+        </div>
 
+        <h1 className="heading">Verify your email</h1>
+        <p className="body mt-1.5">
           {editingEmail ? (
-            <div className="mt-6">
-              <label className="flex flex-col gap-1">
-                <span className="dm-meta flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5" /> Email
-                </span>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
-              </label>
-              <div className="mt-4 flex gap-3">
-                <button onClick={() => setEditingEmail(false)} className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-sm font-medium text-foreground transition-all hover:bg-white/[0.08]">
-                  Cancel
-                </button>
-                <button onClick={() => { setEditingEmail(false); handleSendOtp(email) }} disabled={!email || sendingOtp}
-                  className="flex-1 rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50">
-                  {sendingOtp ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Send code"}
-                </button>
-              </div>
-            </div>
+            "Enter your email address to receive a verification code."
           ) : (
             <>
-              <div className="mt-6 flex justify-center gap-2">
-                {otp.map((digit, i) => (
-                  <input key={i} ref={(el) => { inputRefs.current[i] = el }}
-                    type="text" inputMode="numeric" maxLength={1} value={digit}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(i, e)} onFocus={() => setFocusedIdx(i)}
-                    className={`h-11 w-9 sm:h-12 sm:w-10 rounded-xl border text-center font-mono text-lg font-semibold transition-all duration-150 outline-none ${
-                      focusedIdx === i ? "border-foreground/30 bg-foreground/[0.04]" : digit ? "border-white/15 bg-white/[0.04]" : "border-white/10 bg-transparent"
-                    } text-foreground`}
-                    autoComplete="one-time-code" autoFocus={i === 0}
-                  />
-                ))}
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, y: -6, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-4 overflow-hidden"
+              We sent a 6-digit code to{" "}
+              <button
+                onClick={() => setEditingEmail(true)}
+                className="font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+                style={{ color: "var(--gold)" }}
               >
-                <div className="flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-primary/[0.06] px-4 py-3 text-xs leading-relaxed text-primary">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
-                  <div>
-                    <p>
-                      Didn&apos;t receive the code? Please check your <strong>Spam</strong> or{" "}
-                      <strong>Junk</strong> folder. For some email providers, verification emails may be
-                      filtered there.
-                    </p>
-                    <p className="mt-1.5 text-[11px] text-primary/60">
-                      If you still don&apos;t receive the email after a minute, you can request a new
-                      verification code.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <AnimatePresence>
-                {error && (
-                  <motion.div initial={{ opacity: 0, y: -4, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, y: -4, height: 0 }}
-                    className="mt-2 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red">
-                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {attempts > 0 && attempts < MAX_ATTEMPTS && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  {MAX_ATTEMPTS - attempts} verification {MAX_ATTEMPTS - attempts === 1 ? "attempt" : "attempts"} remaining
-                </p>
-              )}
-
-              <motion.button
-                onClick={handleVerify}
-                disabled={loading || !allFilled}
-                whileHover={{ scale: loading || !allFilled ? 1 : 1.01 }} whileTap={{ scale: loading || !allFilled ? 1 : 0.98 }}
-                className="mt-5 w-full rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 disabled:opacity-50"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
-                  {loading ? "Verifying…" : "Verify email"}
-                </span>
-              </motion.button>
-
-              <AnimatePresence mode="wait">
-                {resendCooldown > 0 ? (
-                  <motion.div
-                    key="cooldown"
-                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="mt-4 flex items-center justify-center"
-                  >
-                    <button disabled className="flex items-center gap-1.5 text-xs text-muted-foreground/40">
-                      <RefreshCw className="h-3 w-3" />
-                      Resend in {resendCooldown}s
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="ready"
-                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="mt-4 flex items-center justify-center"
-                  >
-                    <button onClick={handleResend} disabled={sendingOtp}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-40"
-                    >
-                      {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                      {sendingOtp ? "Sending…" : "Resend code"}
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                Wrong email?{" "}
-                <button onClick={() => setEditingEmail(true)} className="font-medium text-foreground hover:text-foreground/80 transition-colors underline underline-offset-2">
-                  Change email address
-                </button>
-              </p>
-
-              <AnimatePresence>
-                {toast && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12, scale: 0.92, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95, filter: "blur(4px)" }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
-                  >
-                    <div className="flex items-center gap-2.5 rounded-2xl border border-emerald/20 bg-emerald/10 px-5 py-3 text-xs text-emerald shadow-2xl backdrop-blur-2xl">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      {toast}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {email || "your email"}
+              </button>
             </>
           )}
-        </div>
+        </p>
+
+        {editingEmail ? (
+          <div className="mt-6 space-y-4">
+            <div className="field">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder=" "
+                className="field__input"
+                autoComplete="email"
+              />
+              <label className="field__label">Email address</label>
+            </div>
+            <button
+              onClick={() => { setEditingEmail(false); sentForEmail.current = null; requestOtp(email, true) }}
+              disabled={!email || sendingOtp}
+              className="btn btn--gold w-full justify-center"
+            >
+              {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send code"}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mt-7 flex justify-center gap-2.5">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputRefs.current[i] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  onFocus={() => setFocusedIdx(i)}
+                  className={`h-14 w-12 rounded-xl border text-center font-mono text-xl font-semibold transition-all duration-150 outline-none ${
+                    focusedIdx === i
+                      ? "border-[var(--gold)] bg-[var(--gold-glow)] shadow-[0_0_0_3px_var(--gold-glow)]"
+                      : digit
+                        ? "border-[var(--glass-border-hover)]"
+                        : "border-[var(--glass-border)]"
+                  }`}
+                  style={{ color: "var(--text-primary)", background: "transparent" }}
+                  autoComplete="one-time-code"
+                  autoFocus={i === 0}
+                />
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[var(--glass-border)] px-3.5 py-2.5 text-xs leading-relaxed" style={{ color: "var(--text-tertiary)", background: "var(--glass-bg)" }}>
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--gold)" }} />
+              <span>
+                Didn&apos;t get it? Check your <strong style={{ color: "var(--text-secondary)" }}>Spam</strong> or{" "}
+                <strong style={{ color: "var(--text-secondary)" }}>Junk</strong> folder, then request a new code below.
+              </span>
+            </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, y: -4, height: 0 }}
+                  className="mt-3 flex items-start gap-2 rounded-xl border border-red/20 bg-red/[0.06] px-3.5 py-2.5 text-xs text-red"
+                >
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {attempts > 0 && attempts < MAX_ATTEMPTS && (
+              <p className="mt-3 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
+                {MAX_ATTEMPTS - attempts} verification {MAX_ATTEMPTS - attempts === 1 ? "attempt" : "attempts"} remaining
+              </p>
+            )}
+
+            <button
+              onClick={handleVerify}
+              disabled={loading || !allFilled}
+              className="btn btn--gold mt-5 w-full justify-center"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
+              {loading ? "Verifying…" : "Verify email"}
+            </button>
+
+            <div className="mt-4 flex items-center justify-center">
+              {resendCooldown > 0 ? (
+                <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
+                  <RefreshCw className="h-3 w-3" />
+                  Resend in {resendCooldown}s
+                </span>
+              ) : (
+                <button
+                  onClick={handleResend}
+                  disabled={sendingOtp}
+                  className="flex items-center gap-1.5 text-xs transition-colors hover:opacity-80 disabled:opacity-40"
+                  style={{ color: "var(--gold)" }}
+                >
+                  {sendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  {sendingOtp ? "Sending…" : "Resend code"}
+                </button>
+              )}
+            </div>
+
+            <p className="mt-4 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
+              Wrong email?{" "}
+              <button
+                onClick={() => setEditingEmail(true)}
+                className="font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+                style={{ color: "var(--gold)" }}
+              >
+                Change email address
+              </button>
+            </p>
+          </>
+        )}
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.92, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -8, scale: 0.95, filter: "blur(4px)" }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+          >
+            <div className="flex items-center gap-2.5 rounded-2xl border border-emerald/20 bg-emerald/10 px-5 py-3 text-xs text-emerald shadow-2xl backdrop-blur-2xl">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              {toast}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="dm-card dm-card--inset h-64 w-full max-w-sm animate-pulse" />}>
+    <Suspense fallback={<div className="glass-dialog rounded-3xl p-8 h-64 w-full max-w-sm animate-pulse" />}>
       <VerifyEmailInner />
     </Suspense>
   )
