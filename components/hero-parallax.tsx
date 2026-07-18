@@ -1,61 +1,43 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { TrendingUp, BarChart3, Globe, Sparkles } from "lucide-react"
 
 const FEATURES = [
-  { icon: Globe, label: "60+ Global Exchanges" },
-  { icon: BarChart3, label: "Real-time Portfolio" },
-  { icon: Sparkles, label: "AI-Powered Analysis" },
-  { icon: TrendingUp, label: "Smart Trade Planning" },
+  { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data across 40+ countries" },
+  { icon: BarChart3, label: "Portfolio Tracking", desc: "Live holdings, watchlists, and risk metrics" },
+  { icon: Sparkles, label: "AI Analysis", desc: "Transparent insights with clear reasoning" },
+  { icon: TrendingUp, label: "Trade Planning", desc: "Risk/reward analysis with confidence scoring" },
 ]
 
 export function HeroParallax() {
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let raf = 0
-    const onMouse = (e: MouseEvent) => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 8
-        const y = (e.clientY / window.innerHeight - 0.5) * 6
-        el!.style.transform = `translate(${x}px, ${y}px)`
-      })
-    }
-    window.addEventListener("mousemove", onMouse, { passive: true })
-    return () => {
-      window.removeEventListener("mousemove", onMouse)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
-
   return (
-    <div className="flex flex-col items-center" style={{ perspective: "800px" }}>
-      <div ref={ref} className="text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="subheading mb-4"
-        >
-          AI-Powered Market Intelligence
-        </motion.p>
-        <h1 className="display" style={{ marginBottom: "1.5rem" }}>
-          Lumora
-        </h1>
-      </div>
+    <div className="flex flex-col items-center">
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="subheading mb-5"
+      >
+        AI-Powered Market Intelligence
+      </motion.p>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        className="display"
+      >
+        Lumora
+      </motion.h1>
 
       <motion.p
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="body text-center"
-        style={{ maxWidth: 480, margin: "0 auto" }}
+        transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="body mt-5 text-center"
+        style={{ maxWidth: 480 }}
       >
         Your intelligent window into global markets — powered by real-time data and AI-driven analysis.
       </motion.p>
@@ -63,19 +45,25 @@ export function HeroParallax() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-10 flex flex-wrap justify-center gap-3"
+        transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-10 grid grid-cols-2 gap-3"
       >
         {FEATURES.map((f, i) => (
           <motion.div
             key={f.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.6 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-card flex items-center gap-2 rounded-xl px-3.5 py-2"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card rounded-xl px-4 py-3"
+            style={{ minWidth: 180, boxShadow: "0 4px 24px -8px rgba(0,0,0,0.3)" }}
           >
-            <f.icon className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />
-            <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{f.label}</span>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: "rgba(201,165,92,0.1)" }}>
+                <f.icon className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />
+              </div>
+              <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{f.label}</span>
+            </div>
+            <p className="mt-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>{f.desc}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -83,11 +71,11 @@ export function HeroParallax() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="mt-10 flex gap-3"
       >
-        <Link href="/sign-up" className="btn btn--gold">Get started</Link>
-        <Link href="/markets" className="btn">Explore markets</Link>
+        <Link href="/sign-up" className="btn btn--gold">Get started free</Link>
+        <Link href="/markets" className="btn">Explore dashboard</Link>
       </motion.div>
     </div>
   )

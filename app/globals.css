@@ -111,15 +111,16 @@ body {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.4);
   transition: transform var(--duration-base) var(--ease-out-expo),
               border-color var(--duration-base) var(--ease-out-expo),
               box-shadow var(--duration-base) var(--ease-out-expo);
 }
 
 .glass-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--glass-border-hover);
-  box-shadow: 0 8px 40px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 48px -16px rgba(0, 0, 0, 0.6);
 }
 
 .glass-nav {
