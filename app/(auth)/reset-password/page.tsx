@@ -143,7 +143,7 @@ function ResetPasswordInner() {
         <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px] bg-primary/[0.04]" />
         <div className="relative">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
+            <span className="font-heading text-base font-semibold tracking-tight text-foreground">Lumora</span>
           </div>
 
           {needsEmail ? (

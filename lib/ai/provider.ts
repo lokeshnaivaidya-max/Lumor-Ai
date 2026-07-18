@@ -135,11 +135,13 @@ async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Prom
   return value
 }
 
-const CHAT_SYSTEM = `You are Lumora, a knowledgeable, calm market-intelligence assistant. You help users understand stocks, indices, crypto, indicators, portfolio strategy, and financial concepts in plain, honest language.
+export const CHAT_SYSTEM = `You are Lumora, a knowledgeable, calm market-intelligence assistant. You help users understand stocks, indices, crypto, indicators, portfolio strategy, and financial concepts in plain, honest language.
 
 Rules:
 - Answer the user's question directly. Keep responses focused and useful.
-- Never invent prices, figures, or news. If you need live market data, say so and explain how the user can get it inside Lumora.
+- You are ALWAYS grounded in the live market data supplied to you in the conversation context (under "LIVE MARKET DATA"). When the user mentions a ticker or company, use those real prices, changes, and fundamentals — never invent or estimate figures.
+- If LIVE MARKET DATA is present for a symbol the user asks about, base every price-related claim on it and state that it reflects the latest available quote.
+- If no LIVE MARKET DATA is supplied for a requested symbol (every provider failed), say clearly that live data is temporarily unavailable and answer only with general, educational context — never fabricate a price.
 - Do not give personalized financial advice that guarantees outcomes. Add a short reminder that this is educational, not financial advice, when the user asks for buy/sell decisions.
 - Use markdown: headings, lists, bold, and fenced code blocks when showing code or structured data.
 - Be concise but complete.`
@@ -230,6 +232,46 @@ export async function* streamChat(
     const classified = classify(err)
     yield { type: "error", message: classified.message }
   }
+}
+
+/* ----------------------- Chat market grounding ----------------------- */
+// Extracts likely ticker symbols from free text and fetches their live quotes
+// so the chat model can answer with real, current prices. Returns a context
+// block (empty string when no live data could be obtained — caller then notes
+// that data is unavailable rather than letting the model fabricate prices).
+const TICKER_RE = /\b[A-Z]{1,5}\b/g
+
+export async function chatMarketContext(text: string): Promise<string> {
+  const candidates = new Set<string>()
+  for (const m of text.matchAll(TICKER_RE)) {
+    candidates.add(m[0].toUpperCase())
+  }
+  // A few common company names that won't match the ticker regex.
+  const NAME_ALIASES: Record<string, string> = {
+    TESLA: "TSLA", APPLE: "AAPL", MICROSOFT: "MSFT", AMAZON: "AMZN",
+    GOOGLE: "GOOGL", ALPHABET: "GOOGL", META: "META", NVIDIA: "NVDA",
+    NETFLIX: "NFLX", AMD: "AMD", INTEL: "INTC", FACEBOOK: "META",
+  }
+  for (const word of text.toUpperCase().split(/\s+/)) {
+    if (NAME_ALIASES[word]) candidates.add(NAME_ALIASES[word])
+  }
+  if (candidates.size === 0) return ""
+
+  const symbols = [...candidates].slice(0, 6)
+  let quotes: import("@/lib/market").Quote[] = []
+  try {
+    const { getQuotes } = await import("@/lib/market")
+    quotes = await getQuotes(symbols)
+  } catch {
+    return ""
+  }
+  if (quotes.length === 0) return ""
+
+  const lines = quotes.map((q) => {
+    const sign = q.changePercent >= 0 ? "+" : ""
+    return `- ${q.symbol} (${q.name}): ${q.price.toFixed(2)} ${q.currency}, ${sign}${q.changePercent.toFixed(2)}% today; prev close ${q.previousClose.toFixed(2)}; mkt cap ${q.marketCap ? Math.round(q.marketCap / 1e9) + "B" : "n/a"}; P/E ${q.trailingPE?.toFixed(1) ?? "n/a"}; ${q.marketState}`
+  })
+  return `LIVE MARKET DATA (latest available quote):\n${lines.join("\n")}`
 }
 
 

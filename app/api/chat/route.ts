@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { db } from "@/lib/db"
 import { chatConversation, chatMessage } from "@/lib/db/schema"
-import { streamChat, type ChatMessageInput } from "@/lib/ai/provider"
+import { streamChat, chatMarketContext, CHAT_SYSTEM, type ChatMessageInput } from "@/lib/ai/provider"
 import { eq, and } from "drizzle-orm"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
 
@@ -63,7 +63,14 @@ export async function POST(req: Request) {
   const history: ChatMessageInput[] = (body.history || [])
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }))
-  const fullHistory: ChatMessageInput[] = [...history, { role: "user", content: message }]
+
+  // Ground the response in live market data for any ticker/company mentioned.
+  const marketContext = await chatMarketContext(message)
+
+  const fullHistory: ChatMessageInput[] = [
+    ...history,
+    { role: "user", content: message },
+  ]
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -74,7 +81,7 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
 
       try {
-        for await (const event of streamChat(fullHistory)) {
+        for await (const event of streamChat(fullHistory, marketContext ? { system: `${CHAT_SYSTEM}\n\n${marketContext}` } : undefined)) {
           if (event.type === "delta") {
             assistantText += event.text
             send({ type: "token", token: event.text })

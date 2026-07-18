@@ -76,13 +76,24 @@ function AnimatedPrice({ value, ccySym }: { value: number | undefined; ccySym: s
 
 function useScrollPreserve() {
   const scrollRef = useRef(0)
+  const lockedRef = useRef(true)
   useEffect(() => {
+    // Capture the scroll position at mount, then re-lock it once after the
+    // initial layout settles. After that we let the user scroll freely and
+    // never yank the page back — earlier this observer ran on EVERY resize
+    // and trapped the user on the page.
     scrollRef.current = window.scrollY
+    const id = setTimeout(() => {
+      lockedRef.current = false
+    }, 600)
     const observer = new ResizeObserver(() => {
-      window.scrollTo(0, scrollRef.current)
+      if (lockedRef.current) window.scrollTo(0, scrollRef.current)
     })
     observer.observe(document.body)
-    return () => observer.disconnect()
+    return () => {
+      clearTimeout(id)
+      observer.disconnect()
+    }
   }, [])
 }
 

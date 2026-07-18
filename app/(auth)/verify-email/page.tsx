@@ -10,6 +10,10 @@ import { authClient } from "@/lib/auth-client"
 const RESEND_COOLDOWN = 60
 const MAX_ATTEMPTS = 5
 
+// Module-level guard: ensures an OTP is auto-requested for a given email at most
+// once per browser session, even across component remounts / Strict Mode invokes.
+const autoSentEmails = new Set<string>()
+
 function VerifyEmailInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -36,10 +40,14 @@ function VerifyEmailInner() {
 
   const requestOtp = useCallback(async (targetEmail: string, allowResend = false) => {
     if (!targetEmail) return
-    if (!allowResend && sentForEmail.current === targetEmail) return
+    if (!allowResend) {
+      if (sentForEmail.current === targetEmail) return
+      if (autoSentEmails.has(targetEmail)) return
+    }
     if (sendingRef.current) return
     sendingRef.current = true
     sentForEmail.current = targetEmail
+    if (!allowResend) autoSentEmails.add(targetEmail)
     console.log("[OTP-TRACE] requestOtp called", { targetEmail, allowResend, stack: new Error().stack })
     setSendingOtp(true)
     setError(null)

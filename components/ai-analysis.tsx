@@ -177,6 +177,17 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
     const controller = new AbortController()
     abortRef.current = controller
 
+    // Watchdog: if the server sends no progress within the budget, free the UI
+    // instead of leaving the user stuck on "Analyzing…" forever.
+    const watchdog = setTimeout(() => {
+      try {
+        controller.abort()
+      } catch {}
+      setError("Analysis is taking too long. Please try again.")
+      setProgressMsg("")
+      setLoading(false)
+    }, 35_000)
+
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -213,12 +224,14 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             } else if (event.type === "loading") {
               setProgressMsg(event.message)
             } else if (event.type === "complete") {
+              clearTimeout(watchdog)
               setData(event.analysis)
               setProgressMsg("")
               setLoading(false)
               setRetryCount(0)
               return
             } else if (event.type === "error") {
+              clearTimeout(watchdog)
               setError(event.message)
               setProgressMsg("")
               setLoading(false)
@@ -229,8 +242,10 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
           }
         }
       }
+      clearTimeout(watchdog)
       setLoading(false)
     } catch (err: unknown) {
+      clearTimeout(watchdog)
       if (err instanceof Error && err.name === "AbortError") return
       const msg = err instanceof Error ? err.message : "Analysis failed. Retrying…"
       if (attempt < 2) {
@@ -253,6 +268,12 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   const run = useCallback(() => {
     doStream(symbol, horizon)
   }, [doStream, symbol, horizon])
+
+  const cancel = useCallback(() => {
+    abortRef.current?.abort()
+    setLoading(false)
+    setProgressMsg("")
+  }, [])
 
   const { data: session } = useSession()
 
@@ -328,6 +349,14 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             {loading ? "Analyzing…" : "Analyze"}
           </motion.button>
+          {loading && (
+            <button
+              onClick={cancel}
+              className="glass-btn glass-btn-ghost rounded-full px-3 py-1.5 text-xs"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 

@@ -80,6 +80,26 @@ BEGIN
       FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
   END IF;
 END $$;
+
+-- Profile & preference columns (defined in drizzle schema but not part of the
+-- minimal Better Auth bootstrap above). Added idempotently so the Profile page
+-- and updateProfile() work even if drizzle-kit migrate never ran.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'theme') THEN
+    CREATE TYPE "theme" AS ENUM ('light', 'dark', 'system');
+  END IF;
+END $$;
+
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "timezone" text;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "country" text;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "theme" "theme" NOT NULL DEFAULT 'system';
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "bio" text;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "notification_prefs" jsonb;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "accepted_terms" boolean NOT NULL DEFAULT false;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "accepted_privacy_policy" boolean NOT NULL DEFAULT false;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "accepted_legal_version" text NOT NULL DEFAULT '1.0';
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "accepted_at" timestamp;
 `
 
 let schemaReady: Promise<void> | null = null

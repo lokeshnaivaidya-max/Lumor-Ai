@@ -54,6 +54,9 @@ const _auth = betterAuth({
     emailOTP({
       otpLength: 6,
       expiresIn: 600,
+      // The Verify Email page owns the single OTP send after sign-up; do not
+      // let Better Auth also send one on the sign-up request (avoids duplicates).
+      sendVerificationOnSignUp: false,
       async sendVerificationOTP({ email, otp, type }) {
         console.log("[OTP-TRACE] >>> Better Auth sendVerificationOTP callback FIRED", { email, type, stack: new Error().stack })
         const emailType = type === "forget-password" ? "reset" : "verification"

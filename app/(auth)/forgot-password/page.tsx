@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
       </Link>
       <div className="dm-card dm-card--inset overflow-hidden">
         <div className="flex items-center gap-3 mb-6">
-          <span className="font-heading text-base font-semibold tracking-tight text-foreground">✦ Lumora</span>
+          <span className="font-heading text-base font-semibold tracking-tight text-foreground">Lumora</span>
         </div>
         <h1 className="dm-heading dm-heading--small">Forgot password?</h1>
         <p className="dm-body mt-1.5">Enter your email and we&apos;ll send a reset code.</p>
