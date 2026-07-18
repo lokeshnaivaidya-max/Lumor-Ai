@@ -263,7 +263,8 @@ export function ChatClient() {
             <button
               onClick={() => send(input)}
               disabled={streaming || !input.trim()}
-              className="lm-btn lm-btn--gold flex h-9 w-9 items-center justify-center rounded-xl p-0 disabled:opacity-50"
+              aria-label="Send message"
+              className="lm-btn lm-btn--gold flex h-9 w-9 items-center justify-center rounded-xl p-0 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>

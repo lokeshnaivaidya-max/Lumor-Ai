@@ -140,7 +140,7 @@ export const CHAT_SYSTEM = `You are Lumora, a knowledgeable, calm market-intelli
 Rules:
 - Answer the user's question directly. Keep responses focused and useful.
 - You are ALWAYS grounded in the live market data supplied to you in the conversation context (under "LIVE MARKET DATA"). When the user mentions a ticker or company, use those real prices, changes, and fundamentals — never invent or estimate figures.
-- If LIVE MARKET DATA is present for a symbol the user asks about, base every price-related claim on it and state that it reflects the latest available quote.
+- If LIVE MARKET DATA is present for a symbol the user asks about, base every price-related claim on it and state that it reflects the latest available quote. Never say you lack real-time data when LIVE MARKET DATA is supplied.
 - If no LIVE MARKET DATA is supplied for a requested symbol (every provider failed), say clearly that live data is temporarily unavailable and answer only with general, educational context — never fabricate a price.
 - Do not give personalized financial advice that guarantees outcomes. Add a short reminder that this is educational, not financial advice, when the user asks for buy/sell decisions.
 - Use markdown: headings, lists, bold, and fenced code blocks when showing code or structured data.
@@ -235,33 +235,50 @@ export async function* streamChat(
 }
 
 /* ----------------------- Chat market grounding ----------------------- */
-// Extracts likely ticker symbols from free text and fetches their live quotes
-// so the chat model can answer with real, current prices. Returns a context
-// block (empty string when no live data could be obtained — caller then notes
-// that data is unavailable rather than letting the model fabricate prices).
-const TICKER_RE = /\b[A-Z]{1,5}\b/g
+// Extracts likely ticker symbols AND company names from free text and fetches
+// their live quotes so the chat model can answer with real, current prices.
+// Returns a context block (empty string only when providers truly fail — the
+// caller then notes data is unavailable rather than letting the model invent
+// prices). Detection is case-insensitive so natural language like
+// "What's Reliance live price?" or "Apple vs Tesla" is grounded in real data.
+
+// Common company names -> Yahoo tickers (resolved again via resolveSymbol).
+const NAME_ALIASES: Record<string, string> = {
+  TESLA: "TSLA", APPLE: "AAPL", MICROSOFT: "MSFT", AMAZON: "AMZN",
+  GOOGLE: "GOOGL", ALPHABET: "GOOGL", META: "META", FACEBOOK: "META",
+  NVIDIA: "NVDA", NETFLIX: "NFLX", AMD: "AMD", INTEL: "INTC",
+  RELIANCE: "RELIANCE.NS", INFOSYS: "INFY.NS", TCS: "TCS.NS",
+  INFY: "INFY.NS", HDFC: "HDFCBANK.NS", "HDFC BANK": "HDFCBANK.NS",
+  ICICI: "ICICIBANK.NS", "ICICI BANK": "ICICIBANK.NS", SBI: "SBIN.NS",
+  "STATE BANK": "SBIN.NS", TATA: "TATAMOTORS.NS", "TATA MOTORS": "TATAMOTORS.NS",
+  ADANI: "ADANIENT.NS", WIPRO: "WIPRO.NS", "BHARTI": "BHARTIARTL.NS",
+  AIRTEL: "BHARTIARTL.NS", "ITC": "ITC.NS", "MARUTI": "MARUTI.NS",
+}
 
 export async function chatMarketContext(text: string): Promise<string> {
+  const upper = text.toUpperCase()
   const candidates = new Set<string>()
-  for (const m of text.matchAll(TICKER_RE)) {
-    candidates.add(m[0].toUpperCase())
+
+  // 1. All-caps tickers (AAPL, RELIANCE.NS, ^GSPC, BTC-USD) — case-insensitive.
+  for (const m of upper.matchAll(/\b[A-Z]{1,6}(?:\.[A-Z]{1,3})?(?:=|[-_ ]?[A-Z]{2,4})?\b/g)) {
+    candidates.add(m[0])
   }
-  // A few common company names that won't match the ticker regex.
-  const NAME_ALIASES: Record<string, string> = {
-    TESLA: "TSLA", APPLE: "AAPL", MICROSOFT: "MSFT", AMAZON: "AMZN",
-    GOOGLE: "GOOGL", ALPHABET: "GOOGL", META: "META", NVIDIA: "NVDA",
-    NETFLIX: "NFLX", AMD: "AMD", INTEL: "INTC", FACEBOOK: "META",
+  // 2. Known company names (multi-word first, then single words).
+  for (const phrase of Object.keys(NAME_ALIASES).sort((a, b) => b.length - a.length)) {
+    if (upper.includes(phrase)) candidates.add(NAME_ALIASES[phrase])
   }
-  for (const word of text.toUpperCase().split(/\s+/)) {
+  for (const word of upper.split(/[^A-Z]+/)) {
     if (NAME_ALIASES[word]) candidates.add(NAME_ALIASES[word])
   }
+
   if (candidates.size === 0) return ""
 
-  const symbols = [...candidates].slice(0, 6)
   let quotes: import("@/lib/market").Quote[] = []
   try {
-    const { getQuotes } = await import("@/lib/market")
-    quotes = await getQuotes(symbols)
+    const market = await import("@/lib/market")
+    // Resolve friendly names (Reliance -> RELIANCE.NS) before fetching.
+    const symbols = [...candidates].slice(0, 6).map((s) => market.resolveSymbol(s))
+    quotes = await market.getQuotes(symbols)
   } catch {
     return ""
   }

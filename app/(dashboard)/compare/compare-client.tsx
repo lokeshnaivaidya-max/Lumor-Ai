@@ -4,13 +4,64 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { Search, TrendingUp, TrendingDown, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
 
-type Quote = { symbol: string; name: string; price: number; change: number; changePercent: number; previousClose: number }
+type Quote = {
+  symbol: string
+  name: string
+  price: number
+  change: number
+  changePercent: number
+  previousClose: number
+  marketCap?: number
+  trailingPE?: number
+  eps?: number
+  fiftyTwoWeekHigh?: number
+  fiftyTwoWeekLow?: number
+  volume?: number
+}
 
-type Side = { symbol: string; quote: Quote | null }
+type Candle = { t: number; c: number }
+
+type Side = { symbol: string; quote: Quote | null; candles: Candle[] }
+
+function fmtNum(n?: number) {
+  if (n == null) return "n/a"
+  if (Math.abs(n) >= 1e12) return `${(n / 1e12).toFixed(2)}T`
+  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(2)}M`
+  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(2)}K`
+  return n.toLocaleString("en-US")
+}
+
+function fmtPrice(n: number) {
+  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
+}
+
+function Sparkline({ candles, positive }: { candles: Candle[]; positive: boolean }) {
+  if (!candles || candles.length < 2) return <div className="h-10" />
+  const closes = candles.map((c) => c.c)
+  const min = Math.min(...closes)
+  const max = Math.max(...closes)
+  const span = max - min || 1
+  const w = 100
+  const h = 32
+  const pts = closes
+    .map((c, i) => {
+      const x = (i / (closes.length - 1)) * w
+      const y = h - ((c - min) / span) * h
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(" ")
+  const stroke = positive ? "var(--emerald)" : "var(--rose)"
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-10 w-full">
+      <polyline points={pts} fill="none" stroke={stroke} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
 
 export function CompareClient() {
-  const [a, setA] = useState<Side>({ symbol: "", quote: null })
-  const [b, setB] = useState<Side>({ symbol: "", quote: null })
+  const [a, setA] = useState<Side>({ symbol: "", quote: null, candles: [] })
+  const [b, setB] = useState<Side>({ symbol: "", quote: null, candles: [] })
   const [suggestions, setSuggestions] = useState<{ symbol: string; name: string }[]>([])
   const [activeBox, setActiveBox] = useState<"a" | "b" | null>(null)
   const [loading, setLoading] = useState<"a" | "b" | null>(null)
@@ -20,29 +71,54 @@ export function CompareClient() {
     if (!s) return
     setLoading(box)
     try {
-      const res = await fetch(`/api/quote?q=${encodeURIComponent(s)}`)
-      const data = await res.json()
-      const q: Quote | undefined = data.quotes?.find((x: Quote) => x.symbol === s)
-      if (box === "a") setA({ symbol: s, quote: q ?? null })
-      else setB({ symbol: s, quote: q ?? null })
-    } finally { setLoading(null) }
+      const [qRes, cRes] = await Promise.all([
+        fetch(`/api/quote?symbols=${encodeURIComponent(s)}`),
+        fetch(`/api/chart?symbol=${encodeURIComponent(s)}&range=1mo`),
+      ])
+      const qData = await qRes.json()
+      const q: Quote | undefined = qData.quotes?.find((x: Quote) => x.symbol === s)
+      let candles: Candle[] = []
+      try {
+        const cData = await cRes.json()
+        candles = cData.candles ?? []
+      } catch {}
+      if (box === "a") setA({ symbol: s, quote: q ?? null, candles })
+      else setB({ symbol: s, quote: q ?? null, candles })
+    } finally {
+      setLoading(null)
+    }
   }
 
   async function fetchSuggestions(input: string) {
-    if (!input.trim()) { setSuggestions([]); return }
+    if (!input.trim()) {
+      setSuggestions([])
+      return
+    }
     const res = await fetch(`/api/search?q=${encodeURIComponent(input.trim())}`)
     const data = await res.json()
     setSuggestions((data?.results || []).slice(0, 6))
   }
 
+  const metrics: { label: string; get: (q: Quote) => string; raw: (q: Quote) => number }[] = [
+    { label: "Current Price", get: (q) => fmtPrice(q.price), raw: (q) => q.price },
+    { label: "Change %", get: (q) => `${q.changePercent >= 0 ? "+" : ""}${q.changePercent.toFixed(2)}%`, raw: (q) => q.changePercent },
+    { label: "Market Cap", get: (q) => fmtNum(q.marketCap), raw: (q) => q.marketCap ?? -Infinity },
+    { label: "P/E", get: (q) => (q.trailingPE != null ? q.trailingPE.toFixed(1) : "n/a"), raw: (q) => q.trailingPE ?? -Infinity },
+    { label: "EPS", get: (q) => (q.eps != null ? `$${q.eps.toFixed(2)}` : "n/a"), raw: (q) => q.eps ?? -Infinity },
+    { label: "52W High", get: (q) => (q.fiftyTwoWeekHigh != null ? fmtPrice(q.fiftyTwoWeekHigh) : "n/a"), raw: (q) => q.fiftyTwoWeekHigh ?? -Infinity },
+    { label: "52W Low", get: (q) => (q.fiftyTwoWeekLow != null ? fmtPrice(q.fiftyTwoWeekLow) : "n/a"), raw: (q) => q.fiftyTwoWeekLow ?? -Infinity },
+    { label: "Volume", get: (q) => fmtNum(q.volume), raw: (q) => q.volume ?? -Infinity },
+  ]
+
   const rows = (() => {
     if (!a.quote || !b.quote) return []
-    const pair = [
-      { label: "Current Price", a: `$${a.quote.price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, b: `$${b.quote.price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, winner: a.quote.price >= b.quote.price ? "a" : "b" },
-      { label: "Change %", a: `${a.quote.changePercent >= 0 ? "+" : ""}${a.quote.changePercent.toFixed(2)}%`, b: `${b.quote.changePercent >= 0 ? "+" : ""}${b.quote.changePercent.toFixed(2)}%`, winner: a.quote.changePercent >= b.quote.changePercent ? "a" : "b" },
-      { label: "Day Move", a: `${a.quote.change >= 0 ? "+" : ""}$${a.quote.change.toFixed(2)}`, b: `${b.quote.change >= 0 ? "+" : ""}$${b.quote.change.toFixed(2)}`, winner: a.quote.change >= b.quote.change ? "a" : "b" },
-    ]
-    return pair
+    return metrics.map((m) => {
+      const av = m.raw(a.quote!)
+      const bv = m.raw(b.quote!)
+      const winner: "a" | "b" | null =
+        av === bv ? null : av > bv ? "a" : "b"
+      return { label: m.label, a: m.get(a.quote!), b: m.get(b.quote!), winner }
+    })
   })()
 
   const aWins = rows.filter((r) => r.winner === "a").length
@@ -69,8 +145,8 @@ export function CompareClient() {
                   value={side.symbol}
                   onChange={(e) => {
                     const v = e.target.value.toUpperCase()
-                    if (box === "a") setA({ ...a, symbol: v, quote: null })
-                    else setB({ ...b, symbol: v, quote: null })
+                    if (box === "a") setA({ ...a, symbol: v, quote: null, candles: [] })
+                    else setB({ ...b, symbol: v, quote: null, candles: [] })
                     setActiveBox(box)
                     fetchSuggestions(v)
                   }}
@@ -120,10 +196,8 @@ export function CompareClient() {
                   <span className="dm-meta">Live Snapshot</span>
                 </div>
                 <p className="dm-body leading-relaxed">
-                  <strong className="text-gold">{a.symbol}</strong> is trading at $
-                  {a.quote.price.toLocaleString("en-US", { maximumFractionDigits: 2 })} ({a.quote.changePercent >= 0 ? "+" : ""}{a.quote.changePercent.toFixed(2)}%) and{" "}
-                  <strong className="text-gold">{b.symbol}</strong> at $
-                  {b.quote.price.toLocaleString("en-US", { maximumFractionDigits: 2 })} ({b.quote.changePercent >= 0 ? "+" : ""}{b.quote.changePercent.toFixed(2)}%).
+                  <strong className="text-gold">{a.symbol}</strong> is trading at {fmtPrice(a.quote.price)} ({a.quote.changePercent >= 0 ? "+" : ""}{a.quote.changePercent.toFixed(2)}%) and{" "}
+                  <strong className="text-gold">{b.symbol}</strong> at {fmtPrice(b.quote.price)} ({b.quote.changePercent >= 0 ? "+" : ""}{b.quote.changePercent.toFixed(2)}%).
                   {aWins > bWins ? ` ${a.symbol} leads on ${aWins} of ${aWins + bWins} metrics.` : bWins > aWins ? ` ${b.symbol} leads on ${bWins} of ${aWins + bWins} metrics.` : " The two are tied on the compared metrics."}
                 </p>
               </div>
@@ -197,10 +271,14 @@ export function CompareClient() {
                         {side.quote!.changePercent >= 0 ? "+" : ""}{side.quote!.changePercent.toFixed(2)}%
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 rounded-2xl bg-card p-3">
-                      <div className="text-center"><p className="dm-meta">Price</p><p className="text-xs font-semibold font-mono tabular-nums">${side.quote!.price.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p></div>
+                    <Sparkline candles={side.candles} positive={side.quote!.changePercent >= 0} />
+                    <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl bg-card p-3">
+                      <div className="text-center"><p className="dm-meta">Price</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.price)}</p></div>
                       <div className="text-center"><p className="dm-meta">Change</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.change >= 0 ? "+" : ""}{side.quote!.change.toFixed(2)}</p></div>
-                      <div className="text-center"><p className="dm-meta">Prev Close</p><p className="text-xs font-semibold font-mono tabular-nums">${side.quote!.previousClose.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p></div>
+                      <div className="text-center"><p className="dm-meta">Prev Close</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.previousClose)}</p></div>
+                      <div className="text-center"><p className="dm-meta">Mkt Cap</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.marketCap)}</p></div>
+                      <div className="text-center"><p className="dm-meta">P/E</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.trailingPE != null ? side.quote!.trailingPE.toFixed(1) : "n/a"}</p></div>
+                      <div className="text-center"><p className="dm-meta">Volume</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.volume)}</p></div>
                     </div>
                   </div>
                 </div>
@@ -208,7 +286,7 @@ export function CompareClient() {
             ))}
           </div>
         </>
-        ) : (
+      ) : (
         <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
           <p className="dm-body">Select two symbols to compare</p>
           <p className="dm-body mt-1 max-w-sm">Search and pick two tickers above to see a live side-by-side comparison.</p>
