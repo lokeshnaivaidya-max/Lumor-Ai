@@ -52,7 +52,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => router.push("/analyze")}
+          onClick={() => router.push("/markets")}
           className="lm-btn lm-btn--gold flex items-center gap-2 px-4 py-2.5 text-xs"
         >
           <Plus className="h-3.5 w-3.5" />New analysis
@@ -79,7 +79,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => router.push("/analyze")}
+            onClick={() => router.push("/markets")}
             className="lm-btn lm-btn--gold mt-6 flex items-center gap-2 px-4 py-2 text-xs"
           >
             Analyze a stock

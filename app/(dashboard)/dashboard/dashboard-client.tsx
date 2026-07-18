@@ -115,7 +115,7 @@ function InsightsWidget({ analyses }: { analyses: AnalysisView[] }) {
       >
         <p className="meta mb-3">AI Insights</p>
         <p className="body mb-4">No analyses yet.</p>
-        <Link href="/analyze" className="btn btn--gold btn--sm">
+        <Link href="/markets" className="btn btn--gold btn--sm">
           <Sparkles className="h-3 w-3" /> Analyze a stock
         </Link>
       </motion.div>

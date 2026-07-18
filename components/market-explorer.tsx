@@ -8,7 +8,7 @@ import { SymbolSearch, type SearchResult } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
 import { currencySymbol, logoUrl } from "@/lib/utils"
-import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers } from "lucide-react"
+import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers, LineChart } from "lucide-react"
 
 const POLL_INTERVAL = 12_000
 
@@ -201,6 +201,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
   const [range, setRange] = useState<(typeof RANGES)[number]>("6mo")
   const [region, setRegion] = useState<Region>("US")
   const [optionParams, setOptionParams] = useState<{ strike?: number; expiry?: string }>({})
+  const analysisTrigger = useRef<(() => void) | null>(null)
 
   useScrollPreserve()
 
@@ -336,6 +337,22 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
       <StatsGrid quote={quote} ccySym={ccySym} />
 
+      <div className="mt-5 flex items-center gap-3">
+        <button
+          onClick={() => {
+            analysisTrigger.current?.()
+            requestAnimationFrame(() => {
+              document.getElementById("ai-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" })
+            })
+          }}
+          className="glass-btn glass-btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium"
+        >
+          <LineChart className="h-4 w-4" />
+          Analyze Stock
+        </button>
+        <span className="text-xs text-muted-foreground">AI analysis runs below, grounded in live market data.</span>
+      </div>
+
       {(!quote || quote.assetType !== "EQUITY") && (
         <div className="mt-6">
           <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -347,9 +364,9 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-6" id="ai-analysis">
         <BentoCard className="!p-0">
-          <AiAnalysis symbol={symbol} />
+          <AiAnalysis symbol={symbol} triggerRef={analysisTrigger} />
         </BentoCard>
       </div>
 

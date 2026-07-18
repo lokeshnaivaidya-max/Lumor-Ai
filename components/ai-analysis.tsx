@@ -158,7 +158,13 @@ function LoadingSkeleton() {
   )
 }
 
-export function AiAnalysis({ symbol }: { symbol: string }) {
+export function AiAnalysis({
+  symbol,
+  triggerRef,
+}: {
+  symbol: string
+  triggerRef?: React.MutableRefObject<(() => void) | null>
+}) {
   const [data, setData] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [horizon, setHorizon] = useState<string>("swing")
@@ -268,6 +274,13 @@ export function AiAnalysis({ symbol }: { symbol: string }) {
   const run = useCallback(() => {
     doStream(symbol, horizon)
   }, [doStream, symbol, horizon])
+
+  useEffect(() => {
+    if (triggerRef) triggerRef.current = run
+    return () => {
+      if (triggerRef) triggerRef.current = null
+    }
+  }, [triggerRef, run])
 
   const cancel = useCallback(() => {
     abortRef.current?.abort()
