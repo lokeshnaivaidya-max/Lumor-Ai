@@ -8,7 +8,12 @@ import { rateLimit, clientIp } from "@/lib/ratelimit"
 const betterHandler = toNextJsHandler(auth.handler)
 
 export const GET = async (req: Request) => {
-  await ensureAuthSchema()
+  if (!(await readySchema())) {
+    return error(
+      "Database connection failed. Check that DATABASE_URL is set correctly and the database is reachable.",
+      503,
+    )
+  }
   return betterHandler.GET(req)
 }
 
@@ -35,8 +40,24 @@ function error(msg: string, status: number): Response {
   return json({ error: msg, message: msg }, status)
 }
 
+async function readySchema(): Promise<boolean> {
+  try {
+    await ensureAuthSchema()
+    return true
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error("[AUTH SCHEMA] ensureAuthSchema failed:", detail)
+    return false
+  }
+}
+
 export async function POST(request: Request) {
-  await ensureAuthSchema()
+  if (!(await readySchema())) {
+    return error(
+      "Database connection failed. Check that DATABASE_URL is set correctly and the database is reachable.",
+      503,
+    )
+  }
   const url = new URL(request.url)
   const path = url.pathname
   const body = await request.clone().json().catch(() => ({}))

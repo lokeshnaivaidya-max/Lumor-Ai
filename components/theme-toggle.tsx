@@ -8,19 +8,19 @@ const icons = { dark: Moon, light: Sun, system: Sun }
 const labels = { dark: "Dark", light: "Light", system: "System" }
 
 export function ThemeToggle() {
-  const { theme, cycleTheme } = useTheme()
-  const Icon = icons[theme]
+  const { resolved, cycleTheme } = useTheme()
+  const Icon = resolved === "dark" ? Moon : Sun
 
   return (
     <button
       type="button"
       onClick={cycleTheme}
       className="btn btn--icon"
-      aria-label={`Theme: ${labels[theme]}. Click to switch.`}
+      aria-label={`Theme: ${resolved === "dark" ? "Dark" : "Light"}. Click to switch.`}
     >
       <AnimatePresence mode="wait">
         <motion.span
-          key={theme}
+          key={resolved}
           initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
           exit={{ opacity: 0, rotate: 90, scale: 0.5 }}

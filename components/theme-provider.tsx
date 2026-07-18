@@ -62,9 +62,8 @@ export function ThemeProvider({ children, initial }: { children: ReactNode; init
 
   const cycleTheme = useCallback(() => {
     setThemeState((prev) => {
-      const order: Theme[] = ["dark", "light", "system"]
-      const idx = order.indexOf(prev)
-      return order[(idx + 1) % order.length]
+      const current = resolve(prev)
+      return current === "dark" ? "light" : "dark"
     })
   }, [])
 

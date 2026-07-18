@@ -107,7 +107,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="w-full max-w-sm"
     >
-      <div className="glass-dialog rounded-3xl p-8">
+      <div className={`glass-dialog rounded-3xl ${isSignUp ? "p-8" : "p-8 sm:p-10"}`}>
         <div className="mb-6">
           <span className="font-serif text-lg italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </div>
@@ -157,7 +157,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className={isSignUp ? "mt-6 space-y-4" : "mt-7 space-y-5"}>
           {isSignUp && (
             <div className="field">
               <input
@@ -225,6 +225,13 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                 <Link href="/privacy" style={{ color: "var(--gold)" }}>Privacy Policy</Link>.
               </span>
             </label>
+          )}
+
+          {!isSignUp && (
+            <div className="flex items-center justify-center gap-2 pt-1 text-xs" style={{ color: "var(--text-tertiary)" }}>
+              <span className="inline-block h-1 w-1 rounded-full" style={{ background: "var(--gold)" }} />
+              Bank-grade encryption keeps your data private
+            </div>
           )}
 
           <AnimatePresence>

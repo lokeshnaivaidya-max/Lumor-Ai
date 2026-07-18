@@ -6,7 +6,13 @@ import { eq } from "drizzle-orm"
 
 /** Returns the full session (or null) for server components / route handlers. */
 export async function getSession() {
-  await ensureAuthSchema()
+  try {
+    await ensureAuthSchema()
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error("[AUTH SCHEMA] ensureAuthSchema failed:", detail)
+    return null
+  }
   return auth.api.getSession({ headers: await headers() })
 }
 
