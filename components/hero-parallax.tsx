@@ -1,26 +1,63 @@
 "use client"
 
+import { useRef, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { TrendingUp, BarChart3, Globe, Sparkles, ChevronDown } from "lucide-react"
 
 const FEATURES = [
-  { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data across 40+ countries" },
-  { icon: BarChart3, label: "Portfolio Tracking", desc: "Live holdings, watchlists, and risk metrics" },
-  { icon: Sparkles, label: "AI Analysis", desc: "Transparent insights with clear reasoning" },
-  { icon: TrendingUp, label: "Trade Planning", desc: "Risk/reward analysis with confidence scoring" },
+  { icon: Globe, label: "60+ Global Exchanges", desc: "Real-time data across 40+ countries", color: "#5b8dff" },
+  { icon: BarChart3, label: "Portfolio Tracking", desc: "Live holdings, watchlists, risk metrics", color: "#3bce8e" },
+  { icon: Sparkles, label: "AI Analysis", desc: "Clear insights with transparent reasoning", color: "#d4a853" },
+  { icon: TrendingUp, label: "Trade Planning", desc: "Risk/reward analysis + confidence scoring", color: "#e85a6f" },
 ]
+
+function TiltCard({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      el.style.setProperty("--mx", `${x * 100}%`)
+      el.style.setProperty("--my", `${y * 100}%`)
+      const tiltY = (x - 0.5) * 6
+      const tiltX = (y - 0.5) * -6
+      el.style.transform = `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+    }
+    const onLeave = () => {
+      el.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg)"
+    }
+    el.addEventListener("mousemove", onMove, { passive: true })
+    el.addEventListener("mouseleave", onLeave, { passive: true })
+    return () => {
+      el.removeEventListener("mousemove", onMove)
+      el.removeEventListener("mouseleave", onLeave)
+    }
+  }, [])
+
+  return (
+    <div ref={ref} className={`tilt-card ${className}`} style={style}>
+      <div className="tilt-card-glow" />
+      <div className="tilt-card-content">{children}</div>
+    </div>
+  )
+}
 
 export function HeroParallax() {
   return (
     <div className="hero-section relative z-10 flex min-h-screen w-full flex-col items-center justify-center">
-      {/* Floating background orbs */}
       <div className="hero-orb hero-orb--1" />
       <div className="hero-orb hero-orb--2" />
       <div className="hero-orb hero-orb--3" />
 
+      {/* Grid overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
+
       <div className="relative z-10 flex flex-col items-center px-4">
-        {/* Gold accent line */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 0.4 }}
@@ -65,21 +102,24 @@ export function HeroParallax() {
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-card rounded-xl px-4 py-3.5"
-              style={{ minWidth: 180 }}
             >
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "rgba(212,168,83,0.1)" }}>
-                  <f.icon className="h-4 w-4" style={{ color: "var(--gold)" }} />
+              <TiltCard className="glass-card glass-card--glow rounded-xl px-4 py-3.5" style={{ minWidth: 180 }}>
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ background: `${f.color}12` }}
+                  >
+                    <f.icon className="h-4.5 w-4.5" style={{ color: f.color }} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{f.label}</span>
+                    <p className="mt-0.5 text-[10px] leading-tight" style={{ color: "var(--text-tertiary)" }}>{f.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{f.label}</span>
-                  <p className="text-[10px] leading-tight" style={{ color: "var(--text-tertiary)", marginTop: 1 }}>{f.desc}</p>
-                </div>
-              </div>
+              </TiltCard>
             </motion.div>
           ))}
         </motion.div>
@@ -99,7 +139,6 @@ export function HeroParallax() {
         </motion.div>
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

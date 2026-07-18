@@ -2,7 +2,8 @@ import Link from "next/link"
 import { LandingNav } from "@/components/landing-nav"
 import { HeroParallax } from "@/components/hero-parallax"
 import { StatsSection } from "@/components/stats-section"
-import { FadeScale, FadeUp, SlideLeft, SlideRight, CardReveal } from "@/components/reveal"
+import { HowItWorks } from "@/components/how-it-works"
+import { FadeScale, FadeUp, SlideLeft, CardReveal } from "@/components/reveal"
 
 const EXCHANGES = [
   ["NYSE", "USA"], ["NASDAQ", "USA"], ["NSE", "India"], ["BSE", "India"],
@@ -33,65 +34,104 @@ const CAPABILITIES = [
   },
 ]
 
+const SOCIAL_PROOF = [
+  { value: "60+", label: "Global exchanges" },
+  { value: "40+", label: "Countries covered" },
+  { value: "12K+", label: "Trackable instruments" },
+  { value: "500B+", label: "Data points served" },
+]
+
 export default async function HomePage() {
   return (
     <>
       <LandingNav />
 
-      {/* Hero — full cinematic entrance */}
+      {/* Hero */}
       <section className="relative">
         <HeroParallax />
       </section>
 
-      {/* Stats / Proof — scale reveal */}
-      <section className="scene" id="reach" style={{ background: "var(--bg-surface)" }}>
+      {/* How It Works */}
+      <section className="scene" style={{ background: "var(--bg-surface)" }}>
+        <div className="section-accent" />
         <FadeScale>
-          <p className="subheading mb-6">Global coverage</p>
-          <StatsSection />
+          <HowItWorks />
         </FadeScale>
-
-        <SlideLeft delay={0.2}>
-          <div className="mt-12">
-            <p className="meta mb-4">Supported exchanges</p>
-            <div className="flex flex-wrap gap-3">
-              {EXCHANGES.map(([ex, country]) => (
-                <span
-                  key={ex}
-                  className="glass-card flex items-center gap-2 rounded-lg px-3 py-1.5"
-                >
-                  <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
-                  <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{country}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </SlideLeft>
       </section>
 
-      {/* Features — staggered alternating cards */}
-      <section className="scene" id="offerings" style={{ background: "var(--bg-deep)" }}>
+      {/* Social proof / Stats */}
+      <section className="scene bg-grid" style={{ background: "var(--bg-deep)" }}>
+        <div className="section-accent" />
+
         <FadeUp>
-          <p className="subheading">Platform capabilities</p>
+          <p className="subheading text-center">Trusted by traders worldwide</p>
         </FadeUp>
 
-        <div className="relative mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-          {/* Gold divider line behind cards */}
-          <div className="absolute left-1/2 top-0 hidden h-full w-px md:block" style={{ background: "linear-gradient(180deg, transparent, rgba(212,168,83,0.08), transparent)" }} />
-
-          {CAPABILITIES.map((item, i) => (
-            <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
-              {item.number && (
-                <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
-              )}
-              <h3 className="heading--small mt-3">{item.title}</h3>
-              <p className="body mt-2">{item.desc}</p>
-            </CardReveal>
+        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-10">
+          {SOCIAL_PROOF.map((s, i) => (
+            <FadeScale key={s.label} delay={0.1 + i * 0.06}>
+              <div className="flex flex-col items-center text-center">
+                <p className="stat-number">{s.value}</p>
+                <p className="stat-label mt-1.5">{s.label}</p>
+              </div>
+            </FadeScale>
           ))}
         </div>
       </section>
 
-      {/* CTA — centered full reveal */}
+      {/* Stats / Exchanges */}
+      <section className="scene" id="reach" style={{ background: "var(--bg-surface)" }}>
+        <div className="section-accent" />
+        <div className="relative z-10 mx-auto w-full max-w-5xl">
+          <FadeScale>
+            <p className="subheading mb-6">Global coverage</p>
+            <StatsSection />
+          </FadeScale>
+
+          <SlideLeft delay={0.2}>
+            <div className="mt-12">
+              <p className="meta mb-4">Supported exchanges</p>
+              <div className="flex flex-wrap gap-2.5">
+                {EXCHANGES.map(([ex, country]) => (
+                  <span key={ex} className="exchange-badge">
+                    <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{ex}</span>
+                    <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{country}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </SlideLeft>
+        </div>
+      </section>
+
+      {/* Capabilities */}
+      <section className="scene" id="offerings" style={{ background: "var(--bg-deep)" }}>
+        <div className="section-accent" />
+        <div className="relative z-10 mx-auto w-full max-w-5xl">
+          <FadeUp>
+            <p className="subheading">Platform capabilities</p>
+          </FadeUp>
+
+          <div className="relative mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="absolute left-1/2 top-0 hidden h-full w-px md:block" style={{
+              background: "linear-gradient(180deg, transparent, rgba(212,168,83,0.08), transparent)",
+            }} />
+            {CAPABILITIES.map((item, i) => (
+              <CardReveal key={item.number} delay={0.1 + i * 0.08} index={i}>
+                {item.number && (
+                  <span className="meta" style={{ color: "var(--gold)" }}>{item.number}</span>
+                )}
+                <h3 className="heading--small mt-3">{item.title}</h3>
+                <p className="body mt-2">{item.desc}</p>
+              </CardReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
       <section className="scene" style={{ background: "var(--bg-surface)" }}>
+        <div className="section-accent" />
         <FadeScale delay={0.1}>
           <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
             <div className="scene-line mb-6" />
