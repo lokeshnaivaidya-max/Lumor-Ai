@@ -1,5 +1,4 @@
 import { sendEmail, getActiveProviderName } from "@/lib/email/index"
-import { generateOtp } from "@/lib/otp/index"
 import { createCorrelationId } from "@/lib/email/adapter"
 
 export function buildOtpEmail({ otp, type }: { otp: string; type: "verification" | "reset" }): { subject: string; html: string } {
@@ -48,4 +47,4 @@ export function getLastEmailLog(): Record<string, unknown> | null {
   return lastLog
 }
 
-export { generateOtp } from "@/lib/otp/index"
+
