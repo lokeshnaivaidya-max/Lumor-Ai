@@ -80,163 +80,184 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           throw new Error(String(errMsg))
         }
         router.push("/dashboard")
+        router.refresh()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
       setLoading(false)
     }
   }
 
   async function handleOAuth(provider: Provider) {
-    setError(null)
     setOauthLoading(provider)
+    setError(null)
     try {
       await authClient.signIn.social({ provider, callbackURL: "/dashboard" })
     } catch {
-      setError(`Could not sign in with ${provider}. Please try again.`)
+      setError("OAuth sign-in failed. Please try again.")
+    } finally {
       setOauthLoading(null)
     }
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative w-full max-w-sm"
+      className="w-full max-w-sm"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-[oklch(0.91_0.01_75_/_0.06)] bg-[oklch(0.073_0.008_75)] p-8 shadow-2xl" style={{ backdropFilter: "blur(24px)" }}>
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px]" style={{ background: "oklch(0.75 0.1 85 / 0.06)" }} />
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-8">
-            <LumoraMark className="h-6 w-6" />
-            <span className="font-heading text-sm font-semibold tracking-tight text-[oklch(0.91_0.01_75)]">Lumora</span>
-          </div>
+      <div className="glass-dialog rounded-3xl p-8">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="font-serif text-base italic text-[var(--text-primary)]">Lumora</span>
+        </div>
 
-          <h1 className="font-serif text-2xl font-normal tracking-tight text-[oklch(0.91_0.01_75)]" style={{ lineHeight: 1.1, letterSpacing: "-0.03em" }}>
-            {isSignUp ? "Create your account" : "Welcome back"}
-          </h1>
-          <p className="mt-2 text-sm text-[oklch(0.53_0.015_75)]" style={{ maxWidth: "26em" }}>
-            {isSignUp
-              ? "Start tracking global markets with AI-grade intelligence."
-              : "Sign in to your Lumora terminal and portfolio."}
-          </p>
+        <h1 className="heading heading--small">
+          {isSignUp ? "Create your account" : "Welcome back"}
+        </h1>
+        <p className="body mt-1.5">
+          {isSignUp
+            ? "Start your AI-powered investment journey."
+            : "Sign in to your Lumora account."}
+        </p>
 
-          {enabledProviders.length > 0 && (
-            <div className="mt-6 flex flex-col gap-2">
-              {enabledProviders.map((p) => {
-                const { label, Icon } = PROVIDER_META[p]
-                return (
-                  <motion.button
-                    key={p}
-                    type="button"
-                    onClick={() => handleOAuth(p)}
-                    disabled={oauthLoading !== null || loading}
-                    whileHover={{ scale: 1.005 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-[oklch(0.91_0.01_75_/_0.08)] bg-[oklch(0.91_0.01_75_/_0.03)] px-4 py-2.5 text-sm font-medium text-[oklch(0.91_0.01_75)] transition-all hover:bg-[oklch(0.91_0.01_75_/_0.06)] hover:border-[oklch(0.91_0.01_75_/_0.15)] disabled:opacity-50"
-                  >
-                    {oauthLoading === p ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
-                    {label}
-                  </motion.button>
-                )
-              })}
-            </div>
-          )}
-
-          {enabledProviders.length > 0 && (
-            <div className="relative my-6">
+        {enabledProviders.length > 0 && (
+          <div className="mt-6 space-y-2.5">
+            {enabledProviders.map((p, i) => {
+              const meta = PROVIDER_META[p]
+              return (
+                <motion.button
+                  key={p}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                  onClick={() => handleOAuth(p)}
+                  disabled={oauthLoading === p}
+                  className="glass-hover btn w-full justify-center"
+                >
+                  {oauthLoading === p ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <meta.Icon />
+                  )}
+                  {oauthLoading === p ? "Connecting..." : meta.label}
+                </motion.button>
+              )
+            })}
+            <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[oklch(0.91_0.01_75_/_0.06)]" />
+                <div className="w-full border-t" style={{ borderColor: "var(--glass-border)" }} />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-[oklch(0.073_0.008_75)] px-3 text-[11px] uppercase tracking-widest text-[oklch(0.53_0.015_75)]">or</span>
+                <span className="px-3 text-xs" style={{ color: "var(--text-tertiary)", background: "var(--depth-overlay)" }}>
+                  or continue with email
+                </span>
               </div>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {isSignUp && (
+            <div>
+              <label className="meta flex items-center gap-1.5 mb-1.5">
+                <User className="h-3 w-3" /> Name
+              </label>
+              <input type="text" required value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name" className="glass-input w-full"
+                autoComplete="name" />
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={enabledProviders.length > 0 ? "" : "mt-6"}>
-            <div className="flex flex-col gap-4">
-              {isSignUp && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Full name</span>
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="glass-input" autoComplete="name" />
-                </div>
-              )}
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Email</span>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" autoComplete="email" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.53_0.015_75)]">Password</span>
-                <div className="relative">
-                  <input type={showPassword ? "text" : "password"} required minLength={8} value={password}
-                    onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="glass-input pr-10"
-                    autoComplete={isSignUp ? "new-password" : "current-password"} />
-                  <button type="button" onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[oklch(0.53_0.015_75)] hover:text-[oklch(0.91_0.01_75)] transition-colors"
-                    aria-label={showPassword ? "Hide password" : "Show password"}>
-                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
+          <div>
+            <label className="meta flex items-center gap-1.5 mb-1.5">
+              <Mail className="h-3 w-3" /> Email
+            </label>
+            <input type="email" required value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com" className="glass-input w-full"
+              autoComplete="email" />
+          </div>
+
+          <div>
+            <label className="meta flex items-center gap-1.5 mb-1.5">
+              <Lock className="h-3 w-3" /> Password
+            </label>
+            <div className="relative">
+              <input type={showPassword ? "text" : "password"} required minLength={8}
+                value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder={isSignUp ? "At least 8 characters" : "Your password"}
+                className="glass-input w-full pr-10" autoComplete={isSignUp ? "new-password" : "current-password"} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
+                aria-label={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
             </div>
+          </div>
 
-            {!isSignUp && (
-              <div className="mt-3 text-right">
-                <Link href="/forgot-password" className="text-xs text-[oklch(0.53_0.015_75)] hover:text-[oklch(0.91_0.01_75)] transition-colors underline underline-offset-2">
-                  Forgot password?
-                </Link>
-              </div>
-            )}
-
-            {isSignUp && (
-              <label className="mt-4 flex items-start gap-2.5">
-                <input type="checkbox" checked={agreedToLegal} onChange={(e) => setAgreedToLegal(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-[oklch(0.91_0.01_75_/_0.15)] bg-transparent accent-[oklch(0.75_0.1_85)]" />
-                <span className="text-xs text-[oklch(0.53_0.015_75)] leading-relaxed">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-[oklch(0.91_0.01_75)] underline underline-offset-2 hover:text-[oklch(0.75_0.1_85)]">Terms &amp; Conditions</Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-[oklch(0.91_0.01_75)] underline underline-offset-2 hover:text-[oklch(0.75_0.1_85)]">Privacy Policy</Link>
-                </span>
-              </label>
-            )}
-
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, y: -4, height: 0 }}
-                  className="mt-4 flex items-start gap-2 rounded-xl border border-[oklch(0.55_0.22_22_/_0.15)] bg-[oklch(0.55_0.22_22_/_0.06)] px-3.5 py-2.5 text-xs text-[oklch(0.6_0.22_22)]"
-                >
-                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <motion.button
-              type="submit"
-              disabled={loading || (isSignUp && !agreedToLegal)}
-              whileHover={{ scale: loading ? 1 : 1.005 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="mt-5 w-full rounded-xl bg-[oklch(0.75_0.1_85)] py-2.5 text-sm font-medium text-[oklch(0.073_0.008_75)] transition-all hover:bg-[oklch(0.78_0.1_85)] disabled:opacity-50"
-            >
-              <span className="flex items-center justify-center gap-2">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {loading ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
+          {isSignUp && (
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" checked={agreedToLegal}
+                onChange={(e) => setAgreedToLegal(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-[var(--glass-border)] bg-transparent"
+                style={{ accentColor: "var(--gold)" }} />
+              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                I agree to the{" "}
+                <Link href="/terms" className="text-[var(--gold)] hover:underline">Terms &amp; Conditions</Link>
+                {" "}and{" "}
+                <Link href="/privacy" className="text-[var(--gold)] hover:underline">Privacy Policy</Link>.
               </span>
-            </motion.button>
-          </form>
+            </label>
+          )}
 
-          <p className="mt-6 text-center text-xs text-[oklch(0.53_0.015_75)]">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <Link href={isSignUp ? "/sign-in" : "/sign-up"} className="font-medium text-[oklch(0.91_0.01_75)] hover:text-[oklch(0.75_0.1_85)] transition-colors underline underline-offset-2">
-              {isSignUp ? "Sign in" : "Create one"}
-            </Link>
-          </p>
-        </div>
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -4, height: 0 }}
+                className="flex items-start gap-2 rounded-xl px-3.5 py-2.5 text-xs"
+                style={{ background: "rgba(244, 63, 94, 0.06)", border: "1px solid rgba(244, 63, 94, 0.2)", color: "var(--rose)" }}
+              >
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.button
+            type="submit"
+            disabled={loading}
+            whileHover={{ scale: loading ? 1 : 1.01 }}
+            whileTap={{ scale: loading ? 1 : 0.98 }}
+            className="btn btn--gold w-full justify-center"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isSignUp ? (
+              "Create account"
+            ) : (
+              "Sign in"
+            )}
+          </motion.button>
+        </form>
+
+        <p className="mt-5 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
+          {isSignUp ? (
+            <>Already have an account?{" "}
+              <Link href="/sign-in" className="text-[var(--gold)] hover:underline">Sign in</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/forgot-password" className="text-[var(--gold)] hover:underline">Forgot password?</Link>
+              <span className="mx-2">&middot;</span>
+              <Link href="/sign-up" className="text-[var(--gold)] hover:underline">Create account</Link>
+            </>
+          )}
+        </p>
       </div>
     </motion.div>
   )

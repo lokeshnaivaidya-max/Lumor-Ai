@@ -7,12 +7,6 @@ import { PageTransition } from "@/components/page-transition"
 import type { ReactNode } from "react"
 import "./globals.css"
 
-function themeClass(theme: string): string {
-  if (theme === "dark") return "dark-root dark"
-  if (theme === "light") return "light-root"
-  return ""
-}
-
 const sora = Sora({
   subsets: ["latin"],
   variable: "--font-heading",
@@ -62,7 +56,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0f",
+  themeColor: "#08080c",
   width: "device-width",
   initialScale: 1,
 }
@@ -76,7 +70,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable} ${themeClass(theme)}`}
+      className={`${sora.variable} ${inter.variable} ${mono.variable} ${instrument.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">

@@ -1,31 +1,32 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import type { ReactNode } from "react"
+
+const DURATION = 0.5
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
+
+const variants = {
+  initial: { opacity: 0, y: 12, filter: "blur(4px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -8, filter: "blur(4px)" },
+}
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const [reducedMotion, setReducedMotion] = useState(true)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    setReducedMotion(mq.matches)
-    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
-    mq.addEventListener("change", onChange)
-    return () => mq.removeEventListener("change", onChange)
-  }, [])
-
-  if (reducedMotion) return <>{children}</>
-
   return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-    >
-      {children}
-    </motion.div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        variants={variants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={{ duration: DURATION, ease: EASE }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   )
 }

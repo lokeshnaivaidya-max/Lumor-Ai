@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef } from "react"
-import { useInView } from "motion/react"
+import { useInView, motion } from "motion/react"
 import { CountUp } from "./count-up"
 
 const stats = [
@@ -16,21 +16,28 @@ export function StatsSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" })
 
   return (
-    <div ref={ref} className="lm-animate lm-animate--delay-1">
+    <div ref={ref}>
       {inView && (
-        <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap items-center gap-6"
+        >
           {stats.map((s, i) => (
-            <div key={s.label} style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+            <div key={s.label} className="flex items-center gap-6">
               <div>
-                <p className="lm-stat">
+                <p className="stat-number">
                   <CountUp to={s.value} suffix={s.suffix} />
                 </p>
-                <p className="lm-stat-label">{s.label}</p>
+                <p className="stat-label">{s.label}</p>
               </div>
-              {i < stats.length - 1 && <div className="lm-stat-sep" />}
+              {i < stats.length - 1 && (
+                <div className="h-12 w-px" style={{ background: "var(--glass-border)" }} />
+              )}
             </div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   )

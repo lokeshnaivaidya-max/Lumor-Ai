@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { motion, useScroll, useTransform } from "motion/react"
 
 const LINKS = [
   { label: "Markets", href: "/markets" },
@@ -34,30 +35,31 @@ export function LandingNav() {
   }, [])
 
   return (
-    <header
-      className="lm-nav"
-      style={{
-        transform: visible ? "translateY(0)" : "translateY(-120%)",
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{
+        y: visible ? 0 : -120,
         opacity: atTop ? 0 : 1,
-        pointerEvents: atTop ? "none" : "auto",
       }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      style={{ pointerEvents: atTop ? "none" as const : "auto" as const }}
+      className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
     >
-      <nav className="lm-nav__inner">
-        <Link href="/" className="lm-nav__logo" aria-label="Lumora home">
-          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <rect x="2" y="2" width="28" height="28" rx="6" stroke="#b8914b" strokeWidth="1.5" fill="none" />
-            <path d="M10 22V12L16 20L22 12V22" stroke="#b8914b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          </svg>
+      <nav className="glass-nav flex items-center gap-6 rounded-full px-2 py-1.5 shadow-2xl">
+        <Link href="/" className="flex items-center gap-2 px-3 py-1" aria-label="Lumora home">
+          <span className="font-serif text-sm italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </Link>
-        <div className="lm-nav__links">
+        <div className="flex items-center gap-0.5">
           {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="lm-nav__link">
+            <Link key={link.href} href={link.href} className="nav-link">
               {link.label}
             </Link>
           ))}
         </div>
-        <Link href="/sign-up" className="lm-nav__cta">Get started</Link>
+        <Link href="/sign-up" className="btn btn--gold btn--sm">
+          Get started
+        </Link>
       </nav>
-    </header>
+    </motion.header>
   )
 }
