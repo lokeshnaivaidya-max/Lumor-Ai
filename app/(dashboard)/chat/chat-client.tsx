@@ -171,7 +171,7 @@ export function ChatClient() {
 
   return (
       <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-2 lg:p-4">
-      <div className="hidden w-64 shrink-0 flex-col gap-2 md:flex">
+      <div className="hidden w-72 shrink-0 flex-col gap-2 md:flex">
         <button onClick={startNew} className="lm-btn lm-btn--gold flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
           <Plus className="h-3.5 w-3.5" />New chat
         </button>

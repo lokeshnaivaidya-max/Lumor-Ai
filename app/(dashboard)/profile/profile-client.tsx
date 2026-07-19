@@ -6,6 +6,7 @@ import Link from "next/link"
 import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink, Upload, X, Search, ChevronDown, AlertTriangle, BellOff } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
 import { useRouter } from "next/navigation"
+import { useTheme } from "@/components/theme-provider"
 
 type ThemeMode = "dark" | "light" | "system"
 type NotifPrefs = Record<string, boolean>
@@ -129,7 +130,7 @@ function SearchSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="glass-dialog absolute z-30 mt-1.5 max-h-60 w-full overflow-hidden rounded-xl"
+            className="glass-dialog absolute z-50 mt-1.5 max-h-60 w-full overflow-hidden rounded-xl shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3 py-2">
               <Search className="h-3.5 w-3.5 text-muted-foreground/60" />
@@ -242,6 +243,7 @@ export function ProfileClient({ user }: {
   }
 }) {
   const router = useRouter()
+  const { setTheme: applyTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<"profile" | "notifications" | "appearance" | "privacy" | "legal">("profile")
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -252,7 +254,7 @@ export function ProfileClient({ user }: {
   const [country, setCountry] = useState(user.country)
   const [bio, setBio] = useState(user.bio)
   const [notif, setNotif] = useState<NotifPrefs>(user.notificationPrefs)
-  const [theme, setTheme] = useState<ThemeMode>((user.theme as ThemeMode) || "system")
+  const [theme, setTheme] = useState<ThemeMode>((user.theme as ThemeMode) || "light")
 
   const [busy, setBusy] = useState(false)
 
@@ -272,26 +274,28 @@ export function ProfileClient({ user }: {
       } catch { /* noop */ }
     }
     if (!country) {
+      // Prefer the timezone signal — it is the most reliable indicator of the
+      // user's actual region (e.g. Asia/Kolkata -> IN) and is not skewed by an
+      // OS language set to en-US. Locale region is only a fallback.
       let detected = ""
       try {
-        const locale = new Intl.Locale((navigator.language || "en-US"))
-        detected = locale.region || ""
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+        if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") detected = "IN"
+        else if (tz) {
+          const region = tz.split("/")[1]
+          if (region) detected = region.replace(/_/g, " ")
+        }
       } catch { /* noop */ }
+      if (!detected) {
+        try {
+          const locale = new Intl.Locale((navigator.language || "en-US"))
+          detected = locale.region || ""
+        } catch { /* noop */ }
+      }
       if (!detected) {
         const m = (navigator.language || "").match(/[-_]([A-Za-z]{2})/)
         detected = m ? m[1].toUpperCase() : ""
       }
-      if (!detected) {
-        try {
-          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
-          if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") detected = "IN"
-          else {
-            const parts = tz.split("/")
-            if (parts.length > 1) detected = parts[parts.length - 1].replace(/_/g, " ")
-          }
-        } catch { /* noop */ }
-      }
-      // Normalize common deprecated / ambiguous region fragments to ISO codes.
       const normalized = normalizeCountry(detected)
       if (normalized) setCountry(normalized)
     }
@@ -333,7 +337,7 @@ export function ProfileClient({ user }: {
   async function saveProfile() {
     setBusy(true); setError(null)
     try {
-      await updateProfile({ name, image: image || undefined, timezone, country, bio })
+      await updateProfile({ name, image: image || null, timezone, country, bio })
       flashSaved()
     } catch (e: any) { setError(e?.message || "Failed to save") } finally { setBusy(false) }
   }
@@ -557,7 +561,7 @@ export function ProfileClient({ user }: {
                       const Icon = t.icon
                       const active = theme === t.mode
                       return (
-                        <motion.button key={t.mode} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setTheme(t.mode)}
+                        <motion.button key={t.mode} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setTheme(t.mode); applyTheme(t.mode) }}
                           className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm transition-colors ${active ? "border-gold bg-gold/10 text-gold" : "border-border text-muted-foreground hover:border-border/60 hover:text-foreground"}`}>
                           <div className={`rounded-xl p-2 ${active ? "bg-gold/10" : "bg-foreground/5"}`}><Icon className="h-4 w-4" /></div>
                           <div className="text-left">

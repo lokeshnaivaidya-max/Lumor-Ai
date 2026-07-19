@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/compare", label: "Compare", icon: BarChart3 },
   { href: "/chat", label: "AI Chat", icon: MessageSquare },
-  { href: "/notifications", label: "Activity", icon: Bell },
+  { href: "/activity", label: "Activity", icon: Bell },
   { href: "/profile", label: "Profile", icon: User },
 ]
 

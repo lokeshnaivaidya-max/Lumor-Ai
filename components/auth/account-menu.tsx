@@ -91,7 +91,7 @@ export function AccountMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-strong absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl p-1.5 shadow-2xl"
+            className="glass-strong absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl p-1.5 shadow-2xl"
           >
             <div className="px-3 py-2.5">
               <p className="break-words text-sm font-medium text-foreground">

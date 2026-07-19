@@ -352,11 +352,6 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         </div>
       )}
 
-      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-        Technical Metrics
-      </h2>
-      <IndicatorPanel ind={indicators} />
-
       <div className="mt-10 flex items-center gap-3">
         <button
           onClick={() => {
@@ -411,6 +406,11 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
           </div>
         </div>
       </section>
+
+      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        Technical Indicators
+      </h2>
+      <IndicatorPanel ind={indicators} />
 
       <div className="mt-10">
         <BentoCard className="!p-0">

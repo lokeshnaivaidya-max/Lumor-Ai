@@ -67,7 +67,7 @@ export default async function RootLayout({
 }: {
   children: ReactNode
 }) {
-  const theme = (await cookies()).get("lumora-theme")?.value ?? "system"
+  const theme = (await cookies()).get("lumora-theme")?.value ?? "light"
   return (
     <html
       lang="en"
@@ -77,7 +77,7 @@ export default async function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )lumora-theme=([^;]+)/);var v=m?decodeURIComponent(m[1]):"system";var d=v==="dark"||(v==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`,
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )lumora-theme=([^;]+)/);var v=m?decodeURIComponent(m[1]):"light";var d=v==="dark"||(v==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`,
           }}
         />
         <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>

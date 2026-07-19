@@ -347,9 +347,9 @@ export function AiAnalysis({
               <button
                 key={h.id}
                 onClick={() => setHorizon(h.id)}
-                className={`rounded-full px-3 py-1 text-xs transition-all duration-300 ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-300 ${
                   horizon === h.id
-                    ? "bg-blue text-white shadow-[0_0_14px_2px_rgba(91,141,255,0.55)] ring-2 ring-blue/60"
+                    ? "bg-blue-600 text-white shadow-[0_0_14px_2px_rgba(91,141,255,0.55)] ring-2 ring-blue/60"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
