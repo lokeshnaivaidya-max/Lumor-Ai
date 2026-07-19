@@ -55,7 +55,7 @@ export function AccountMenu() {
           Sign in
         </Link>
         <Link href="/sign-up" className="glass-btn glass-btn-primary rounded-full px-4 py-2 text-sm">
-          Get started
+          Sign Up
         </Link>
       </div>
     )

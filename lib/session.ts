@@ -1,18 +1,13 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { db, ensureAuthSchema } from "@/lib/db"
+import { db } from "@/lib/db"
 import { user } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 
-/** Returns the full session (or null) for server components / route handlers. */
+/** Returns the full session (or null) for server components / route handlers.
+ *  The database schema is created solely by Drizzle migrations (run at deploy
+ *  time via `drizzle-kit migrate`), so no per-request schema bootstrap runs here. */
 export async function getSession() {
-  try {
-    await ensureAuthSchema()
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    console.error("[AUTH SCHEMA] ensureAuthSchema failed:", detail)
-    return null
-  }
   return auth.api.getSession({ headers: await headers() })
 }
 

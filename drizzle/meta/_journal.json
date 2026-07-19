@@ -22,6 +22,13 @@
       "when": 1784050000001,
       "tag": "0002_legal_consent_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784383013321,
+      "tag": "0003_app_tables_and_profile_fields",
+      "breakpoints": true
     }
   ]
 }
