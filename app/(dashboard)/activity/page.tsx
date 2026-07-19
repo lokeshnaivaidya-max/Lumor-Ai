@@ -8,8 +8,6 @@ import {
   notification,
   savedAnalysis,
   chatConversation,
-  session,
-  user,
   activityLog,
 } from "@/lib/db/schema"
 import { ActivityClient, type ActivityItem } from "./activity-client"
@@ -32,8 +30,6 @@ export default async function ActivityPage() {
     notes,
     analyses,
     chats,
-    sessions,
-    fullUser,
     logs,
   ] = await Promise.all([
     db.select().from(portfolioHolding).where(eq(portfolioHolding.userId, userId)).orderBy(desc(portfolioHolding.createdAt)).limit(20).catch(() => []),
@@ -41,8 +37,6 @@ export default async function ActivityPage() {
     db.select().from(notification).where(eq(notification.userId, userId)).orderBy(desc(notification.createdAt)).limit(20).catch(() => []),
     db.select().from(savedAnalysis).where(eq(savedAnalysis.userId, userId)).orderBy(desc(savedAnalysis.createdAt)).limit(20).catch(() => []),
     db.select().from(chatConversation).where(eq(chatConversation.userId, userId)).orderBy(desc(chatConversation.updatedAt)).limit(20).catch(() => []),
-    db.select().from(session).where(eq(session.userId, userId)).orderBy(desc(session.createdAt)).limit(20).catch(() => []),
-    db.select().from(user).where(eq(user.id, userId)).limit(1).catch(() => []),
     db.select().from(activityLog).where(eq(activityLog.userId, userId)).orderBy(desc(activityLog.createdAt)).limit(60).catch(() => []),
   ])
 
@@ -102,32 +96,20 @@ export default async function ActivityPage() {
     })
   }
 
-  for (const s of sessions as any[]) {
-    items.push({
-      id: `session-${s.id}`,
-      type: "login",
-      title: "Signed in",
-      timestamp: new Date(s.createdAt).toISOString(),
-    })
-  }
-
-  const fu = (fullUser as unknown as any[])?.[0]
-  if (fu?.createdAt && fu?.updatedAt) {
-    const created = new Date(fu.createdAt).getTime()
-    const updated = new Date(fu.updatedAt).getTime()
-    // Only surface a profile-updated event if it happened meaningfully after signup.
-    if (updated - created > 60_000) {
-      items.push({
-        id: "profile-update",
-        type: "profile",
-        title: "Profile updated",
-        href: "/profile",
-        timestamp: new Date(fu.updatedAt).toISOString(),
-      })
-    }
-  }
-
   for (const l of logs as any[]) {
+    // Only surface genuine product-usage events (stock interactions). Generic
+    // account events such as profile/notification/appearance changes and auth
+    // sessions are intentionally excluded from the activity feed.
+    const STOCK_TYPES = new Set([
+      "search",
+      "analysis",
+      "compare",
+      "trade-planner",
+      "portfolio",
+      "watchlist",
+      "chat",
+    ])
+    if (!STOCK_TYPES.has(l.type)) continue
     items.push({
       id: `log-${l.id}`,
       type: l.type,

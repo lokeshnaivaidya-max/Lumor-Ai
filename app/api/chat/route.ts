@@ -5,6 +5,7 @@ import { chatConversation, chatMessage } from "@/lib/db/schema"
 import { streamChat, chatMarketContext, CHAT_SYSTEM, type ChatMessageInput } from "@/lib/ai/provider"
 import { eq, and } from "drizzle-orm"
 import { rateLimit, clientIp } from "@/lib/ratelimit"
+import { logActivity } from "@/app/actions/activity"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -35,12 +36,14 @@ export async function POST(req: Request) {
 
   // Resolve or create the conversation.
   let conversationId = body.conversationId
+  let isNewConversation = false
   if (!conversationId) {
     const [conv] = await db
       .insert(chatConversation)
       .values({ userId, title: message.slice(0, 60) || "New chat" })
       .returning()
     conversationId = conv.id
+    isNewConversation = true
   } else {
     const conv = await db
       .select({ id: chatConversation.id })
@@ -58,6 +61,12 @@ export async function POST(req: Request) {
     role: "user",
     content: message,
   })
+
+  // Log a single "asked AI" activity per conversation (no duplicates).
+  if (isNewConversation) {
+    const preview = message.length > 60 ? message.slice(0, 60).trimEnd() + "…" : message
+    logActivity({ type: "chat", title: `Asked Lumora AI: ${preview}`, href: "/chat" }).catch(() => {})
+  }
 
   // Build the model context: prior history (without the just-sent message) + the new user turn.
   const history: ChatMessageInput[] = (body.history || [])

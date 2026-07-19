@@ -31,9 +31,26 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET) {
 
 export const enabledProviders = Object.keys(socialProviders)
 
+// The secret is required by Better Auth at runtime. We must NOT throw at
+// module-evaluation time: this module is imported by server components (via
+// lib/session) and a top-level throw crashes the whole Server Components
+// render (the "An error occurred in the Server Components render…" page).
+// Better Auth already throws a clear error when it is actually used without a
+// secret, so by passing the env value through (empty string when unset) we
+// keep the "no insecure default" guarantee at request time while never
+// breaking the import graph.
+const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET ?? ""
+
+if (!BETTER_AUTH_SECRET) {
+  console.warn(
+    "[Lumora] BETTER_AUTH_SECRET is not set. Auth requests will fail until it is provided. " +
+    "Refusing to crash the server import with an insecure default.",
+  )
+}
+
 const _auth = betterAuth({
   database: pool,
-  secret: process.env.BETTER_AUTH_SECRET || "please-set-BETTER_AUTH_SECRET",
+  secret: BETTER_AUTH_SECRET,
   baseURL:
     process.env.BETTER_AUTH_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -87,9 +104,5 @@ const _auth = betterAuth({
       }
     : {}),
 })
-
-if (!process.env.BETTER_AUTH_SECRET) {
-  console.warn("[Lumora] BETTER_AUTH_SECRET is not set. Auth will fail at runtime.")
-}
 
 export const auth = _auth

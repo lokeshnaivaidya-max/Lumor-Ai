@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
 import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink, Upload, X, Search, ChevronDown, AlertTriangle, BellOff } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
-import { logActivity } from "@/app/actions/activity"
 import { useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
 import { authClient } from "@/lib/auth-client"
@@ -259,7 +258,8 @@ export function ProfileClient({ user }: {
   const [country, setCountry] = useState(user.country)
   const [bio, setBio] = useState(user.bio)
   const [notif, setNotif] = useState<NotifPrefs>(user.notificationPrefs)
-  const [theme, setTheme] = useState<ThemeMode>((user.theme as ThemeMode) || "light")
+  const normalizedInitialTheme = (["light", "dark", "system"].includes(user.theme) ? user.theme : "light") as ThemeMode
+  const [theme, setTheme] = useState<ThemeMode>(normalizedInitialTheme)
 
   const [busy, setBusy] = useState(false)
 
@@ -272,7 +272,7 @@ export function ProfileClient({ user }: {
     country: user.country,
     bio: user.bio,
     notif: user.notificationPrefs,
-    theme: (user.theme as ThemeMode) || "light",
+    theme: normalizedInitialTheme,
   })
 
   const [curPw, setCurPw] = useState("")
@@ -368,7 +368,8 @@ export function ProfileClient({ user }: {
       // Keep better-auth session (avatar/name) in sync and refresh caches.
       await authClient.updateUser({ name: name || undefined, image: image || null }).catch(() => {})
       await refreshSessionCache()
-      logActivity({ type: "profile", title: "Profile updated", href: "/profile" }).catch(() => {})
+      // Update the dirty baseline so Save disables again until a new change.
+      initialRef.current = { ...initialRef.current, name, image, timezone, country, bio }
       toast("Profile saved", "success")
     } catch (e: any) {
       setError(e?.message || "Failed to save")
@@ -381,7 +382,7 @@ export function ProfileClient({ user }: {
     try {
       await updateProfile({ notificationPrefs: notif })
       await refreshSessionCache()
-      logActivity({ type: "notification", title: "Notification preferences updated", href: "/profile?tab=notifications" }).catch(() => {})
+      initialRef.current = { ...initialRef.current, notif }
       toast("Notification preferences saved", "success")
     } catch (e: any) {
       setError(e?.message || "Failed to save")
@@ -395,7 +396,7 @@ export function ProfileClient({ user }: {
       await updateProfile({ theme })
       applyTheme(theme)
       await refreshSessionCache()
-      logActivity({ type: "appearance", title: `Changed theme to ${theme}`, href: "/profile?tab=appearance" }).catch(() => {})
+      initialRef.current = { ...initialRef.current, theme }
       toast("Theme updated", "success")
     } catch (e: any) {
       setError(e?.message || "Failed to save")

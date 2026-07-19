@@ -34,6 +34,9 @@ export function AccountMenu() {
   // Compute the dropdown position from the button's viewport rect. Because the
   // menu is portaled to <body> with position:fixed, these viewport coords are
   // exact and unaffected by any ancestor overflow/transform/stacking context.
+  // We anchor the menu's right edge to the avatar's right edge so it always
+  // sits directly below the avatar and never overflows the viewport on small
+  // screens (we also clamp it in render).
   const position = useCallback(() => {
     const el = btnRef.current
     if (!el) return
@@ -130,37 +133,55 @@ export function AccountMenu() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.97 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ position: "fixed", top: coords.top, right: coords.right, pointerEvents: "auto" }}
-                  className="glass-strong w-72 overflow-hidden rounded-2xl p-1.5 shadow-2xl"
+                  style={{
+                    position: "fixed",
+                    top: coords.top,
+                    // Clamp the right offset so the menu stays fully on-screen
+                    // even when the avatar hugs the viewport edge.
+                    right: Math.max(coords.right, 12),
+                    pointerEvents: "auto",
+                  }}
+                  className="glass-strong w-64 overflow-hidden rounded-2xl p-2 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/10"
                 >
-                  <div className="px-3 py-2.5">
-                    <p className="break-words text-sm font-medium text-foreground">
-                      {user.name || "Lumora member"}
-                    </p>
-                    <p className="break-words text-xs text-muted-foreground">{user.email}</p>
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    {user.image ? (
+                      <img src={user.image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-sm font-semibold text-foreground">
+                        {initials(user.name, user.email)}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {user.name || "Lumora member"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                    </div>
                   </div>
                   <div className="my-1 h-px bg-white/[0.06]" />
-                  {MENU_LINKS.map((l) => (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
-                    >
-                      <l.icon className="h-4 w-4" />
-                      {l.label}
-                    </Link>
-                  ))}
+                  <div className="py-1">
+                    {MENU_LINKS.map((l) => (
+                      <Link
+                        key={l.href}
+                        href={l.href}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                      >
+                        <l.icon className="h-4 w-4 shrink-0" />
+                        {l.label}
+                      </Link>
+                    ))}
+                  </div>
                   <div className="my-1 h-px bg-white/[0.06]" />
                   <button
                     onClick={handleSignOut}
                     disabled={signingOut}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-neg transition-colors hover:bg-neg/10 disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-neg transition-colors hover:bg-neg/10 disabled:opacity-60"
                   >
                     {signingOut ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                     ) : (
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4 w-4 shrink-0" />
                     )}
                     Sign out
                   </button>
