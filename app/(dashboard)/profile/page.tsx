@@ -10,7 +10,15 @@ export const metadata = {
 }
 
 export default async function ProfilePage() {
-  const user = await getFullUser()
+  let user = null
+  try {
+    user = await getFullUser()
+  } catch {
+    // A session/DB/network failure while resolving the user must never crash
+    // the whole Server Components render. Treat it like an unauthenticated
+    // request and send the visitor to sign-in (where they can re-authenticate).
+    user = null
+  }
   if (!user) redirect("/sign-in")
   return (
     <ProfileClient

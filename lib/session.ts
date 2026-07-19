@@ -28,10 +28,17 @@ export async function getUserId() {
 export async function getFullUser() {
   const session = await getSession()
   if (!session?.user) return null
-  const [row] = await db
-    .select()
-    .from(user)
-    .where(eq(user.id, session.user.id))
-    .limit(1)
-  return row ?? null
+  try {
+    const [row] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1)
+    return row ?? null
+  } catch {
+    // A DB/network error resolving the profile must not bubble into the Server
+    // Component render (which would surface as the "Server Components render"
+    // error page). Treat it as "no user" so the caller redirects to sign-in.
+    return null
+  }
 }

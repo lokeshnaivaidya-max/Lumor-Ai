@@ -4,7 +4,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import {
   TrendingUp, TrendingDown, Wallet, BarChart3, ArrowUpRight, ArrowDownRight,
-  Plus, Bell, LineChart, ArrowRight, Star, Sparkles, Activity,
+  Plus, Bell, LineChart, ArrowRight, Star, Sparkles, Activity, Search,
 } from "lucide-react"
 import type { PortfolioSummary, WatchlistView } from "@/lib/portfolio"
 
@@ -53,7 +53,12 @@ function WatchlistWidget({ items }: { items: WatchlistView[] }) {
         className="glass-card rounded-2xl p-6"
       >
         <p className="meta mb-3">Watchlist</p>
-        <p className="body mb-4">No stocks tracked yet.</p>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--gold-soft)] text-[var(--gold)]">
+            <Star className="h-4 w-4" />
+          </span>
+          <p className="body">Track your first stock</p>
+        </div>
         <Link href="/watchlist" className="btn btn--gold btn--sm">
           <Plus className="h-3 w-3" /> Add your first
         </Link>
@@ -114,7 +119,12 @@ function InsightsWidget({ analyses }: { analyses: AnalysisView[] }) {
         className="glass-card rounded-2xl p-6"
       >
         <p className="meta mb-3">AI Insights</p>
-        <p className="body mb-4">No analyses yet.</p>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--gold-soft)] text-[var(--gold)]">
+            <LineChart className="h-4 w-4" />
+          </span>
+          <p className="body">Run your first AI analysis</p>
+        </div>
         <Link href="/markets" className="btn btn--gold btn--sm">
           <Sparkles className="h-3 w-3" /> Analyze a stock
         </Link>
@@ -208,7 +218,12 @@ function ActivityWidget({ notifications }: { notifications: NotifView[] }) {
         className="glass-card rounded-2xl p-6"
       >
         <p className="meta mb-3">Recent Activity</p>
-        <p className="body">No activity yet.</p>
+        <div className="flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--gold-soft)] text-[var(--gold)]">
+            <Search className="h-4 w-4" />
+          </span>
+          <p className="body">Search a stock to begin</p>
+        </div>
       </motion.div>
     )
   }
@@ -274,7 +289,7 @@ export function DashboardClient({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Wallet} label="Portfolio Value"
-          value={hasPortfolio ? `$${portfolio.value.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}
+          value={hasPortfolio ? `$${portfolio.value.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "No holdings yet"}
           change={hasPortfolio
             ? `${portfolio.returnsPercent >= 0 ? "+" : ""}${portfolio.returnsPercent.toFixed(2)}%`
             : undefined}
