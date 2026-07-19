@@ -133,7 +133,16 @@ async function safeForward(request: Request): Promise<Response> {
     }
     return response
   } catch (e) {
-    console.error("[AUTH API ERROR]", e)
+    const err = e as any
+    const sql = err?.cause?.code || err?.code || err?.meta?.code || err?.meta?.target || null
+    console.error("[AUTH API THROW]", JSON.stringify({
+      name: err?.name,
+      message: err?.message,
+      cause: err?.cause ? (typeof err.cause === "object" ? JSON.stringify(err.cause) : String(err.cause)) : undefined,
+      sqlCode: sql,
+      sqlMessage: err?.meta?.message || err?.cause?.message || null,
+      stack: err?.stack,
+    }, null, 2))
     return error("An internal error occurred. Please try again.", 500)
   }
 }
