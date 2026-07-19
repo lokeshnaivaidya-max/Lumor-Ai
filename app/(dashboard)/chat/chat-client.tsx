@@ -249,6 +249,10 @@ export function ChatClient() {
         {error && <p className="dm-meta px-5 pb-1 text-neg">{error}</p>}
 
         <div className="border-t border-border p-3">
+          <p className="dm-meta mb-2 flex items-center gap-1.5 text-muted-foreground/70">
+            <span aria-hidden>⚠️</span>
+            Lumora AI can make mistakes. Responses are for educational purposes only and should not be considered financial advice.
+          </p>
           <div className="flex items-end gap-2 rounded-2xl border border-border bg-card/40 px-3 py-2">
             <textarea
               value={input}

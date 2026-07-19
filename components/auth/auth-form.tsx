@@ -79,7 +79,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
           const errMsg = (result.error as Record<string, unknown>).message || (result.error as Record<string, unknown>).error || "Invalid email or password"
           throw new Error(String(errMsg))
         }
-        router.push("/dashboard")
+        router.push("/")
         router.refresh()
       }
     } catch (err) {
@@ -93,7 +93,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
     setOauthLoading(provider)
     setError(null)
     try {
-      await authClient.signIn.social({ provider, callbackURL: "/dashboard" })
+      await authClient.signIn.social({ provider, callbackURL: "/" })
     } catch {
       setError("OAuth sign-in failed. Please try again.")
     } finally {

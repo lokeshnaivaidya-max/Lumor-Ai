@@ -155,7 +155,7 @@ function VerifyEmailInner() {
       }
       if (mountedRef.current) {
         setSuccess(true)
-        const navTimer = setTimeout(() => { if (mountedRef.current) { router.push("/dashboard"); router.refresh() } }, 1500)
+        const navTimer = setTimeout(() => { if (mountedRef.current) { router.push("/"); router.refresh() } }, 1500)
         toastTimer.current = navTimer
       }
     } catch {
@@ -179,7 +179,7 @@ function VerifyEmailInner() {
             <CheckCircle2 className="h-8 w-8 text-emerald" />
           </motion.div>
           <h2 className="heading mt-5">Email verified</h2>
-          <p className="body mt-1.5">Redirecting to your dashboard…</p>
+          <p className="body mt-1.5">Redirecting to your home…</p>
         </div>
       </motion.div>
     )

@@ -113,7 +113,7 @@ function ResetPasswordInner() {
       }
       if (mountedRef.current) {
         setSuccess(true)
-        setTimeout(() => { mountedRef.current && (router.push("/dashboard"), router.refresh()) }, 1500)
+        setTimeout(() => { mountedRef.current && (router.push("/"), router.refresh()) }, 1500)
       }
     } catch (err) {
       if (mountedRef.current) setError(err instanceof Error ? err.message : "Verification failed")
@@ -129,7 +129,7 @@ function ResetPasswordInner() {
           <CheckCircle2 className="h-14 w-14 text-emerald" />
         </motion.div>
         <h2 className="dm-heading dm-heading--small mt-5">Password reset!</h2>
-        <p className="dm-body mt-1.5">Redirecting to your dashboard…</p>
+        <p className="dm-body mt-1.5">Redirecting to your home…</p>
       </motion.div>
     )
   }

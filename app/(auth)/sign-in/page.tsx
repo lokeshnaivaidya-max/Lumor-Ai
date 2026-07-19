@@ -19,7 +19,7 @@ export default async function SignInPage() {
   } catch {
     // Auth not configured — render form anyway
   }
-  if (user) redirect("/dashboard")
+  if (user) redirect("/")
 
   return (
     <div className="relative w-full max-w-md">

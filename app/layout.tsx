@@ -75,6 +75,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )lumora-theme=([^;]+)/);var v=m?decodeURIComponent(m[1]):"system";var d=v==="dark"||(v==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`,
+          }}
+        />
         <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>
           <EntranceScreen />
           <AmbientBackground />

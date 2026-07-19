@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { motion } from "motion/react"
 import { ThemeToggle } from "./theme-toggle"
+import { AccountMenu } from "./auth/account-menu"
+import { useSession } from "@/lib/auth-client"
 
 const LINKS = [
   { label: "Markets", href: "/markets" },
@@ -11,6 +13,8 @@ const LINKS = [
 ]
 
 export function LandingNav() {
+  const { data: session, isPending } = useSession()
+
   return (
     <motion.header
       initial={{ y: -16, opacity: 0 }}
@@ -31,9 +35,20 @@ export function LandingNav() {
         </div>
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <Link href="/sign-up" className="btn btn--gold btn--sm">
-            Get started
-          </Link>
+          {isPending ? (
+            <div className="h-9 w-9 animate-pulse rounded-full bg-white/5" />
+          ) : session?.user ? (
+            <AccountMenu />
+          ) : (
+            <>
+              <Link href="/sign-in" className="btn btn--ghost btn--sm">
+                Sign In
+              </Link>
+              <Link href="/sign-up" className="btn btn--gold btn--sm">
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </motion.header>

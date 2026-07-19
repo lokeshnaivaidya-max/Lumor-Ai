@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
-import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink } from "lucide-react"
+import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink, Upload, X, Search, ChevronDown, AlertTriangle, BellOff } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
 import { useRouter } from "next/navigation"
 
@@ -56,6 +56,162 @@ function Field({ label, icon: Icon, children }: { label: string; icon: React.Ele
   )
 }
 
+function SearchSelect({
+  value,
+  onChange,
+  options,
+  getLabel,
+  placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+  getLabel: (v: string) => string
+  placeholder: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState("")
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [])
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase()
+    if (!query) return options
+    return options.filter((o) => o.label.toLowerCase().includes(query) || o.value.toLowerCase().includes(query))
+  }, [options, q])
+
+  const selectedLabel = value ? getLabel(value) : ""
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="glass-input flex w-full items-center justify-between text-left"
+      >
+        <span className={value ? "" : "text-muted-foreground/60"}>{value ? selectedLabel : placeholder}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-30 mt-1.5 max-h-60 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
+          >
+            <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+              <Search className="h-3.5 w-3.5 text-muted-foreground/60" />
+              <input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search…"
+                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+              />
+            </div>
+            <div className="max-h-48 overflow-y-auto py-1">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-muted-foreground/60">No matches</p>
+              ) : (
+                filtered.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => { onChange(o.value); setOpen(false); setQ("") }}
+                    className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors hover:bg-foreground/[0.04] ${o.value === value ? "text-gold" : "text-foreground"}`}
+                  >
+                    <span className="truncate">{o.label}</span>
+                    {o.value === value && <Check className="h-3.5 w-3.5 shrink-0 text-gold" />}
+                  </button>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string) => void }) {
+  const [dragOver, setDragOver] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const MAX_BYTES = 4 * 1024 * 1024
+
+  function handleFile(file?: File | null) {
+    setError(null)
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file (PNG, JPG, WEBP, GIF).")
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setError("Image is too large. Please use a file under 4 MB.")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => onChange(typeof reader.result === "string" ? reader.result : "")
+    reader.onerror = () => setError("Could not read the selected file.")
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div>
+      <label className="dm-meta mb-1.5 flex items-center gap-1.5">
+        <Camera className="h-3 w-3" />Profile photo
+      </label>
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${dragOver ? "border-gold bg-gold/5" : "border-border hover:border-gold/50"}`}
+      >
+        {image ? (
+          <img src={image} alt="" className="h-14 w-14 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground/[0.06]">
+            <Upload className="h-5 w-5 text-muted-foreground" />
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-gold">Click to upload</span> or drag &amp; drop
+        </p>
+        <p className="text-[10px] text-muted-foreground/60">PNG, JPG, WEBP or GIF · max 4 MB</p>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+      {error && <p className="mt-1.5 text-xs text-neg">{error}</p>}
+      {image && (
+        <div className="mt-2 flex gap-3">
+          <button type="button" onClick={() => inputRef.current?.click()} className="dm-meta text-xs text-gold hover:underline">
+            Replace
+          </button>
+          <button type="button" onClick={() => onChange("")} className="dm-meta flex items-center gap-1 text-xs text-muted-foreground hover:text-neg">
+            <X className="h-3 w-3" />Remove
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ProfileClient({ user }: {
   user: {
     id: string; name: string; email: string; image: string; timezone: string; country: string;
@@ -83,7 +239,64 @@ export function ProfileClient({ user }: {
   const [newEmail, setNewEmail] = useState("")
   const [delPw, setDelPw] = useState("")
 
+  // Auto-detect timezone / country on first load when empty (never overwrite existing values).
+  useEffect(() => {
+    if (!timezone) {
+      try { setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "") } catch { /* noop */ }
+    }
+    if (!country) {
+      let detected = ""
+      try {
+        const locale = new Intl.Locale((navigator.language || "en-US"))
+        detected = locale.region || ""
+      } catch { /* noop */ }
+      if (!detected) {
+        const m = (navigator.language || "").match(/[-_]([A-Za-z]{2})/)
+        detected = m ? m[1].toUpperCase() : ""
+      }
+      if (!detected) {
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+          const parts = tz.split("/")
+          if (parts.length > 1) detected = parts[parts.length - 1].replace(/_/g, " ")
+        } catch { /* noop */ }
+      }
+      if (detected) setCountry(detected)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Browser notification permission state.
+  const [notifSupport, setNotifSupport] = useState<"unknown" | "granted" | "denied" | "default" | "unsupported">("unknown")
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotifSupport("unsupported")
+    } else {
+      setNotifSupport(Notification.permission as "granted" | "denied" | "default")
+    }
+  }, [])
+
   function flashSaved() { setSaved(true); setTimeout(() => setSaved(false), 2000) }
+
+  async function ensureNotificationPermission(): Promise<boolean> {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotifSupport("unsupported")
+      return false
+    }
+    if (Notification.permission === "granted") return true
+    if (Notification.permission === "denied") {
+      setNotifSupport("denied")
+      return false
+    }
+    try {
+      const result = await Notification.requestPermission()
+      setNotifSupport(result)
+      return result === "granted"
+    } catch {
+      setNotifSupport("denied")
+      return false
+    }
+  }
 
   async function saveProfile() {
     setBusy(true); setError(null)
@@ -140,6 +353,34 @@ export function ProfileClient({ user }: {
       router.push("/")
     } catch (e: any) { setError(e?.message || "Failed to delete account"); setBusy(false) }
   }
+
+  // Build searchable option lists from the browser's Intl data (no hard-coded lists).
+  const timezones = useMemo<{ value: string; label: string }[]>(() => {
+    try {
+      const list = (Intl as any).supportedValuesOf?.("timeZone") as string[] | undefined
+      if (list && list.length) return list.map((t) => ({ value: t, label: t.replace(/_/g, " ") }))
+    } catch { /* noop */ }
+    return []
+  }, [])
+
+  const countryNames = useMemo(() => {
+    try {
+      return new Intl.DisplayNames([navigator.language || "en"], { type: "region" })
+    } catch { return null }
+  }, [])
+
+  const countries = useMemo<{ value: string; label: string }[]>(() => {
+    let codes: string[] = []
+    try {
+      codes = (Intl as any).supportedValuesOf?.("region") as string[] | undefined || []
+    } catch { /* noop */ }
+    return codes
+      .map((c) => ({ value: c, label: countryNames ? countryNames.of(c) || c : c }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+  }, [countryNames])
+
+  const tzLabel = (v: string) => (timezones.find((t) => t.value === v)?.label || v || "Select timezone")
+  const countryLabel = (v: string) => (countries.find((c) => c.value === v)?.label || v || "Select country")
 
   return (
     <div className="p-6 lg:p-8">
@@ -203,9 +444,23 @@ export function ProfileClient({ user }: {
                 <hr className="dm-rule" />
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full" /></Field>
-                  <Field label="Avatar URL" icon={Camera}><input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" className="glass-input w-full" /></Field>
-                  <Field label="Timezone" icon={Clock}><input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" className="glass-input w-full" /></Field>
-                  <Field label="Country" icon={Globe}><input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="US" className="glass-input w-full" /></Field>
+                  <div className="sm:col-span-2">
+                    <AvatarUpload image={image} onChange={setImage} />
+                  </div>
+                  <Field label="Timezone" icon={Clock}>
+                    {timezones.length ? (
+                      <SearchSelect value={timezone} onChange={setTimezone} options={timezones} getLabel={tzLabel} placeholder="Select timezone" />
+                    ) : (
+                      <input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" className="glass-input w-full" />
+                    )}
+                  </Field>
+                  <Field label="Country" icon={Globe}>
+                    {countries.length ? (
+                      <SearchSelect value={country} onChange={setCountry} options={countries} getLabel={countryLabel} placeholder="Select country" />
+                    ) : (
+                      <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="US" className="glass-input w-full" />
+                    )}
+                  </Field>
                 </div>
                 <Field label="Bio" icon={User}>
                   <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself…" className="glass-input w-full resize-none" />
@@ -219,6 +474,18 @@ export function ProfileClient({ user }: {
           <motion.div key="notifications" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
             <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
               <div className="space-y-1 p-6">
+                {notifSupport === "unsupported" && (
+                  <p className="mb-3 flex items-center gap-2 rounded-xl bg-neg/10 px-4 py-2.5 text-xs text-neg">
+                    <BellOff className="h-3.5 w-3.5 shrink-0" />
+                    Browser notifications aren&apos;t supported in this browser. You can still manage your in-app preferences below.
+                  </p>
+                )}
+                {notifSupport === "denied" && (
+                  <p className="mb-3 flex items-center gap-2 rounded-xl bg-neg/10 px-4 py-2.5 text-xs text-neg">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    Notifications are blocked. Enable them in your browser site settings to receive browser alerts.
+                  </p>
+                )}
                 {NOTIF_KEYS.map((item, i) => (
                   <motion.div key={item.key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                     className="flex items-center justify-between rounded-xl px-4 py-3.5 transition-colors hover:bg-foreground/[0.02]">
@@ -226,7 +493,18 @@ export function ProfileClient({ user }: {
                       <p className="dm-body font-medium">{item.label}</p>
                       <p className="dm-meta mt-0.5">{item.desc}</p>
                     </div>
-                    <ToggleSwitch checked={!!notif[item.key]} onChange={(v) => setNotif((p) => ({ ...p, [item.key]: v }))} />
+                    <ToggleSwitch
+                      checked={!!notif[item.key]}
+                      onChange={async (v) => {
+                        if (v) {
+                          const ok = await ensureNotificationPermission()
+                          if (!ok && notifSupport !== "granted") {
+                            setError(notifSupport === "denied" ? "Notifications are blocked in your browser settings." : "Could not enable browser notifications.")
+                          }
+                        }
+                        setNotif((p) => ({ ...p, [item.key]: v }))
+                      }}
+                    />
                   </motion.div>
                 ))}
               </div>

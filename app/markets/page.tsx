@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, BarChart3, Target, ShieldAlert, Scale } from "lucide-react"
 
 import { LumoraMark } from "@/components/lumora-mark"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -43,6 +43,39 @@ export default async function MarketsPage({ searchParams }: { searchParams?: Pro
           </p>
         </div>
         <MarketExplorer initialSymbol={symbol} />
+
+        <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-12">
+          <div className="rounded-[28px] border border-gold/15 bg-gold/[0.04] p-6 sm:p-8">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                    <BarChart3 className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">Trade Planner</p>
+                </div>
+                <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  Plan your trade before you place it
+                </h2>
+                <p className="mt-2 text-pretty text-muted-foreground">
+                  Enter your entry price, quantity, and style — intraday or swing — and get AI-computed target, stop-loss,
+                  risk&nbsp;/&nbsp;reward, and position sizing. Describe it in plain language and we&apos;ll parse it for you.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3 text-gold" />Target &amp; Stop-Loss</span>
+                  <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3 text-gold" />Risk / Reward</span>
+                  <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3 text-gold" />Position Sizing</span>
+                </div>
+              </div>
+              <Link
+                href="/trade-planner"
+                className="lm-btn lm-btn--gold shrink-0 px-6 py-3 text-sm"
+              >
+                Open Trade Planner
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
     </>
   )
