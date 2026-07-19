@@ -4,10 +4,12 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { motion } from "motion/react"
 import {
+  Home,
   LayoutDashboard,
   Briefcase,
   Eye,
   BarChart3,
+  LineChart,
   MessageSquare,
   Bell,
   User,
@@ -20,7 +22,9 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 
 const NAV_ITEMS = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/markets", label: "Markets", icon: LineChart },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/compare", label: "Compare", icon: BarChart3 },
