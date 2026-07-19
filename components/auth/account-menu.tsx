@@ -143,40 +143,31 @@ export function AccountMenu() {
                   }}
                   className="glass-strong w-64 overflow-hidden rounded-2xl p-2 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/10"
                 >
-                  <div className="flex items-center gap-3 px-3 py-3">
-                    {user.image ? (
-                      <img src={user.image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-sm font-semibold text-foreground">
-                        {initials(user.name, user.email)}
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {user.name || "Lumora member"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                    </div>
+                  <div className="px-3 pb-3 pt-2">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {user.name || "Lumora member"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <div className="my-1 h-px bg-white/[0.06]" />
+                  <div className="h-px bg-white/[0.06]" />
                   <div className="py-1">
                     {MENU_LINKS.map((l) => (
                       <Link
                         key={l.href}
                         href={l.href}
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
                       >
                         <l.icon className="h-4 w-4 shrink-0" />
                         {l.label}
                       </Link>
                     ))}
                   </div>
-                  <div className="my-1 h-px bg-white/[0.06]" />
+                  <div className="h-px bg-white/[0.06]" />
                   <button
                     onClick={handleSignOut}
                     disabled={signingOut}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-neg transition-colors hover:bg-neg/10 disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-neg transition-colors hover:bg-neg/10 disabled:opacity-60"
                   >
                     {signingOut ? (
                       <Loader2 className="h-4 w-4 shrink-0 animate-spin" />

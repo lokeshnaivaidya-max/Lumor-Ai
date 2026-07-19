@@ -258,8 +258,14 @@ export function ProfileClient({ user }: {
   const [country, setCountry] = useState(user.country)
   const [bio, setBio] = useState(user.bio)
   const [notif, setNotif] = useState<NotifPrefs>(user.notificationPrefs)
+  // The theme persisted in the database is the single source of truth for the
+  // "saved" baseline. We keep it in its own ref so the dirty check compares the
+  // *selected* theme against the *persisted* theme — never against a value that
+  // drifts during the session. Save enables the instant they differ and only
+  // disables again after a successful save resets this baseline.
   const normalizedInitialTheme = (["light", "dark", "system"].includes(user.theme) ? user.theme : "light") as ThemeMode
   const [theme, setTheme] = useState<ThemeMode>(normalizedInitialTheme)
+  const savedThemeRef = useRef<ThemeMode>(normalizedInitialTheme)
 
   const [busy, setBusy] = useState(false)
 
@@ -396,7 +402,7 @@ export function ProfileClient({ user }: {
       await updateProfile({ theme })
       applyTheme(theme)
       await refreshSessionCache()
-      initialRef.current = { ...initialRef.current, theme }
+      savedThemeRef.current = theme
       toast("Theme updated", "success")
     } catch (e: any) {
       setError(e?.message || "Failed to save")
@@ -526,7 +532,7 @@ export function ProfileClient({ user }: {
     name !== init.name || image !== init.image || timezone !== init.timezone ||
     country !== init.country || bio !== init.bio
   const dirtyNotif = JSON.stringify(notif) !== JSON.stringify(init.notif)
-  const dirtyTheme = theme !== init.theme
+  const dirtyTheme = theme !== savedThemeRef.current
   const isDirty =
     (activeTab === "profile" && dirtyProfile) ||
     (activeTab === "notifications" && dirtyNotif) ||

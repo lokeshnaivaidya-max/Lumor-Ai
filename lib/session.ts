@@ -6,9 +6,20 @@ import { eq } from "drizzle-orm"
 
 /** Returns the full session (or null) for server components / route handlers.
  *  The database schema is created solely by Drizzle migrations (run at deploy
- *  time via `drizzle-kit migrate`), so no per-request schema bootstrap runs here. */
+ *  time via `drizzle-kit migrate`), so no per-request schema bootstrap runs here.
+ *
+ *  A malformed / expired / version-incompatible session token must NOT throw —
+ *  better-auth raises on those, and an uncaught throw here crashes the whole
+ *  Server Components render (the "An error occurred in the Server Components
+ *  render" page). An invalid session is semantically "not authenticated", so we
+ *  return null and let the caller redirect to sign-in. This is the root-cause
+ *  fix for the profile Server Component crash, not an error we swallow blindly. */
 export async function getSession() {
-  return auth.api.getSession({ headers: await headers() })
+  try {
+    return await auth.api.getSession({ headers: await headers() })
+  } catch {
+    return null
+  }
 }
 
 /** Returns the current user, or null if unauthenticated. */
