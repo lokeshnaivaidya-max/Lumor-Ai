@@ -170,7 +170,7 @@ export function ChatClient() {
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-4 lg:p-6">
+      <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-2 lg:p-4">
       <div className="hidden w-64 shrink-0 flex-col gap-2 md:flex">
         <button onClick={startNew} className="lm-btn lm-btn--gold flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
           <Plus className="h-3.5 w-3.5" />New chat
@@ -208,14 +208,14 @@ export function ChatClient() {
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 lg:px-6">
+        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-2 py-4 lg:px-4">
           {loadingMsgs ? (
             <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <p className="dm-body">Ask Lumora about the markets</p>
               <p className="dm-body mt-1 text-muted-foreground">Get grounded insights on stocks, strategies, and investing.</p>
-              <div className="mt-5 grid w-full max-w-md grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
                 {SUGGESTIONS.map((s) => (
                   <button key={s} onClick={() => send(s)} className="glass-card rounded-2xl px-3 py-2.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground">
                     {s}
@@ -234,7 +234,7 @@ export function ChatClient() {
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${m.role === "user" ? "bg-gold/10 text-gold" : "bg-card text-muted-foreground"}`}>
                   {m.role === "user" ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-gold/10" : "bg-foreground/[0.04]"}`}>
+                <div className={`max-w-[92%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-gold/10" : "bg-foreground/[0.04]"}`}>
                   {m.role === "assistant" && !m.content ? <TypingDots /> : <Markdown content={m.content} />}
                 </div>
               </motion.div>

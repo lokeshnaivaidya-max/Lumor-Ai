@@ -26,6 +26,29 @@ const TABS = [
   { key: "legal" as const, label: "Legal", icon: FileText },
 ]
 
+// Map a detected region fragment (including deprecated / ambiguous ones) to a
+// 2-letter ISO country code we actually store.
+const COUNTRY_ALIASES: Record<string, string> = {
+  IN: "IN", INDIA: "IN", KOLKATA: "IN", CALCUTTA: "IN", BENGALURU: "IN", MUMBAI: "IN", DELHI: "IN",
+  US: "US", USA: "US", "UNITED STATES": "US",
+  GB: "GB", UK: "GB", "UNITED KINGDOM": "GB", ENGLAND: "GB", LONDON: "GB",
+  CA: "CA", CANADA: "CA", TORONTO: "CA",
+  AU: "AU", AUSTRALIA: "AU", SYDNEY: "AU",
+  DE: "DE", GERMANY: "DE", BERLIN: "DE",
+  FR: "FR", FRANCE: "FR", PARIS: "FR",
+  JP: "JP", JAPAN: "JP", TOKYO: "JP",
+  SG: "SG", SINGAPORE: "SG",
+  AE: "AE", "UNITED ARAB EMIRATES": "AE", DUBAI: "AE",
+}
+
+function normalizeCountry(raw: string): string {
+  if (!raw) return ""
+  const key = raw.trim().toUpperCase()
+  if (COUNTRY_ALIASES[key]) return COUNTRY_ALIASES[key]
+  if (/^[A-Z]{2}$/.test(key)) return key
+  return ""
+}
+
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!checked)}
@@ -106,7 +129,7 @@ function SearchSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-30 mt-1.5 max-h-60 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
+            className="glass-dialog absolute z-30 mt-1.5 max-h-60 w-full overflow-hidden rounded-xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3 py-2">
               <Search className="h-3.5 w-3.5 text-muted-foreground/60" />
@@ -242,7 +265,11 @@ export function ProfileClient({ user }: {
   // Auto-detect timezone / country on first load when empty (never overwrite existing values).
   useEffect(() => {
     if (!timezone) {
-      try { setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "") } catch { /* noop */ }
+      try {
+        let tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+        if (tz === "Asia/Calcutta") tz = "Asia/Kolkata"
+        setTimezone(tz)
+      } catch { /* noop */ }
     }
     if (!country) {
       let detected = ""
@@ -257,11 +284,16 @@ export function ProfileClient({ user }: {
       if (!detected) {
         try {
           const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
-          const parts = tz.split("/")
-          if (parts.length > 1) detected = parts[parts.length - 1].replace(/_/g, " ")
+          if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") detected = "IN"
+          else {
+            const parts = tz.split("/")
+            if (parts.length > 1) detected = parts[parts.length - 1].replace(/_/g, " ")
+          }
         } catch { /* noop */ }
       }
-      if (detected) setCountry(detected)
+      // Normalize common deprecated / ambiguous region fragments to ISO codes.
+      const normalized = normalizeCountry(detected)
+      if (normalized) setCountry(normalized)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient, useSession } from "@/lib/auth-client";
+import type { Indicators } from "@/lib/indicators"
 import {
   Loader2,
   TrendingUp,
@@ -161,9 +162,11 @@ function LoadingSkeleton() {
 export function AiAnalysis({
   symbol,
   triggerRef,
+  indicators,
 }: {
   symbol: string
   triggerRef?: React.MutableRefObject<(() => void) | null>
+  indicators?: Indicators | null
 }) {
   const [data, setData] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
@@ -344,8 +347,10 @@ export function AiAnalysis({
               <button
                 key={h.id}
                 onClick={() => setHorizon(h.id)}
-                className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                  horizon === h.id ? "bg-blue text-white" : "text-muted-foreground hover:text-foreground"
+                className={`rounded-full px-3 py-1 text-xs transition-all duration-300 ${
+                  horizon === h.id
+                    ? "bg-blue text-white shadow-[0_0_14px_2px_rgba(91,141,255,0.55)] ring-2 ring-blue/60"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {h.label}
@@ -401,7 +406,7 @@ export function AiAnalysis({
         </div>
       )}
 
-      {data && <Report data={data} />}
+      {data && <Report data={data} indicators={indicators} />}
 
       {!data && !loading && !error && (
         <p className="relative mt-4 text-sm text-muted-foreground">
@@ -413,12 +418,14 @@ export function AiAnalysis({
   )
 }
 
-function Report({ data }: { data: Analysis }) {
+function Report({ data, indicators }: { data: Analysis; indicators?: Indicators | null }) {
   const rec = recTone(data.recommendation)
   const conf = Math.max(0, Math.min(100, Math.round(data.confidenceScore)))
   const profit = Math.max(0, Math.min(100, Math.round(data.probabilityOfProfit)))
   const loss = Math.max(0, Math.min(100, Math.round(data.probabilityOfLoss)))
   const risk = riskTone(data.riskLevel)
+
+  const indicatorBullets = buildIndicatorReasons(indicators)
 
   return (
     <div className="relative mt-5 space-y-6 border-t border-white/10 pt-6">
@@ -429,9 +436,32 @@ function Report({ data }: { data: Analysis }) {
           transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
           className="relative flex flex-col items-center justify-center gap-3 rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl p-6"
         >
-          <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Confidence</span>
-          <ConfidenceMeter value={conf} color={rec.ring} size="lg" />
-          <p className="text-center text-xs leading-relaxed text-muted-foreground">{data.confidenceNote}</p>
+          <div
+            className="pointer-events-none absolute -top-10 -left-10 h-32 w-32 rounded-full blur-[60px]"
+            style={{ background: rec.ring.replace(")", " / 0.18)") }}
+          />
+          <span className="relative text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">AI Verdict</span>
+          <div className={`relative flex items-center gap-2.5 text-2xl font-semibold ${rec.text}`}>
+            <RecIcon rec={data.recommendation} />
+            {data.recommendation}
+          </div>
+          <div className="relative flex items-center gap-2 text-sm text-muted-foreground">
+            <ShieldAlert className={`h-4 w-4 ${risk.text}`} />
+            <span className={`font-semibold ${risk.text}`}>{data.riskLevel}</span>
+            <span>risk</span>
+          </div>
+          <div className="relative mt-1 h-2 w-full max-w-[180px] overflow-hidden rounded-full bg-white/10">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${risk.pct}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+              className={`h-full rounded-full ${risk.bar}`}
+            />
+          </div>
+          <div className="relative mt-2 flex flex-col items-center">
+            <ConfidenceMeter value={conf} color={rec.ring} size="lg" />
+            <p className="mt-1 text-center text-xs leading-relaxed text-muted-foreground">{data.confidenceNote}</p>
+          </div>
         </motion.div>
 
         <motion.div
@@ -446,13 +476,19 @@ function Report({ data }: { data: Analysis }) {
           />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-               AI verdict
+               Why this call
             </span>
-            <div className={`mt-3 flex items-center gap-2.5 text-2xl font-semibold ${rec.text}`}>
-              <RecIcon rec={data.recommendation} />
-              {data.recommendation}
+            <p className="mt-3 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <CockpitMetric icon={<LogIn />} label="Entry" value={data.entry} accent="blue" />
+              <CockpitMetric icon={<ArrowUpRight />} label="Target" value={data.target} accent="emerald" />
+              <CockpitMetric icon={<Ban />} label="Stop Loss" value={data.stopLoss} accent="rose" />
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <CockpitMetric icon={<Clock />} label="Hold" value={data.holdingPeriod} accent="violet" />
+              <CockpitMetric icon={<ArrowUpRight />} label="R:R" value={data.riskReward} accent="gold" />
+              <CockpitMetric icon={<Clock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
+            </div>
           </div>
         </motion.div>
       </div>
@@ -461,36 +497,80 @@ function Report({ data }: { data: Analysis }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-3 gap-3 sm:grid-cols-6"
+        className="rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl p-5"
       >
-        <CockpitMetric icon={<LogIn />} label="Entry" value={data.entry} accent="blue" />
-        <CockpitMetric icon={<ArrowUpRight />} label="Target" value={data.target} accent="emerald" />
-        <CockpitMetric icon={<Ban />} label="Stop Loss" value={data.stopLoss} accent="rose" />
-        <CockpitMetric icon={<Clock />} label="Hold" value={data.holdingPeriod} accent="violet" />
-        <CockpitMetric icon={<ArrowUpRight />} label="R:R" value={data.riskReward} accent="gold" />
-        <CockpitMetric icon={<Clock />} label="Timeframe" value={data.bestTimeframe} accent="cyan" />
-      </motion.div>
-
-      {data.quickSummary?.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="flex flex-wrap gap-2"
-        >
-          {data.quickSummary.slice(0, 3).map((s, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-relaxed text-foreground/80 backdrop-blur-sm">
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-blue" />
-              {s}
-            </span>
+        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-emerald">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Key Reasons
+        </h4>
+        <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {(data.whyBuy ?? []).slice(0, 4).map((p, i) => (
+            <div key={`b-${i}`} className="flex items-start gap-2 text-sm leading-relaxed text-foreground/85">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" />
+              {p}
+            </div>
           ))}
-        </motion.div>
-      )}
+        </div>
+        {indicatorBullets.length > 0 && (
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">From the charts</p>
+            <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+              {indicatorBullets.map((b, i) => (
+                <div key={`i-${i}`} className="flex items-start gap-2 text-sm leading-relaxed text-foreground/80">
+                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${b.tone}`} />
+                  {b.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
+        className="rounded-[32px] border border-rose/30 bg-rose/[0.05] p-5"
+      >
+        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-rose">
+          <ShieldAlert className="h-3.5 w-3.5" /> Risks &amp; What Could Go Wrong
+        </h4>
+        <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {(data.whatCouldGoWrong ?? []).slice(0, 4).map((p, i) => (
+            <div key={`r-${i}`} className="flex items-start gap-2 text-sm leading-relaxed text-foreground/85">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose" />
+              {p}
+            </div>
+          ))}
+        </div>
+        {data.biggestRisk && (
+          <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs leading-relaxed text-foreground/80">
+            <span className="font-semibold text-rose">Biggest risk:</span> {data.biggestRisk}
+          </p>
+        )}
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="rounded-[32px] border border-gold/30 bg-gold/[0.06] p-5 backdrop-blur-sm"
+      >
+        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-gold">
+          <UserCheck className="h-3.5 w-3.5" /> Summary
+        </h4>
+        <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
+        {data.ownMoneyView && (
+          <p className="mt-2 text-sm leading-relaxed text-foreground/85">{data.ownMoneyView}</p>
+        )}
+        {data.aiVerdict && (
+          <p className="mt-2 text-sm font-medium leading-relaxed text-foreground/90">{data.aiVerdict}</p>
+        )}
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.55 }}
       >
         <Section title="Probability" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -506,7 +586,7 @@ function Report({ data }: { data: Analysis }) {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.45 }}
+        transition={{ delay: 0.6 }}
       >
         <Section title="Scenarios" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -520,17 +600,7 @@ function Report({ data }: { data: Analysis }) {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="grid gap-4 sm:grid-cols-2"
-      >
-        <ExpandableCase title="Bull Case" tone="pos" points={data.whyBuy} />
-        <ExpandableCase title="Bear Case" tone="neg" points={data.whatCouldGoWrong} />
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.55 }}
+        transition={{ delay: 0.65 }}
         className="grid gap-3 sm:grid-cols-2"
       >
         <TimelineLevel
@@ -554,83 +624,7 @@ function Report({ data }: { data: Analysis }) {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="grid gap-4 sm:grid-cols-2"
-      >
-        <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <ShieldAlert className="h-3.5 w-3.5" /> Risk Level
-            </span>
-            <motion.span
-              initial={{ x: 10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className={`text-sm font-semibold ${risk.text}`}
-            >
-              {data.riskLevel}
-            </motion.span>
-          </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/10">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${risk.pct}%` }}
-              transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-              className={`h-full rounded-full ${risk.bar}`}
-            />
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.riskNote}</p>
-        </div>
-
-        <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-5">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Market Mood</span>
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.9 }}
-              className={`flex items-center gap-1.5 text-sm font-semibold ${moodTone(data.marketMood)}`}
-            >
-              <MoodIcon bias={data.marketMood} /> {data.marketMood}
-            </motion.span>
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{data.marketMoodNote}</p>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.65 }}
-        className="rounded-[28px] border border-blue/30 bg-blue/[0.06] p-5 backdrop-blur-sm"
-      >
-        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-blue">
-           Explained Like I&apos;m Your Family
-        </h4>
-        <p className="text-sm leading-relaxed text-foreground/90">{data.beginnerExplanation}</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="flex items-start gap-3 rounded-[28px] border border-gold/30 bg-gold/[0.07] p-5 backdrop-blur-sm"
-      >
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold/20 text-gold">
-          <UserCheck className="h-4 w-4" />
-        </span>
-        <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-gold">
-            What Would I Do With My Own Money?
-          </div>
-          <p className="mt-1 text-sm leading-relaxed text-foreground/90">{data.ownMoneyView}</p>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.75 }}
       >
         <details className="group rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
           <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
@@ -645,24 +639,54 @@ function Report({ data }: { data: Analysis }) {
         </details>
       </motion.div>
 
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="flex items-start gap-3 rounded-[28px] border border-blue/30 bg-blue/10 p-4 backdrop-blur-sm"
-      >
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue/20 text-blue">
-          <ArrowUpRight className="h-4 w-4" />
-        </span>
-        <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-blue">Final Advice</div>
-          <p className="mt-1 text-sm font-medium leading-relaxed text-foreground/90">{data.aiVerdict}</p>
-        </div>
-      </motion.div>
+      {data.quickSummary?.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.75 }}
+          className="flex flex-wrap gap-2"
+        >
+          {data.quickSummary.slice(0, 3).map((s, i) => (
+            <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-relaxed text-foreground/80 backdrop-blur-sm">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-blue" />
+              {s}
+            </span>
+          ))}
+        </motion.div>
+      )}
 
       <p className="pt-1 text-[11px] italic text-muted-foreground/70">{data.disclaimer}</p>
     </div>
   )
+}
+
+function buildIndicatorReasons(ind: Indicators | null | undefined): { label: string; tone: string }[] {
+  if (!ind) return []
+  const out: { label: string; tone: string }[] = []
+
+  if (ind.rsi != null) {
+    const rsi = ind.rsi!
+    const tag = rsi >= 70 ? "overbought" : rsi <= 30 ? "oversold" : "neutral"
+    const tone = rsi >= 70 ? "bg-rose" : rsi <= 30 ? "bg-emerald" : "bg-gold"
+    out.push({ label: `RSI ${rsi.toFixed(0)} (${tag})`, tone })
+  }
+  if (ind.macd) {
+    const m = ind.macd!
+    const bull = m.histogram >= 0
+    out.push({ label: `MACD ${bull ? "bullish" : "bearish"} crossover`, tone: bull ? "bg-emerald" : "bg-rose" })
+  }
+  if (ind.ema20 != null && ind.ema50 != null) {
+    const bull = ind.ema20! > ind.ema50!
+    out.push({ label: `EMA 20 ${bull ? "above" : "below"} EMA 50`, tone: bull ? "bg-emerald" : "bg-rose" })
+  }
+  if (ind.vwap != null) {
+    out.push({ label: "Price vs VWAP momentum", tone: "bg-blue" })
+  }
+  if (ind.trend) {
+    const tone = ind.trend === "bullish" ? "bg-emerald" : ind.trend === "bearish" ? "bg-rose" : "bg-gold"
+    out.push({ label: `Trend ${ind.trend} (${ind.trendStrength})`, tone })
+  }
+  return out
 }
 
 function ConfidenceMeter({ value, color, size = "sm" }: { value: number; color: string; size?: "sm" | "lg" }) {

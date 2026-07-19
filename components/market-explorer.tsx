@@ -8,7 +8,8 @@ import { SymbolSearch, type SearchResult } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
 import { currencySymbol, logoUrl } from "@/lib/utils"
-import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers, LineChart } from "lucide-react"
+import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers, LineChart, Target, ShieldAlert, Scale } from "lucide-react"
+import Link from "next/link"
 
 const POLL_INTERVAL = 12_000
 
@@ -335,9 +336,28 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         ) : chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} indicators={indicators} />}
       </BentoCard>
 
+      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        Company Details
+      </h2>
       <StatsGrid quote={quote} ccySym={ccySym} />
 
-      <div className="mt-5 flex items-center gap-3">
+      {(!quote || quote.assetType !== "EQUITY") && (
+        <div className="mt-6">
+          <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Options Chain
+          </h2>
+          <BentoCard className="!p-0">
+            <OptionChain symbol={symbol} defaultStrike={optionParams.strike} defaultExpiry={optionParams.expiry} />
+          </BentoCard>
+        </div>
+      )}
+
+      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        Technical Metrics
+      </h2>
+      <IndicatorPanel ind={indicators} />
+
+      <div className="mt-10 flex items-center gap-3">
         <button
           onClick={() => {
             analysisTrigger.current?.()
@@ -353,33 +373,50 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         <span className="text-xs text-muted-foreground">AI analysis runs below, grounded in live market data.</span>
       </div>
 
-      {(!quote || quote.assetType !== "EQUITY") && (
-        <div className="mt-6">
-          <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Options Chain
-          </h2>
-          <BentoCard className="!p-0">
-            <OptionChain symbol={symbol} defaultStrike={optionParams.strike} defaultExpiry={optionParams.expiry} />
-          </BentoCard>
-        </div>
-      )}
-
       <div className="mt-6" id="ai-analysis">
         <BentoCard className="!p-0">
-          <AiAnalysis symbol={symbol} triggerRef={analysisTrigger} />
+          <AiAnalysis symbol={symbol} triggerRef={analysisTrigger} indicators={indicators} />
         </BentoCard>
       </div>
 
-      <div className="mt-6">
+      <section className="mt-10">
+        <div className="rounded-[28px] border border-gold/15 bg-gold/[0.04] p-6 sm:p-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">Trade Planner</p>
+              </div>
+              <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                Plan your trade before you place it
+              </h2>
+              <p className="mt-2 text-pretty text-muted-foreground">
+                Enter your entry price, quantity, and style — intraday or swing — and get AI-computed target, stop-loss,
+                risk&nbsp;/&nbsp;reward, and position sizing. Describe it in plain language and we&apos;ll parse it for you.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3 text-gold" />Target &amp; Stop-Loss</span>
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3 text-gold" />Risk / Reward</span>
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3 text-gold" />Position Sizing</span>
+              </div>
+            </div>
+            <Link
+              href="/trade-planner"
+              className="lm-btn lm-btn--gold shrink-0 px-6 py-3 text-sm"
+            >
+              Open Trade Planner
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-10">
         <BentoCard className="!p-0">
           <NewsPanel symbol={symbol} />
         </BentoCard>
       </div>
-
-      <h2 className="mb-4 mt-12 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-        Technical Indicators
-      </h2>
-      <IndicatorPanel ind={indicators} />
     </div>
   )
 }

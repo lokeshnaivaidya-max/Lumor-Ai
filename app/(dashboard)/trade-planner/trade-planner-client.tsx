@@ -366,7 +366,7 @@ export function TradePlannerClient() {
                 <SymbolSearch onSelect={(r) => setSymbol(r.symbol)} />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="dm-meta mb-1.5 block">Buy Price</label>
                   <input
@@ -375,7 +375,7 @@ export function TradePlannerClient() {
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value)}
                     placeholder="0.00"
-                    className="glass-input"
+                    className="glass-input w-full"
                   />
                 </div>
                 <div>
@@ -386,7 +386,7 @@ export function TradePlannerClient() {
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="0"
-                    className="glass-input"
+                    className="glass-input w-full"
                   />
                 </div>
               </div>
@@ -399,11 +399,11 @@ export function TradePlannerClient() {
                   value={budget || computedBudget}
                   onChange={(e) => handleBudgetChange(e.target.value)}
                   placeholder="0.00"
-                  className="glass-input font-semibold"
+                  className="glass-input w-full font-semibold"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="dm-meta mb-1.5 block">Target Price</label>
                   <input
@@ -412,7 +412,7 @@ export function TradePlannerClient() {
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
                     placeholder="Optional"
-                    className="glass-input"
+                    className="glass-input w-full"
                   />
                 </div>
                 <div>
@@ -423,7 +423,7 @@ export function TradePlannerClient() {
                     value={stopLoss}
                     onChange={(e) => setStopLoss(e.target.value)}
                     placeholder="Optional"
-                    className="glass-input"
+                    className="glass-input w-full"
                   />
                 </div>
               </div>
@@ -447,7 +447,7 @@ export function TradePlannerClient() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.96 }}
                       transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+                      className="glass-dialog absolute z-20 mt-1 w-full overflow-hidden rounded-xl"
                     >
                       {HOLDING_OPTIONS.map((opt) => (
                         <button
@@ -490,7 +490,7 @@ export function TradePlannerClient() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.96 }}
                       transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+                      className="glass-dialog absolute z-20 mt-1 w-full overflow-hidden rounded-xl"
                     >
                       {RISK_OPTIONS.map((opt) => (
                         <button
