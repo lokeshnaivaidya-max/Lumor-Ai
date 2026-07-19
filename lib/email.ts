@@ -37,7 +37,15 @@ export async function sendOtpEmail({ email, otp, type }: { email: string; otp: s
   lastLog = result
 
   if (!result.success) {
-    throw new Error(`Email delivery failed after ${result.retryCount + 1} attempts. Last error: ${result.error}`)
+    // Do NOT throw: an unconfigured/down email provider must not crash the auth
+    // flow (sign-up OTP, password reset). The OTP is already emitted to logs
+    // via the [OTP-TRACE] callback, so the flow remains usable in dev/demo
+    // environments. We surface the failure as a non-throwing result and let the
+    // caller proceed.
+    console.warn(
+      `[EMAIL] OTP email not delivered (provider ${getActiveProviderName()}): ${result.error}`,
+    )
+    return { success: false, messageId: result.messageId, correlationId, accepted: result.accepted }
   }
 
   return { success: true, messageId: result.messageId, correlationId, accepted: result.accepted }

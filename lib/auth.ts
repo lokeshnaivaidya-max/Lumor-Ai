@@ -77,7 +77,14 @@ const _auth = betterAuth({
       async sendVerificationOTP({ email, otp, type }) {
         console.log("[OTP-TRACE] >>> Better Auth sendVerificationOTP callback FIRED", { email, type, stack: new Error().stack })
         const emailType = type === "forget-password" ? "reset" : "verification"
-        await sendOtpEmail({ email, otp, type: emailType })
+        // Never let an email-delivery failure break the auth flow (sign-up /
+        // password-reset). The OTP is logged above so it remains usable in
+        // dev/demo environments without a configured SMTP provider.
+        try {
+          await sendOtpEmail({ email, otp, type: emailType })
+        } catch (e) {
+          console.warn("[OTP-TRACE] sendOtpEmail failed (non-fatal):", (e as Error)?.message)
+        }
         console.log("[OTP-TRACE] <<< Better Auth sendVerificationOTP callback DONE", { email, type })
       },
     }),
