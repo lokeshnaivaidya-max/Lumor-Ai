@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { Search, TrendingUp, TrendingDown, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
+import { logActivity } from "@/app/actions/activity"
 
 type Quote = {
   symbol: string
@@ -65,6 +66,20 @@ export function CompareClient() {
   const [suggestions, setSuggestions] = useState<{ symbol: string; name: string }[]>([])
   const [activeBox, setActiveBox] = useState<"a" | "b" | null>(null)
   const [loading, setLoading] = useState<"a" | "b" | null>(null)
+  const comparedRef = useRef<string>("")
+
+  // Log a "compare" activity once both sides are loaded (deduped per pair).
+  useEffect(() => {
+    if (a.quote && b.quote) {
+      const key = `${a.symbol}|${b.symbol}`
+      if (comparedRef.current !== key) {
+        comparedRef.current = key
+        logActivity({ type: "compare", title: `Compared ${a.symbol} vs ${b.symbol}`, ticker: a.symbol, href: "/compare" }).catch(() => {})
+      }
+    } else {
+      comparedRef.current = ""
+    }
+  }, [a.quote, b.quote, a.symbol, b.symbol])
 
   async function loadQuote(sym: string, box: "a" | "b") {
     const s = sym.trim().toUpperCase()

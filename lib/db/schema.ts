@@ -156,3 +156,18 @@ export const userAgreement = pgTable("user_agreement", {
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
 })
+
+// Lightweight, append-only activity log for user-facing events that are not
+// otherwise captured by a dedicated table (searches, compare/trade-planner
+// usage, watchlist removals, notification-preference changes, etc.).
+export const activityLog = pgTable("activity_log", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  ticker: text("ticker"),
+  href: text("href"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})

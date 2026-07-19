@@ -11,19 +11,22 @@ import {
   Bell,
   LogIn,
   User,
+  Search,
+  GitCompare,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react"
 
 export type ActivityItem = {
   id: string
-  type: "portfolio" | "watchlist" | "analysis" | "chat" | "notification" | "login" | "profile"
+  type: string
   title: string
   ticker?: string
   href?: string
   timestamp: string
 }
 
-const ICONS: Record<ActivityItem["type"], LucideIcon> = {
+const ICONS: Record<string, LucideIcon> = {
   portfolio: Briefcase,
   watchlist: Star,
   analysis: LineChart,
@@ -31,6 +34,9 @@ const ICONS: Record<ActivityItem["type"], LucideIcon> = {
   notification: Bell,
   login: LogIn,
   profile: User,
+  search: Search,
+  compare: GitCompare,
+  "trade-planner": TrendingUp,
 }
 
 function timeAgo(iso: string): string {
@@ -68,7 +74,7 @@ export function ActivityClient({ items }: { items: ActivityItem[] }) {
         <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
           <ul className="divide-y divide-[var(--glass-border)]">
             {items.map((item, i) => {
-              const Icon = ICONS[item.type]
+              const Icon = ICONS[item.type] ?? Activity
               const body = (
                 <div className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-foreground/[0.03]">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold">

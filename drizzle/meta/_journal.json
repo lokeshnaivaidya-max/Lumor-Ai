@@ -29,6 +29,20 @@
       "when": 1784383013321,
       "tag": "0003_app_tables_and_profile_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784470000000,
+      "tag": "0004_add_fk_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784560000000,
+      "tag": "0005_activity_log",
+      "breakpoints": true
     }
   ]
 }

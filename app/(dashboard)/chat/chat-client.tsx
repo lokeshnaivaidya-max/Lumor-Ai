@@ -170,8 +170,8 @@ export function ChatClient() {
   }
 
   return (
-      <div className="relative flex h-[calc(100vh-8rem)] gap-4 p-2 lg:p-4">
-      <div className="hidden w-72 shrink-0 flex-col gap-2 md:flex">
+      <div className="relative flex h-[calc(100vh-7rem)] gap-3 p-2 lg:gap-4 lg:p-3">
+      <div className="hidden w-72 shrink-0 flex-col gap-2 md:block md:w-1/5">
         <button onClick={startNew} className="lm-btn lm-btn--gold flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
           <Plus className="h-3.5 w-3.5" />New chat
         </button>
@@ -208,7 +208,7 @@ export function ChatClient() {
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-2 py-4 lg:px-4">
+        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-2 py-4 lg:px-6">
           {loadingMsgs ? (
             <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : messages.length === 0 ? (
@@ -234,7 +234,7 @@ export function ChatClient() {
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${m.role === "user" ? "bg-gold/10 text-gold" : "bg-card text-muted-foreground"}`}>
                   {m.role === "user" ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                 </div>
-                <div className={`max-w-[92%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-gold/10" : "bg-foreground/[0.04]"}`}>
+                <div className={`max-w-[88%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-gold/10" : "bg-foreground/[0.04]"}`}>
                   {m.role === "assistant" && !m.content ? <TypingDots /> : <Markdown content={m.content} />}
                 </div>
               </motion.div>

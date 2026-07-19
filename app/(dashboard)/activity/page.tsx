@@ -10,6 +10,7 @@ import {
   chatConversation,
   session,
   user,
+  activityLog,
 } from "@/lib/db/schema"
 import { ActivityClient, type ActivityItem } from "./activity-client"
 
@@ -33,6 +34,7 @@ export default async function ActivityPage() {
     chats,
     sessions,
     fullUser,
+    logs,
   ] = await Promise.all([
     db.select().from(portfolioHolding).where(eq(portfolioHolding.userId, userId)).orderBy(desc(portfolioHolding.createdAt)).limit(20).catch(() => []),
     db.select().from(watchlistItem).where(eq(watchlistItem.userId, userId)).orderBy(desc(watchlistItem.createdAt)).limit(20).catch(() => []),
@@ -41,6 +43,7 @@ export default async function ActivityPage() {
     db.select().from(chatConversation).where(eq(chatConversation.userId, userId)).orderBy(desc(chatConversation.updatedAt)).limit(20).catch(() => []),
     db.select().from(session).where(eq(session.userId, userId)).orderBy(desc(session.createdAt)).limit(20).catch(() => []),
     db.select().from(user).where(eq(user.id, userId)).limit(1).catch(() => []),
+    db.select().from(activityLog).where(eq(activityLog.userId, userId)).orderBy(desc(activityLog.createdAt)).limit(60).catch(() => []),
   ])
 
   const items: ActivityItem[] = []
@@ -122,6 +125,17 @@ export default async function ActivityPage() {
         timestamp: new Date(fu.updatedAt).toISOString(),
       })
     }
+  }
+
+  for (const l of logs as any[]) {
+    items.push({
+      id: `log-${l.id}`,
+      type: l.type,
+      title: l.title,
+      ticker: l.ticker,
+      href: l.href,
+      timestamp: new Date(l.createdAt).toISOString(),
+    })
   }
 
   items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())

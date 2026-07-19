@@ -5,6 +5,7 @@ import { portfolioHolding, watchlistItem } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { logActivity } from "@/app/actions/activity"
 
 export type PortfolioHolding = typeof portfolioHolding.$inferSelect
 
@@ -76,6 +77,7 @@ export async function addHolding(input: {
 
   revalidatePath("/portfolio")
   revalidatePath("/dashboard")
+  logActivity({ type: "portfolio", title: `Added ${symbol} to portfolio`, ticker: symbol, href: "/portfolio" }).catch(() => {})
 }
 
 export async function updateHolding(input: {
@@ -113,6 +115,7 @@ export async function removeHolding(id: number) {
     )
   revalidatePath("/portfolio")
   revalidatePath("/dashboard")
+  logActivity({ type: "portfolio", title: `Removed holding from portfolio`, href: "/portfolio" }).catch(() => {})
 }
 
 export async function addToWatchlist(input: { symbol: string; name?: string; assetType?: string }) {
@@ -137,6 +140,7 @@ export async function addToWatchlist(input: { symbol: string; name?: string; ass
 
   revalidatePath("/watchlist")
   revalidatePath("/dashboard")
+  logActivity({ type: "watchlist", title: `Added ${symbol} to watchlist`, ticker: symbol, href: "/watchlist" }).catch(() => {})
 }
 
 export async function removeFromWatchlist(symbol: string) {

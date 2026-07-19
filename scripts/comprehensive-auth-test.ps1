@@ -1,10 +1,20 @@
 param(
-  [string]$DbUrl = "postgresql://neondb_owner:npg_CW0U3MPTnesw@ep-long-lake-atvfc2iq.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
+  [string]$DbUrl
 )
+
+if (-not $DbUrl) { $DbUrl = $env:DATABASE_URL }
+if (-not $DbUrl) {
+  Write-Error "DATABASE_URL is not set. Pass -DbUrl or export it (e.g. from .env.local) before running this script."
+  exit 1
+}
 
 $env:DATABASE_URL = $DbUrl
 $env:BETTER_AUTH_URL = "http://localhost:3000"
-$env:BETTER_AUTH_SECRET = "50ce7e851dd45f8b295c92324803861417b6f49a2567b722b55ce8226499ceba"
+if ($env:BETTER_AUTH_SECRET) {
+  # use the provided secret from the environment
+} else {
+  Write-Warning "BETTER_AUTH_SECRET is not set; better-auth may refuse to start. Set it in your environment."
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = Split-Path -Parent $scriptDir

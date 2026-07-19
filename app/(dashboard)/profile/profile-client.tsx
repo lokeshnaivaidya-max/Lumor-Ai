@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
 import { User, Bell, Shield, Palette, Save, Camera, Check, Globe, Clock, Mail, Monitor, Moon, Sun, Loader2, Trash2, KeyRound, FileText, ExternalLink, Upload, X, Search, ChevronDown, AlertTriangle, BellOff } from "lucide-react"
 import { updateProfile, changePassword, updateEmail, deleteAccount } from "@/app/actions/profile"
+import { logActivity } from "@/app/actions/activity"
 import { useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "@/lib/toast"
+import { ISO_COUNTRIES, FALLBACK_TIMEZONES } from "@/lib/regions"
 
 type ThemeMode = "dark" | "light" | "system"
 type NotifPrefs = Record<string, boolean>
@@ -59,12 +63,13 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
   )
 }
 
-function SaveButton({ onSave, busy, label = "Save changes" }: { onSave: () => void; busy: boolean; label?: string }) {
+function SaveButton({ onSave, busy, disabled, label = "Save changes" }: { onSave: () => void; busy: boolean; disabled?: boolean; label?: string }) {
+  const isDisabled = disabled || busy
   return (
-    <motion.button onClick={onSave} disabled={busy} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-      className="lm-btn lm-btn--gold flex items-center gap-2 px-5 py-2.5 text-xs disabled:opacity-60">
+    <motion.button onClick={onSave} disabled={isDisabled} whileHover={{ scale: isDisabled ? 1 : 1.03 }} whileTap={{ scale: isDisabled ? 1 : 0.97 }}
+      className="lm-btn lm-btn--gold flex items-center gap-2 px-5 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-      {label}
+      {busy ? "Saving…" : label}
     </motion.button>
   )
 }
@@ -89,7 +94,7 @@ function SearchSelect({
 }: {
   value: string
   onChange: (v: string) => void
-  options: { value: string; label: string }[]
+  options: { value: string; label: string; search?: string }[]
   getLabel: (v: string) => string
   placeholder: string
 }) {
@@ -108,7 +113,7 @@ function SearchSelect({
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase()
     if (!query) return options
-    return options.filter((o) => o.label.toLowerCase().includes(query) || o.value.toLowerCase().includes(query))
+    return options.filter((o) => o.label.toLowerCase().includes(query) || o.value.toLowerCase().includes(query) || (o.search?.toLowerCase().includes(query) ?? false))
   }, [options, q])
 
   const selectedLabel = value ? getLabel(value) : ""
@@ -258,6 +263,18 @@ export function ProfileClient({ user }: {
 
   const [busy, setBusy] = useState(false)
 
+  // Baseline of persisted values, captured once, so we can disable Save Changes
+  // until the user actually modifies something.
+  const initialRef = useRef({
+    name: user.name,
+    image: user.image,
+    timezone: user.timezone,
+    country: user.country,
+    bio: user.bio,
+    notif: user.notificationPrefs,
+    theme: (user.theme as ThemeMode) || "light",
+  })
+
   const [curPw, setCurPw] = useState("")
   const [newPw, setNewPw] = useState("")
   const [confPw, setConfPw] = useState("")
@@ -314,6 +331,16 @@ export function ProfileClient({ user }: {
 
   function flashSaved() { setSaved(true); setTimeout(() => setSaved(false), 2000) }
 
+  // Refresh the better-auth client session cache so the header avatar, account
+  // dropdown avatar, name, theme, etc. update everywhere without a manual reload.
+  async function refreshSessionCache() {
+    try {
+      // Re-fetch the session from the server to refresh better-auth's client cache.
+      await authClient.getSession()
+    } catch { /* noop */ }
+    try { router.refresh() } catch { /* noop */ }
+  }
+
   async function ensureNotificationPermission(): Promise<boolean> {
     if (typeof window === "undefined" || !("Notification" in window)) {
       setNotifSupport("unsupported")
@@ -338,24 +365,42 @@ export function ProfileClient({ user }: {
     setBusy(true); setError(null)
     try {
       await updateProfile({ name, image: image || null, timezone, country, bio })
-      flashSaved()
-    } catch (e: any) { setError(e?.message || "Failed to save") } finally { setBusy(false) }
+      // Keep better-auth session (avatar/name) in sync and refresh caches.
+      await authClient.updateUser({ name: name || undefined, image: image || null }).catch(() => {})
+      await refreshSessionCache()
+      logActivity({ type: "profile", title: "Profile updated", href: "/profile" }).catch(() => {})
+      toast("Profile saved", "success")
+    } catch (e: any) {
+      setError(e?.message || "Failed to save")
+      toast(e?.message || "Failed to save", "error")
+    } finally { setBusy(false) }
   }
 
   async function saveNotif() {
     setBusy(true); setError(null)
     try {
       await updateProfile({ notificationPrefs: notif })
-      flashSaved()
-    } catch (e: any) { setError(e?.message || "Failed to save") } finally { setBusy(false) }
+      await refreshSessionCache()
+      logActivity({ type: "notification", title: "Notification preferences updated", href: "/profile?tab=notifications" }).catch(() => {})
+      toast("Notification preferences saved", "success")
+    } catch (e: any) {
+      setError(e?.message || "Failed to save")
+      toast(e?.message || "Failed to save", "error")
+    } finally { setBusy(false) }
   }
 
   async function saveTheme() {
     setBusy(true); setError(null)
     try {
       await updateProfile({ theme })
-      flashSaved()
-    } catch (e: any) { setError(e?.message || "Failed to save") } finally { setBusy(false) }
+      applyTheme(theme)
+      await refreshSessionCache()
+      logActivity({ type: "appearance", title: `Changed theme to ${theme}`, href: "/profile?tab=appearance" }).catch(() => {})
+      toast("Theme updated", "success")
+    } catch (e: any) {
+      setError(e?.message || "Failed to save")
+      toast(e?.message || "Failed to save", "error")
+    } finally { setBusy(false) }
   }
 
   async function handleChangePw() {
@@ -365,8 +410,8 @@ export function ProfileClient({ user }: {
     setBusy(true)
     try {
       await changePassword(curPw, newPw)
-      setCurPw(""); setNewPw(""); setConfPw(""); flashSaved()
-    } catch (e: any) { setError(e?.message || "Failed to change password") } finally { setBusy(false) }
+      setCurPw(""); setNewPw(""); setConfPw(""); toast("Password changed", "success")
+    } catch (e: any) { setError(e?.message || "Failed to change password"); toast(e?.message || "Failed to change password", "error") } finally { setBusy(false) }
   }
 
   async function handleUpdateEmail() {
@@ -375,8 +420,8 @@ export function ProfileClient({ user }: {
     setBusy(true)
     try {
       await updateEmail(newEmail.trim())
-      setNewEmail(""); setError("Verification email sent. Check your inbox.")
-    } catch (e: any) { setError(e?.message || "Failed to update email") } finally { setBusy(false) }
+      setNewEmail(""); toast("Verification email sent. Check your inbox.", "info")
+    } catch (e: any) { setError(e?.message || "Failed to update email"); toast(e?.message || "Failed to update email", "error") } finally { setBusy(false) }
   }
 
   async function handleDelete() {
@@ -390,13 +435,70 @@ export function ProfileClient({ user }: {
     } catch (e: any) { setError(e?.message || "Failed to delete account"); setBusy(false) }
   }
 
-  // Build searchable option lists from the browser's Intl data (no hard-coded lists).
-  const timezones = useMemo<{ value: string; label: string }[]>(() => {
+  // Build the timezone list (prefer Intl, fall back to a static IANA subset so
+  // it is never empty). Each option carries a searchable string so users can
+  // find zones by name, region, offset (e.g. "GMT+5:30") or the legacy
+  // "Asia/Calcutta" alias.
+  const timezones = useMemo<{ value: string; label: string; search: string }[]>(() => {
+    // Always start from the complete IANA list so the dropdown is never missing
+    // a zone, then merge in any extra zones the browser exposes via Intl.
+    let list: string[] = [...FALLBACK_TIMEZONES]
     try {
-      const list = (Intl as any).supportedValuesOf?.("timeZone") as string[] | undefined
-      if (list && list.length) return list.map((t) => ({ value: t, label: t.replace(/_/g, " ") }))
+      const intl = (Intl as any).supportedValuesOf?.("timeZone") as string[] | undefined
+      if (intl && intl.length) {
+        const known = new Set(list)
+        for (const z of intl) if (!known.has(z)) list.push(z)
+      }
     } catch { /* noop */ }
-    return []
+
+    const offsetFor = (tz: string): string => {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz, timeZoneName: "shortOffset",
+        }).formatToParts(new Date()).find((p) => p.type === "timeZoneName")?.value || ""
+        return parts
+      } catch { return "" }
+    }
+
+    // Map a few well-known countries to their IANA zones so users can search by
+    // country name (e.g. "India" -> Asia/Kolkata, Asia/Calcutta, Asia/Colombo).
+    const COUNTRY_TZ_KEYWORDS: Record<string, string[]> = {
+      india: ["Asia/Kolkata", "Asia/Calcutta", "Asia/Colombo"],
+      "united states": ["America/"],
+      usa: ["America/"],
+      uk: ["Europe/London"],
+      "united kingdom": ["Europe/London"],
+      japan: ["Asia/Tokyo"],
+      china: ["Asia/Shanghai", "Asia/Hong_Kong"],
+      germany: ["Europe/Berlin"],
+      france: ["Europe/Paris"],
+      australia: ["Australia/"],
+      canada: ["America/Toronto", "America/Vancouver"],
+      singapore: ["Asia/Singapore"],
+      "united arab emirates": ["Asia/Dubai"],
+      uae: ["Asia/Dubai"],
+    }
+
+    const seen = new Set<string>()
+    const out: { value: string; label: string; search: string }[] = []
+    const add = (tz: string, value: string) => {
+      if (seen.has(value)) return
+      seen.add(value)
+      const offset = offsetFor(tz)
+      const region = tz.split("/")[0]
+      const countryHits = Object.entries(COUNTRY_TZ_KEYWORDS)
+        .filter(([, zones]) => zones.some((z) => tz === z || (z.endsWith("/") && tz.startsWith(z))))
+        .map(([country]) => country)
+      const label = offset ? `${tz} (${offset})` : tz
+      const search = [tz, tz.toLowerCase().replace(/_/g, " "), offset, region, ...countryHits].filter(Boolean).join(" ")
+      out.push({ value, label, search })
+    }
+
+    list.forEach((tz) => add(tz, tz))
+    // Legacy alias Asia/Calcutta -> Asia/Kolkata.
+    add("Asia/Kolkata", "Asia/Calcutta")
+
+    return out.sort((a, b) => a.value.localeCompare(b.value))
   }, [])
 
   const countryNames = useMemo(() => {
@@ -406,17 +508,28 @@ export function ProfileClient({ user }: {
   }, [])
 
   const countries = useMemo<{ value: string; label: string }[]>(() => {
-    let codes: string[] = []
-    try {
-      codes = (Intl as any).supportedValuesOf?.("region") as string[] | undefined || []
-    } catch { /* noop */ }
-    return codes
-      .map((c) => ({ value: c, label: countryNames ? countryNames.of(c) || c : c }))
+    // Always show the complete ISO-3166 list. Intl.DisplayNames is used only for
+    // nicer localized display names when available; the full list is the
+    // authoritative source so it never depends on the browser's Intl support.
+    return ISO_COUNTRIES
+      .map((c) => ({ value: c.code, label: countryNames ? countryNames.of(c.code) || c.name : c.name }))
       .sort((a, b) => a.label.localeCompare(b.label))
   }, [countryNames])
 
   const tzLabel = (v: string) => (timezones.find((t) => t.value === v)?.label || v || "Select timezone")
   const countryLabel = (v: string) => (countries.find((c) => c.value === v)?.label || v || "Select country")
+
+  // Disable Save Changes unless the active tab actually has unsaved changes.
+  const init = initialRef.current
+  const dirtyProfile =
+    name !== init.name || image !== init.image || timezone !== init.timezone ||
+    country !== init.country || bio !== init.bio
+  const dirtyNotif = JSON.stringify(notif) !== JSON.stringify(init.notif)
+  const dirtyTheme = theme !== init.theme
+  const isDirty =
+    (activeTab === "profile" && dirtyProfile) ||
+    (activeTab === "notifications" && dirtyNotif) ||
+    (activeTab === "appearance" && dirtyTheme)
 
   return (
     <div className="p-6 lg:p-8">
@@ -428,7 +541,7 @@ export function ProfileClient({ user }: {
           <p className="dm-body dm-animate dm-animate--delay-1">Manage your profile, preferences, and account settings.</p>
         </div>
         {activeTab !== "privacy" && (
-          <SaveButton onSave={activeTab === "profile" ? saveProfile : activeTab === "notifications" ? saveNotif : saveTheme} busy={busy} />
+          <SaveButton onSave={activeTab === "profile" ? saveProfile : activeTab === "notifications" ? saveNotif : saveTheme} busy={busy} disabled={!isDirty} />
         )}
       </motion.div>
 

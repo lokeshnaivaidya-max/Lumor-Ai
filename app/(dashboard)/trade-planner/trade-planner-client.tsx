@@ -9,6 +9,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { SymbolSearch } from "@/components/symbol-search"
+import { logActivity } from "@/app/actions/activity"
 
 type HoldingPeriod = "1 day" | "1 week" | "1 month" | "3 months" | "6 months" | "1 year"
 
@@ -305,6 +306,7 @@ export function TradePlannerClient() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Analysis failed")
       setResult(data)
+      logActivity({ type: "trade-planner", title: `Ran trade planner for ${symbol}`, ticker: symbol.toUpperCase(), href: "/trade-planner" }).catch(() => {})
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")

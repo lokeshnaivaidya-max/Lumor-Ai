@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient, useSession } from "@/lib/auth-client";
+import { logActivity } from "@/app/actions/activity";
 import type { Indicators } from "@/lib/indicators"
 import {
   Loader2,
@@ -21,6 +22,7 @@ import {
   UserCheck,
   ChevronDown,
   RefreshCw,
+  Sparkles,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -238,6 +240,7 @@ export function AiAnalysis({
               setProgressMsg("")
               setLoading(false)
               setRetryCount(0)
+              logActivity({ type: "analysis", title: `Analyzed ${symbol}`, ticker: symbol, href: `/markets?symbol=${symbol}` }).catch(() => {})
               return
             } else if (event.type === "error") {
               clearTimeout(watchdog)
@@ -362,10 +365,11 @@ export function AiAnalysis({
             whileTap={{ scale: loading ? 1 : 0.97 }}
             onClick={run}
             disabled={loading}
-            className="glass-btn glass-btn-primary flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-60"
+            className="group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-gold via-amber-400 to-gold px-5 py-2 text-xs font-bold text-black shadow-[0_0_20px_rgba(212,175,55,0.45)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(212,175,55,0.65)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-            {loading ? "Analyzing…" : "Analyze"}
+            <span className="absolute inset-0 -translate-x-full bg-white/25 transition-transform duration-700 group-hover:translate-x-full" />
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {loading ? "Analyzing…" : "Analyze with AI"}
           </motion.button>
           {loading && (
             <button

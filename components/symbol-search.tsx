@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Search, Loader2, TrendingUp, TrendingDown } from "lucide-react"
+import { logActivity } from "@/app/actions/activity"
 
 export type SearchResult = {
   symbol: string
@@ -56,6 +57,7 @@ export function SymbolSearch({ onSelect }: { onSelect: (result: SearchResult) =>
 
   function choose(r: SearchResult) {
     onSelect(r)
+    logActivity({ type: "search", title: `Searched ${r.symbol}`, ticker: r.symbol, href: "/markets?symbol=" + r.symbol }).catch(() => {})
     setQ("")
     setResults([])
     setOpen(false)

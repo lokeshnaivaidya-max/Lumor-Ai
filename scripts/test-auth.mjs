@@ -3,8 +3,14 @@ import { emailOTP } from "better-auth/plugins"
 import pg from "pg"
 const { Pool } = pg
 
+const DATABASE_URL = process.env.DATABASE_URL
+if (!DATABASE_URL) {
+  console.error("DATABASE_URL is not set. Export it (e.g. from .env.local) before running this script.")
+  process.exit(1)
+}
+
 const pool = new Pool({
-  connectionString: "postgresql://neondb_owner:npg_CW0U3MPTnesw@ep-long-lake-atvfc2iq.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require",
+  connectionString: DATABASE_URL,
 })
 
 const testAuth = betterAuth({

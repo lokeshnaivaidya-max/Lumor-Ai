@@ -5,6 +5,7 @@ import { watchlistItem } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { logActivity } from "@/app/actions/activity"
 
 export type WatchlistItem = typeof watchlistItem.$inferSelect
 
@@ -42,14 +43,16 @@ export async function addToWatchlist(input: {
 
 export async function removeFromWatchlist(symbol: string) {
   const userId = await getUserId()
+  const sym = symbol.trim().toUpperCase()
   await db
     .delete(watchlistItem)
     .where(
       and(
         eq(watchlistItem.userId, userId),
-        eq(watchlistItem.symbol, symbol.trim().toUpperCase()),
+        eq(watchlistItem.symbol, sym),
       ),
     )
+  logActivity({ type: "watchlist", title: `Removed ${sym} from watchlist`, ticker: sym, href: "/watchlist" }).catch(() => {})
   revalidatePath("/watchlist")
   revalidatePath("/dashboard")
 }
