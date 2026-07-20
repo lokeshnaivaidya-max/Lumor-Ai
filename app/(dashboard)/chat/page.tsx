@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { ChatClient } from "./chat-client"
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 }
 
 export default function ChatPage() {
-  return <ChatClient />
+  return (
+    <Suspense fallback={<div className="bento-card h-[calc(100vh-7rem)] animate-pulse" />}>
+      <ChatClient />
+    </Suspense>
+  )
 }

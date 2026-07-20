@@ -951,3 +951,25 @@ body::after {
 .border-red\/20 { border-color: rgba(255,107,125,0.2); }
 .bg-red\/\[0\.06\] { background: rgba(255,107,125,0.06); }
 .hover\:text-foreground\/80:hover { color: rgba(244,241,234,0.8); }
+
+/* ─── Chat markdown rendering (structured cards, tables, price badges) ─── */
+.md-prose { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; }
+.md-prose p { margin: 0 0 0.75rem; }
+.md-prose p:last-child { margin-bottom: 0; }
+.md-prose h1, .md-prose h2, .md-prose h3 { font-family: var(--font-serif); color: var(--text-primary); margin: 1rem 0 0.5rem; line-height: 1.25; }
+.md-prose h1 { font-size: 1.25rem; }
+.md-prose h2 { font-size: 1.1rem; }
+.md-prose h3 { font-size: 1rem; }
+.md-prose ul, .md-prose ol { margin: 0 0 0.75rem; padding-left: 1.15rem; }
+.md-prose li { margin: 0.2rem 0; }
+.md-prose strong { color: var(--text-primary); font-weight: 600; }
+.md-prose a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+.md-inline { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 0.05rem 0.35rem; font-size: 0.75rem; font-family: var(--font-mono); color: var(--gold); }
+.md-pre { background: rgba(0,0,0,0.35); border: 1px solid var(--line); border-radius: 0.75rem; padding: 0.75rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.75rem; }
+.md-pre code { font-family: var(--font-mono); color: var(--text-secondary); }
+.md-table-wrap { overflow-x: auto; margin: 0.5rem 0; border-radius: 0.75rem; border: 1px solid var(--line); }
+.md-prose table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.md-prose th { text-align: left; padding: 0.5rem 0.75rem; background: var(--panel-2); color: var(--gold); font-weight: 600; border-bottom: 1px solid var(--line); }
+.md-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); color: var(--text-secondary); }
+.md-prose tr:last-child td { border-bottom: none; }
+.md-prose blockquote { border-left: 2px solid var(--gold); margin: 0.5rem 0; padding: 0.25rem 0 0.25rem 0.75rem; color: var(--text-tertiary); }
