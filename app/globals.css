@@ -1008,8 +1008,9 @@ body {
 }
 
 .divider--gold {
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.35;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+  opacity: 0.5;
+  height: 1.5px;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1618,11 +1619,13 @@ body::after {
 /* Gold brand dot — appears before subheadings */
 .dot-gold {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--gold);
   flex-shrink: 0;
+  box-shadow: 0 0 12px 2px var(--gold-glow-strong);
+  margin-right: 2px;
 }
 
 /* Page-level gold ambient glow */
@@ -1632,19 +1635,32 @@ body::after {
 .glow-page::before {
   content: "";
   position: absolute;
-  top: -30%;
-  left: -10%;
-  width: 60%;
-  height: 80%;
-  background: radial-gradient(circle, var(--gold-glow-strong), transparent 60%);
-  filter: blur(80px);
+  top: -40%;
+  left: -15%;
+  width: 80%;
+  height: 100%;
+  background: radial-gradient(circle, var(--gold-glow-strong), transparent 50%);
+  filter: blur(60px);
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.9;
 }
 
 /* Signature heading composition */
 .page-head {
   position: relative;
+  padding-top: 0.75rem;
+}
+.page-head::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light), transparent);
+  border-radius: 3px;
+  pointer-events: none;
+  box-shadow: 0 0 16px 4px var(--gold-glow-strong);
 }
 .page-head .subheading {
   display: flex;

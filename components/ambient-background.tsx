@@ -38,10 +38,16 @@ export function AmbientBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_85%,oklch(0.62_0.12_168/0.03),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_30%_at_15%_65%,oklch(0.55_0.12_280/0.02),transparent_50%)]" />
 
-      {/* Layer 2: Gold ambient gradient (dashboard areas) */}
-      <div className="absolute left-1/4 top-0 h-[600px] w-[600px] opacity-20"
+      {/* Layer 2: Gold ambient gradient — signature Lumora glow */}
+      <div className="absolute left-1/4 top-0 h-[600px] w-[600px] opacity-40"
         style={{
-          background: "radial-gradient(circle, var(--gold-glow-strong), transparent 60%)",
+          background: "radial-gradient(circle, var(--gold-glow-strong), transparent 50%)",
+          filter: "blur(80px)",
+        }}
+      />
+      <div className="absolute right-0 top-1/3 h-[400px] w-[400px] opacity-30"
+        style={{
+          background: "radial-gradient(circle, var(--gold-glow), transparent 50%)",
           filter: "blur(100px)",
         }}
       />
