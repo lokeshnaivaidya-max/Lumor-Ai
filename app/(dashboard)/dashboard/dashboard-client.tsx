@@ -253,13 +253,13 @@ export function DashboardClient({
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="bento-card relative overflow-hidden bento-full"
+        className="glass relative overflow-hidden rounded-[28px] bento-full"
       >
         <div className="pointer-events-none absolute -inset-32 opacity-50" style={{ background: 'radial-gradient(circle at 18% 0%, var(--gold-glow-strong), transparent 55%)' }} />
         <div className="relative flex flex-col gap-8 p-8 lg:flex-row lg:items-end lg:justify-between lg:p-12">
           <div className="max-w-xl">
             <div className="mb-5 flex flex-wrap items-center gap-3">
-              <p className="subheading"><span className="dot-gold" /> Dashboard</p>
+              <p className="subheading">Dashboard</p>
               <span className="h-3 w-px bg-[var(--line-strong)]" />
               <span className="badge">{watchlist.length} Watching</span>
               <span className="badge">{analyses.length} Analyses</span>

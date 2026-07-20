@@ -132,12 +132,12 @@ function riskTone(level: RiskLevel) {
 }
 
 function SkeletonCard({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-white/10 ${className}`} />
+  return <div className={`animate-pulse rounded-2xl bg-[var(--panel-2)] ${className}`} />
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="mt-5 space-y-4 border-t border-white/10 pt-6">
+    <div className="mt-5 space-y-4 border-t pt-6" style={{ borderColor: "var(--line)" }}>
       <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
         <SkeletonCard className="h-48" />
         <SkeletonCard className="h-48" />
@@ -297,11 +297,15 @@ export function AiAnalysis({
 
   if (!session?.user) {
     return (
-      <div className="relative overflow-hidden p-6 sm:p-8 text-center">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue/[0.02] to-violet/[0.02]" />
+      <div className="glass relative overflow-hidden p-6 sm:p-8 text-center">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
+          style={{ background: "var(--gold-glow)" }}
+        />
         <div className="relative mx-auto max-w-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br from-blue/10 to-violet/10 border border-white/20">
-            <LineChart className="h-8 w-8 text-blue" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[28px] border text-gold" style={{ background: "var(--gold-glow)", borderColor: "var(--gold-line)" }}>
+            <LineChart className="h-8 w-8" />
           </div>
           <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">Sign in to analyze</h3>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -310,13 +314,13 @@ export function AiAnalysis({
           <div className="mt-6 flex items-center justify-center gap-3">
             <Link
               href="/sign-in"
-              className="glass-btn glass-btn-primary rounded-full px-6 py-2.5 text-sm"
+              className="lm-btn lm-btn-gold rounded-full px-6 py-2.5 text-sm"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="glass-btn glass-btn-ghost rounded-full px-6 py-2.5 text-sm"
+              className="lm-btn lm-btn-ghost rounded-full px-6 py-2.5 text-sm"
             >
               Create account
             </Link>
@@ -327,14 +331,15 @@ export function AiAnalysis({
   }
 
   return (
-    <div className="relative overflow-hidden p-5 sm:p-6">
+    <div className="glass relative overflow-hidden p-5 sm:p-6">
       <div
-        className="animate-pulse-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
-        style={{ background: "oklch(0.55 0.18 255 / 0.15)" }}
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-[80px]"
+        style={{ background: "var(--gold-glow)" }}
       />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue/20 to-violet/20 border border-white/20 text-blue">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl border text-gold" style={{ background: "var(--gold-glow)", borderColor: "var(--gold-line)" }}>
             <LineChart className="h-4 w-4" />
           </span>
           <div>
@@ -344,16 +349,17 @@ export function AiAnalysis({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full border border-white/20 bg-white/10 backdrop-blur-sm p-0.5">
+          <div className="flex rounded-full border p-0.5" style={{ borderColor: "var(--line)", background: "var(--surface-alt)" }}>
             {HORIZONS.map((h) => (
               <button
                 key={h.id}
                 onClick={() => setHorizon(h.id)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-300 ${
                   horizon === h.id
-                    ? "bg-blue text-white shadow-[0_0_14px_2px_rgba(91,141,255,0.55)] ring-2 ring-blue/60"
+                    ? "text-[#1a1407] shadow-[0_0_14px_2px_var(--shadow-glow)] ring-1 ring-gold/60"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
+                style={horizon === h.id ? { background: "var(--gold)" } : undefined}
               >
                 {h.label}
               </button>
@@ -364,7 +370,7 @@ export function AiAnalysis({
             whileTap={{ scale: loading ? 1 : 0.97 }}
             onClick={run}
             disabled={loading}
-            className="group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-gold via-amber-400 to-gold px-5 py-2 text-xs font-bold text-black shadow-[0_0_20px_rgba(212,175,55,0.45)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(212,175,55,0.65)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gold px-5 py-2 text-xs font-bold text-[#1a1407] shadow-[0_0_20px_var(--shadow-glow)] transition-all duration-300 hover:shadow-[0_0_28px_var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="absolute inset-0 -translate-x-full bg-white/25 transition-transform duration-700 group-hover:translate-x-full" />
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <TrendingUp className="h-3.5 w-3.5" />}
@@ -373,7 +379,7 @@ export function AiAnalysis({
           {loading && (
             <button
               onClick={cancel}
-              className="glass-btn glass-btn-ghost rounded-full px-3 py-1.5 text-xs"
+              className="lm-btn lm-btn-ghost rounded-full px-3 py-1.5 text-xs"
             >
               Cancel
             </button>
@@ -382,12 +388,12 @@ export function AiAnalysis({
       </div>
 
       {error && (
-        <div className="relative mt-5 border-t border-white/10 pt-5">
-          <div className="flex items-start gap-3 rounded-[28px] border border-gold/30 bg-gold/[0.07] p-4 backdrop-blur-sm">
+        <div className="relative mt-5 border-t pt-5" style={{ borderColor: "var(--line)" }}>
+          <div className="glass flex items-start gap-3 rounded-[28px] border p-4" style={{ borderColor: "var(--gold-line)", background: "var(--gold-glow)" }}>
             <div className="flex-1 text-sm text-foreground/90">{error}</div>
             <button
               onClick={run}
-              className="glass-btn glass-btn-soft shrink-0 rounded-full px-3 py-1 text-xs"
+              className="lm-btn lm-btn-soft shrink-0 rounded-full px-3 py-1 text-xs"
             >
               <RefreshCw className="mr-1 h-3 w-3" /> Retry
             </button>
@@ -396,11 +402,11 @@ export function AiAnalysis({
       )}
 
       {loading && !data && (
-        <div className="relative mt-5 border-t border-white/10 pt-5">
+        <div className="relative mt-5 border-t pt-5" style={{ borderColor: "var(--line)" }}>
           <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
             <div className="flex h-6 w-6 items-center justify-center">
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                <LineChart className="h-4 w-4 text-blue" />
+                <LineChart className="h-4 w-4" style={{ color: "var(--gold)" }} />
               </motion.div>
             </div>
             {progressMsg || "Reading the tape…"}
@@ -431,13 +437,13 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
   const indicatorBullets = buildIndicatorReasons(indicators)
 
   return (
-    <div className="relative mt-5 space-y-6 border-t border-white/10 pt-6">
+    <div className="relative mt-5 space-y-6 border-t pt-6" style={{ borderColor: "var(--line)" }}>
       <div className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
-          className="relative flex flex-col items-center justify-center gap-3 rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl p-6"
+          className="glass-card relative flex flex-col items-center justify-center gap-3 rounded-[32px] p-6"
         >
           <div
             className="pointer-events-none absolute -top-10 -left-10 h-32 w-32 rounded-full blur-[60px]"
@@ -453,7 +459,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
             <span className={`font-semibold ${risk.text}`}>{data.riskLevel}</span>
             <span>risk</span>
           </div>
-          <div className="relative mt-1 h-2 w-full max-w-[180px] overflow-hidden rounded-full bg-white/10">
+          <div className="relative mt-1 h-2 w-full max-w-[180px] overflow-hidden rounded-full" style={{ background: "var(--panel-2)" }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${risk.pct}%` }}
@@ -471,14 +477,14 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 100, damping: 16, delay: 0.2 }}
-          className={`relative overflow-hidden rounded-[32px] border-2 ${rec.border} ${rec.bg} p-5`}
+          className={`glass-card relative overflow-hidden rounded-[32px] border-2 ${rec.border} ${rec.bg} p-5`}
         >
           <div
             className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full blur-[60px]"
             style={{ background: rec.ring.replace(")", " / 0.2)") }}
           />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-alt)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                Why this call
             </span>
             <p className="mt-3 text-sm leading-relaxed text-foreground/85">{data.recommendationReason}</p>
@@ -500,21 +506,21 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl p-5"
+        className="glass-card rounded-[32px] p-5"
       >
-        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-emerald">
+        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-pos">
           <CheckCircle2 className="h-3.5 w-3.5" /> Key Reasons
         </h4>
         <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
           {(data.whyBuy ?? []).slice(0, 4).map((p, i) => (
             <div key={`b-${i}`} className="flex items-start gap-2 text-sm leading-relaxed text-foreground/85">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" />
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pos" />
               {p}
             </div>
           ))}
         </div>
         {indicatorBullets.length > 0 && (
-          <div className="mt-4 border-t border-white/10 pt-4">
+          <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--line)" }}>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">From the charts</p>
             <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
               {indicatorBullets.map((b, i) => (
@@ -532,22 +538,22 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="rounded-[32px] border border-rose/30 bg-rose/[0.05] p-5"
+        className="glass-card rounded-[32px] border-neg/30 bg-neg/[0.05] p-5"
       >
-        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-rose">
+        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-neg">
           <ShieldAlert className="h-3.5 w-3.5" /> Risks &amp; What Could Go Wrong
         </h4>
         <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
           {(data.whatCouldGoWrong ?? []).slice(0, 4).map((p, i) => (
             <div key={`r-${i}`} className="flex items-start gap-2 text-sm leading-relaxed text-foreground/85">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose" />
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-neg" />
               {p}
             </div>
           ))}
         </div>
         {data.biggestRisk && (
-          <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs leading-relaxed text-foreground/80">
-            <span className="font-semibold text-rose">Biggest risk:</span> {data.biggestRisk}
+          <p className="mt-3 rounded-2xl border px-3 py-2 text-xs leading-relaxed text-foreground/80" style={{ borderColor: "var(--line)", background: "var(--surface-alt)" }}>
+            <span className="font-semibold text-neg">Biggest risk:</span> {data.biggestRisk}
           </p>
         )}
       </motion.div>
@@ -556,7 +562,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="rounded-[32px] border border-gold/30 bg-gold/[0.06] p-5 backdrop-blur-sm"
+        className="glass-card rounded-[32px] border-gold/30 bg-gold/[0.06] p-5"
       >
         <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-gold">
           <UserCheck className="h-3.5 w-3.5" /> Summary
@@ -575,7 +581,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.55 }}
       >
-        <Section title="Probability" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
+        <Section title="Probability" icon={<LineChart className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />}>
           <div className="grid gap-3 sm:grid-cols-2">
             <ProbBar label="Chance of Profit" value={profit} tone="pos" icon={<ArrowUpRight className="h-4 w-4 text-pos" />} />
             <ProbBar label="Chance of Loss" value={loss} tone="neg" icon={<ArrowDownRight className="h-4 w-4 text-neg" />} />
@@ -591,7 +597,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
-        <Section title="Scenarios" icon={<LineChart className="h-3.5 w-3.5 text-blue" />}>
+        <Section title="Scenarios" icon={<LineChart className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />}>
           <div className="grid gap-3 sm:grid-cols-3">
             <ScenarioCard label="Best Case" tone="pos" value={data.scenarioBest} />
             <ScenarioCard label="Most Likely" tone="mid" value={data.scenarioLikely} />
@@ -629,10 +635,10 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
-        <details className="group rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
+        <details className="glass-card group rounded-[28px] p-4">
           <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <LineChart className="h-3.5 w-3.5" /> Pro Investor View
+              <LineChart className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> Pro Investor View
             </span>
             <span className="text-[10px] normal-case tracking-normal text-muted-foreground/70 group-open:hidden">
               Tap to expand · technical
@@ -650,8 +656,8 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
           className="flex flex-wrap gap-2"
         >
           {data.quickSummary.slice(0, 3).map((s, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs leading-relaxed text-foreground/80 backdrop-blur-sm">
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-blue" />
+            <span key={i} className="chip">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-gold" />
               {s}
             </span>
           ))}
@@ -683,7 +689,7 @@ function buildIndicatorReasons(ind: Indicators | null | undefined): { label: str
     out.push({ label: `EMA 20 ${bull ? "above" : "below"} EMA 50`, tone: bull ? "bg-emerald" : "bg-rose" })
   }
   if (ind.vwap != null) {
-    out.push({ label: "Price vs VWAP momentum", tone: "bg-blue" })
+    out.push({ label: "Price vs VWAP momentum", tone: "bg-info" })
   }
   if (ind.trend) {
     const tone = ind.trend === "bullish" ? "bg-emerald" : ind.trend === "bearish" ? "bg-rose" : "bg-gold"
@@ -739,7 +745,7 @@ function ProbBar({ label, value, tone, icon }: { label: string; value: number; t
   const bar = tone === "pos" ? "bg-pos" : "bg-neg"
   const text = tone === "pos" ? "text-pos" : "text-neg"
   return (
-    <div className="rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
+    <div className="glass-card rounded-[28px] p-4">
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {icon}
@@ -747,7 +753,7 @@ function ProbBar({ label, value, tone, icon }: { label: string; value: number; t
         </span>
         <span className={`text-sm font-semibold ${text}`}>{value}%</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+      <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: "var(--panel-2)" }}>
         <div className={`h-full rounded-full ${bar}`} style={{ width: `${value}%`, transition: "width 0.8s ease" }} />
       </div>
     </div>
@@ -755,9 +761,9 @@ function ProbBar({ label, value, tone, icon }: { label: string; value: number; t
 }
 
 function CockpitMetric({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: "blue" | "emerald" | "rose" | "violet" | "gold" | "cyan" }) {
-  const dotMap = { blue: "bg-blue", emerald: "bg-emerald", rose: "bg-rose", violet: "bg-violet", gold: "bg-gold", cyan: "bg-cyan" }
+  const dotMap = { blue: "bg-info", emerald: "bg-emerald", rose: "bg-rose", violet: "bg-violet", gold: "bg-gold", cyan: "bg-cyan" }
   return (
-    <motion.div whileHover={{ y: -3 }} className="flex flex-col items-center justify-center gap-1 rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-3 text-center transition-all duration-300 hover:border-white/30">
+    <motion.div whileHover={{ y: -3 }} className="glass-card flex flex-col items-center justify-center gap-1 rounded-[28px] p-3 text-center transition-all duration-300 hover:border-[var(--gold-line)]">
       <span className="text-muted-foreground/70">{icon}</span>
       <span className="font-mono text-sm font-semibold text-foreground tabular-nums">{value}</span>
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -817,7 +823,7 @@ function ExpandableCase({ title, tone, points }: { title: string; tone: "pos" | 
 function TimelineLevel({ icon, label, value, note, accent, side }: { icon: React.ReactNode; label: string; value: string; note: string; accent: "emerald" | "rose"; side: "top" | "bottom" }) {
   const barColor = accent === "emerald" ? "bg-emerald/30" : "bg-rose/30"
   return (
-    <motion.div whileHover={{ scale: 1.01 }} className="relative overflow-hidden rounded-[28px] border border-white/20 bg-white/10 backdrop-blur-xl p-4">
+    <motion.div whileHover={{ scale: 1.01 }} className="glass-card relative overflow-hidden rounded-[28px] p-4">
       <div className={`absolute left-0 right-0 h-1 ${side === "top" ? "top-0" : "bottom-0"} ${barColor}`} />
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">

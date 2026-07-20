@@ -112,10 +112,13 @@ export function CompareClient() {
   return (
     <div className="p-6 lg:p-8">
       <hr className="divider divider--gold" />
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 glow-page">
-        <p className="subheading"><span className="dot-gold" /> Compare</p>
-        <h1 className="heading mt-1">Side-by-Side Analysis</h1>
-        <p className="body mt-2">Pit any two symbols against each other with live market data.</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="glass relative mb-8 flex flex-col gap-3 overflow-hidden rounded-3xl p-8 lg:p-10">
+        <div className="pointer-events-none absolute -inset-24 opacity-40" style={{ background: 'radial-gradient(circle at 100% 0%, var(--gold-glow-strong), transparent 55%)' }} />
+        <div className="glow-page relative">
+          <p className="subheading"><span className="dot-gold" /> Compare</p>
+          <h1 className="heading mt-2 text-[var(--text-primary)]">Side-by-Side Analysis</h1>
+          <p className="body mt-3 max-w-md">Pit any two symbols against each other with live market data.</p>
+        </div>
       </motion.div>
 
       {/* Two search columns */}
@@ -124,8 +127,8 @@ export function CompareClient() {
           const side = box === "a" ? a : b
           return (
             <motion.div key={box} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 + i * 0.08 }} className="relative">
-              <div className="glass-input flex items-center gap-3 rounded-2xl px-4 py-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[var(--panel-2)] font-mono text-[11px] font-bold text-[var(--gold)]">{i + 1}</span>
+              <div className="field flex items-center gap-3 rounded-2xl px-4 py-3">
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[var(--gold-glow)] font-mono text-[11px] font-bold text-[var(--gold)]">{i + 1}</span>
                 <Search className="h-4 w-4 text-[var(--text-tertiary)]" />
                 <input
                   value={side.symbol}
@@ -174,10 +177,10 @@ export function CompareClient() {
         <>
           {/* Verdict banner */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-            <div className="bento-card overflow-hidden">
-              <div className="relative">
-                <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
-                <div className="relative flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div className="glass-card overflow-hidden">
+                <div className="relative">
+                  <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+                  <div className="relative flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
                   <div className="flex items-center gap-3">
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--panel-2)]"><BarChart3 className="h-5 w-5 text-[var(--gold)]" /></span>
                     <div>
@@ -200,8 +203,8 @@ export function CompareClient() {
 
           {/* Metric duel */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-6">
-            <div className="bento-card p-6">
-              <div className="mb-5 grid grid-cols-3 gap-4">
+            <div className="surface-card p-6 lg:p-8">
+              <div className="mb-6 grid grid-cols-3 gap-4">
                 <p className="text-center font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{a.symbol}</p>
                 <p className="text-center meta">Metric</p>
                 <p className="text-center font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{b.symbol}</p>
@@ -232,10 +235,10 @@ export function CompareClient() {
           </motion.div>
 
           {/* Per-symbol cards */}
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
             {[a, b].map((side, idx) => (
               <motion.div key={side.symbol} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 + idx * 0.1 }}>
-                <div className="bento-card p-6">
+                <div className="glass-card p-6 lg:p-8">
                   <div className="mb-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--gold-glow)] font-mono text-sm font-bold text-[var(--gold)]">{side.symbol.slice(0, 2)}</div>

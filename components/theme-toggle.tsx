@@ -2,25 +2,25 @@
 
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "./theme-provider"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Monitor } from "lucide-react"
 
-const icons = { dark: Moon, light: Sun, system: Sun }
-const labels = { dark: "Dark", light: "Light", system: "System" }
+const ICONS = { dark: Moon, light: Sun, system: Monitor } as const
 
 export function ThemeToggle() {
-  const { resolved, cycleTheme } = useTheme()
-  const Icon = resolved === "dark" ? Moon : Sun
+  const { theme, resolved, cycleTheme } = useTheme()
+  const Icon = ICONS[theme]
 
   return (
     <button
       type="button"
       onClick={cycleTheme}
       className="btn btn--icon"
-      aria-label={`Theme: ${resolved === "dark" ? "Dark" : "Light"}. Click to switch.`}
+      aria-label={`Theme: ${theme}. Click to switch.`}
+      title={`Theme: ${theme} (showing ${resolved})`}
     >
       <AnimatePresence mode="wait">
         <motion.span
-          key={resolved}
+          key={theme}
           initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
           exit={{ opacity: 0, rotate: 90, scale: 0.5 }}

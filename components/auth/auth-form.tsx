@@ -107,7 +107,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="w-full max-w-sm"
     >
-      <div className="glass-dialog rounded-3xl p-8 sm:p-10">
+      <div className="glass rounded-[28px] p-8 sm:p-10">
         <div className="mb-6">
           <span className="font-serif text-lg italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </div>

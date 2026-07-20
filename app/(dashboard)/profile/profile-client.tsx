@@ -55,9 +55,9 @@ function normalizeCountry(raw: string): string {
 
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!checked)}
-      className={`relative h-7 w-11 shrink-0 rounded-full transition-colors duration-300 ${checked ? "bg-gold" : "bg-foreground/15"}`}>
-      <motion.div animate={{ x: checked ? 20 : 2 }} transition={{ type: "spring", stiffness: 400, damping: 22 }} className="absolute top-1.5 h-4 w-4 rounded-full bg-background shadow-md" />
+    <button onClick={() => onChange(!checked)} role="switch" aria-checked={checked}
+      className={`relative h-7 w-11 shrink-0 rounded-full border transition-colors duration-300 ${checked ? "border-[var(--gold)] bg-gold/20" : "border-[var(--line-strong)] bg-foreground/10"}`}>
+      <motion.div animate={{ x: checked ? 20 : 2 }} transition={{ type: "spring", stiffness: 400, damping: 22 }} className="absolute top-1.5 h-4 w-4 rounded-full bg-gold shadow-[0_0_10px_var(--gold)]" />
     </button>
   )
 }
@@ -78,9 +78,9 @@ function SaveButton({ onSave, busy, disabled, isDirty, label = "Save changes" }:
 
 function Field({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="field-ring group">
       <label className="meta mb-1.5 flex items-center gap-1.5">
-        <Icon className="h-3 w-3" />{label}
+        <Icon className="h-3 w-3 text-gold/70" />{label}
       </label>
       {children}
     </div>
@@ -176,6 +176,7 @@ function SearchSelect({
 function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string) => void }) {
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const MAX_BYTES = 4 * 1024 * 1024
@@ -193,45 +194,78 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
       setError("Image is too large. Please use a file under 4 MB.")
       return
     }
+    setProgress(0)
     const reader = new FileReader()
+    reader.onprogress = (e) => {
+      if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100))
+    }
     reader.onload = () => {
       console.log("[AVATAR] reader.onload fired")
       const result = typeof reader.result === "string" ? reader.result : ""
       console.log("[AVATAR] onChange invoked", { imageLength: result.length })
+      setProgress(100)
+      setTimeout(() => setProgress(null), 400)
       onChange(result)
     }
     reader.onerror = () => {
       console.error("[AVATAR] reader.onerror fired", reader.error)
+      setProgress(null)
       setError("Could not read the selected file.")
     }
     console.log("[AVATAR] reader.readAsDataURL called")
     reader.readAsDataURL(file)
   }
 
+  const openPicker = () => inputRef.current?.click()
+
   return (
-    <div>
-      <label className="meta mb-1.5 flex items-center gap-1.5">
-        <Camera className="h-3 w-3" />Profile photo
+    <div className="field-ring">
+      <label className="meta mb-2 flex items-center gap-1.5">
+        <Camera className="h-3 w-3 text-gold/70" />Profile photo
       </label>
-      <div
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
-        className={`bento-card flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${dragOver ? "border-[var(--gold)]" : "hover:border-[var(--gold)]"}`}
-      >
-        {image ? (
-          <img src={image} alt="" className="h-14 w-14 rounded-full object-cover" />
-        ) : (
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground/[0.06]">
-            <Upload className="h-5 w-5 text-muted-foreground" />
+
+      {image ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative shrink-0">
+            <div className="h-20 w-20 overflow-hidden rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-[2px] shadow-lg">
+              <img src={image} alt="" className="h-full w-full rounded-[14px] object-cover" />
+            </div>
+            {progress !== null && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
+                <span className="text-xs font-medium text-white">{progress}%</span>
+              </div>
+            )}
           </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-gold">Click to upload</span> or drag &amp; drop
-        </p>
-        <p className="text-[10px] text-muted-foreground/60">PNG, JPG, WEBP or GIF · max 4 MB</p>
-      </div>
+          <div className="min-w-0 flex-1">
+            <p className="meta mb-2">Photo selected</p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={openPicker} className="lm-btn lm-btn-soft flex items-center gap-1.5 px-3 py-2 text-xs">
+                <Upload className="h-3.5 w-3.5" />Replace
+              </button>
+              <button type="button" onClick={() => { onChange(""); setError(null) }} className="lm-btn lm-btn-ghost flex items-center gap-1.5 px-3 py-2 text-xs text-neg">
+                <X className="h-3.5 w-3.5" />Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={openPicker}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-all duration-200 ${dragOver ? "border-[var(--gold)] bg-gold/[0.06]" : "border-[var(--line-strong)] bg-[var(--surface)] hover:border-[var(--gold)] hover:bg-gold/[0.04]"}`}
+        >
+          <div className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors ${dragOver ? "bg-gold/15 text-gold" : "bg-foreground/[0.06] text-muted-foreground"}`}>
+            <Upload className="h-5 w-5" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-gold">Click to upload</span> or drag &amp; drop
+          </p>
+          <p className="text-[10px] text-muted-foreground/60">PNG, JPG, WEBP or GIF · max 4 MB</p>
+        </div>
+      )}
+
       <input
         ref={inputRef}
         type="file"
@@ -239,17 +273,19 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
-      {error && <p className="mt-1.5 text-xs text-neg">{error}</p>}
-      {image && (
-        <div className="mt-2 flex gap-3">
-          <button type="button" onClick={() => inputRef.current?.click()} className="meta text-xs text-gold hover:underline">
-            Replace
-          </button>
-          <button type="button" onClick={() => onChange("")} className="meta flex items-center gap-1 text-xs text-muted-foreground hover:text-neg">
-            <X className="h-3 w-3" />Remove
-          </button>
-        </div>
-      )}
+
+      <AnimatePresence>
+        {progress !== null && !image && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-3 overflow-hidden">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+              <motion.div animate={{ width: `${progress}%` }} transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }} className="h-full rounded-full bg-gold shadow-[0_0_8px_var(--gold)]" />
+            </div>
+            <p className="meta mt-1 text-right">{progress}%</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {error && <p className="mt-2 text-xs text-neg">{error}</p>}
     </div>
   )
 }
@@ -584,7 +620,7 @@ export function ProfileClient({ user }: {
     <div className="p-6 lg:p-8">
       <hr className="divider divider--gold" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="glow-page">
           <p className="subheading"><span className="dot-gold" /> Settings</p>
           <h1 className="heading mt-1">Your Preferences</h1>
@@ -595,13 +631,16 @@ export function ProfileClient({ user }: {
         )}
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.06 }} className="mb-6 flex gap-2 overflow-x-auto">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.06 }} className="mb-7 flex gap-2 overflow-x-auto">
         {TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
           return (
             <motion.button key={tab.key} onClick={() => { setActiveTab(tab.key); setError(null) }} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm capitalize transition-colors ${isActive ? "bg-gold/10 text-gold font-medium" : "glass-card text-muted-foreground hover:text-foreground"}`}>
+              className={`relative flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm capitalize transition-colors ${isActive ? "border-[var(--gold)]/40 text-gold" : "border-[var(--line)] bg-[var(--surface)] text-muted-foreground hover:text-foreground"}`}>
+              {isActive && (
+                <motion.span layoutId="profile-tab" transition={{ type: "spring", stiffness: 400, damping: 32 }} className="absolute inset-0 -z-10 rounded-full bg-gold/10" />
+              )}
               <Icon className={`h-3.5 w-3.5 ${isActive ? "text-gold" : "text-muted-foreground/60"}`} />{tab.label}
             </motion.button>
           )
@@ -620,27 +659,34 @@ export function ProfileClient({ user }: {
       <AnimatePresence mode="wait">
         {activeTab === "profile" && (
           <motion.div key="profile" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="bento-card">
-              <div className="space-y-6 p-6">
+            <div className="glass-card overflow-hidden">
+              <div className="relative p-6 sm:p-8">
+                <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
                   <div className="relative shrink-0">
-                    <div className="h-20 w-20 overflow-hidden rounded-full bg-gradient-to-br from-gold via-gold/50 to-gold/30 p-[2px] shadow-xl">
-                      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-background">
+                    <div className="h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-gold via-gold/50 to-gold/30 p-[2px] shadow-[0_0_30px_var(--gold)/0.25]">
+                      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--bg)]">
                         {image ? <img src={image} alt="" className="h-full w-full object-cover" /> :
-                          <span className="font-heading text-2xl font-semibold text-foreground">{(name || user.email || "U").slice(0, 1).toUpperCase()}</span>}
+                          <span className="font-heading text-3xl font-semibold text-foreground">{(name || user.email || "U").slice(0, 1).toUpperCase()}</span>}
                       </div>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 rounded-full bg-foreground p-1.5 text-background">
-                      <Camera className="h-3.5 w-3.5" />
-                    </div>
+                    <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg)] bg-emerald/20 text-emerald">
+                      <Check className="h-3.5 w-3.5" />
+                    </span>
                   </div>
                   <div className="min-w-0">
-                    <h2 className="heading">{name || "Unnamed"}</h2>
-                    <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{user.email}</span></div>
-                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString()}</span></div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="heading">{name || "Unnamed"}</h2>
+                      <span className="chip chip-gold">Verified</span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{user.email}</span></div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString()}</span></div>
                   </div>
                 </div>
-                <hr className="divider" />
+              </div>
+              <hr className="divider" />
+              <div className="space-y-6 p-6 sm:p-8">
+                <p className="subheading">Account details</p>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full" /></Field>
                   <div className="sm:col-span-2">
@@ -671,8 +717,9 @@ export function ProfileClient({ user }: {
 
         {activeTab === "notifications" && (
           <motion.div key="notifications" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="bento-card">
-              <div className="space-y-1 p-6">
+            <div className="glass-card">
+              <div className="space-y-3 p-6 sm:p-8">
+                <p className="subheading">Notifications</p>
                 {notifSupport === "unsupported" && (
                   <p className="mb-3 flex items-center gap-2 rounded-xl bg-neg/10 px-4 py-2.5 text-xs text-neg">
                     <BellOff className="h-3.5 w-3.5 shrink-0" />
@@ -686,8 +733,8 @@ export function ProfileClient({ user }: {
                   </p>
                 )}
                 {NOTIF_KEYS.map((item, i) => (
-                  <motion.div key={item.key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between rounded-xl px-4 py-3.5 transition-colors hover:bg-foreground/[0.02]">
+                  <motion.div key={item.key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center justify-between rounded-xl border border-[var(--line)] px-4 py-3.5 transition-colors hover:bg-foreground/[0.03]">
                     <div>
                       <p className="body font-medium">{item.label}</p>
                       <p className="meta mt-0.5">{item.desc}</p>
@@ -713,10 +760,11 @@ export function ProfileClient({ user }: {
 
         {activeTab === "appearance" && (
           <motion.div key="appearance" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="bento-card">
-              <div className="space-y-6 p-6">
+            <div className="glass-card">
+              <div className="space-y-6 p-6 sm:p-8">
+                <p className="subheading">Appearance</p>
                 <div>
-                  <p className="body mb-3 flex items-center gap-1.5 font-medium"><Monitor className="h-4 w-4 text-muted-foreground" />Theme</p>
+                  <p className="body mb-3 flex items-center gap-1.5 font-medium"><Monitor className="h-4 w-4 text-gold/70" />Theme</p>
                   <div className="flex gap-3">
                     {([{ mode: "dark" as ThemeMode, icon: Moon, label: "Dark", desc: "Easy on the eyes" },
                       { mode: "light" as ThemeMode, icon: Sun, label: "Light", desc: "Classic bright" },
@@ -748,9 +796,10 @@ export function ProfileClient({ user }: {
 
         {activeTab === "privacy" && (
           <motion.div key="privacy" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="space-y-4">
-            <div className="bento-card">
-              <div className="space-y-4 p-6">
-                <p className="body flex items-center gap-1.5 font-medium"><KeyRound className="h-4 w-4 text-muted-foreground" />Change password</p>
+            <div className="glass-card">
+              <div className="space-y-4 p-6 sm:p-8">
+                <p className="subheading">Security</p>
+                <p className="body flex items-center gap-1.5 font-medium"><KeyRound className="h-4 w-4 text-gold/70" />Change password</p>
                 <Field label="Current password" icon={KeyRound}><input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="glass-input w-full" /></Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="New password" icon={KeyRound}><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="glass-input w-full" /></Field>
@@ -760,16 +809,17 @@ export function ProfileClient({ user }: {
               </div>
             </div>
 
-            <div className="bento-card">
-              <div className="space-y-4 p-6">
-                <p className="body flex items-center gap-1.5 font-medium"><Mail className="h-4 w-4 text-muted-foreground" />Change email</p>
+            <div className="glass-card">
+              <div className="space-y-4 p-6 sm:p-8">
+                <p className="body flex items-center gap-1.5 font-medium"><Mail className="h-4 w-4 text-gold/70" />Change email</p>
                 <Field label="New email" icon={Mail}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={user.email} className="glass-input w-full" /></Field>
                 <button onClick={handleUpdateEmail} disabled={busy} className="lm-btn lm-btn--gold px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
               </div>
             </div>
 
-            <div className="bento-card">
-              <div className="space-y-4 p-6">
+            <div className="glass-card border border-neg/40">
+              <div className="space-y-4 p-6 sm:p-8">
+                <p className="subheading text-neg/90">Danger zone</p>
                 <p className="body flex items-center gap-1.5 font-medium text-neg"><Trash2 className="h-4 w-4" />Delete account</p>
                 <p className="body text-muted-foreground">Permanently remove your account and all associated data. This cannot be undone.</p>
                 <Field label="Confirm password" icon={KeyRound}><input type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} className="glass-input w-full" /></Field>
@@ -783,9 +833,9 @@ export function ProfileClient({ user }: {
 
         {activeTab === "legal" && (
           <motion.div key="legal" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="bento-card">
-              <div className="space-y-4 p-6">
-                <p className="body flex items-center gap-1.5 font-medium"><FileText className="h-4 w-4 text-muted-foreground" />Legal</p>
+            <div className="glass-card">
+              <div className="space-y-4 p-6 sm:p-8">
+                <p className="subheading">Legal</p>
                 <p className="body text-muted-foreground">
                   Review the legal agreements that govern your use of Lumora.
                 </p>
@@ -793,7 +843,7 @@ export function ProfileClient({ user }: {
                   <Link
                     href="/terms"
                     target="_blank"
-                    className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-foreground/[0.06]"
+                    className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 transition-colors hover:bg-foreground/[0.06]"
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">Terms &amp; Conditions</p>
@@ -804,7 +854,7 @@ export function ProfileClient({ user }: {
                   <Link
                     href="/privacy"
                     target="_blank"
-                    className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-foreground/[0.06]"
+                    className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 transition-colors hover:bg-foreground/[0.06]"
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">Privacy Policy</p>

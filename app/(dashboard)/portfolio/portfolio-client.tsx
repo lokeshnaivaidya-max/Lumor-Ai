@@ -88,15 +88,16 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
       <hr className="divider divider--gold" />
 
       {/* FEATURED HEADER */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="glow-page">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="glass relative mb-8 flex flex-col gap-6 overflow-hidden rounded-3xl p-8 sm:flex-row sm:items-end sm:justify-between lg:p-10">
+        <div className="pointer-events-none absolute -inset-24 opacity-40" style={{ background: 'radial-gradient(circle at 0% 0%, var(--gold-glow-strong), transparent 55%)' }} />
+        <div className="glow-page relative">
           <p className="subheading"><span className="dot-gold" /> Portfolio</p>
-          <h1 className="heading mt-1">Your Holdings</h1>
-          <p className="body mt-2">Live valuation, profit &amp; loss, and allocation — all in one view.</p>
+          <h1 className="heading mt-2 text-[var(--text-primary)]">Your Holdings</h1>
+          <p className="body mt-3 max-w-md">Live valuation, profit &amp; loss, and allocation — all in one view.</p>
         </div>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-2">
-          <Link href="/chat" className="btn flex items-center gap-1.5 px-4 py-2.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />AI Review</Link>
-          <button onClick={() => { setError(null); setAdding(true) }} className="btn btn--gold flex items-center gap-1.5 px-4 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="relative flex items-center gap-2">
+          <Link href="/chat" className="lm-btn lm-btn-soft flex items-center gap-1.5 px-4 py-2.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />AI Review</Link>
+          <button onClick={() => { setError(null); setAdding(true) }} className="lm-btn lm-btn-gold flex items-center gap-1.5 px-4 py-2.5 text-xs"><Plus className="h-3.5 w-3.5" />Add Holding</button>
         </motion.div>
       </motion.div>
 
@@ -105,21 +106,21 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
       {hasData ? (
         <>
           {/* KPI STRIP */}
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="bento-card p-6">
-              <p className="meta">Total Value</p>
-              <p className="stat-number mt-2 text-[var(--text-primary)]">{fmt(totalValue)}</p>
-              <p className="mt-1.5 font-mono text-xs text-[var(--text-tertiary)]">Live valuation</p>
+          <div className="mb-8 grid gap-6 sm:grid-cols-3">
+            <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
+              <p className="subheading">Total Value</p>
+              <p className="stat-number mt-3 text-[var(--text-primary)]">{fmt(totalValue)}</p>
+              <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">Live valuation</p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 }} className="bento-card p-6">
-              <p className="meta">Total P&amp;L</p>
-              <p className={`stat-number mt-2 ${totalPnL >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{`${totalPnL >= 0 ? "+" : ""}${fmt(totalPnL)}`}</p>
-              <p className={`mt-1.5 flex items-center gap-1 font-mono text-xs ${pnlPercent >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{pnlPercent >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}{pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}%</p>
+            <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
+              <p className="subheading">Total P&amp;L</p>
+              <p className={`stat-number mt-3 ${totalPnL >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{`${totalPnL >= 0 ? "+" : ""}${fmt(totalPnL)}`}</p>
+              <p className={`mt-2 flex items-center gap-1 font-mono text-xs ${pnlPercent >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{pnlPercent >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}{pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}%</p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }} className="bento-card p-6">
-              <p className="meta">Health Score</p>
-              <p className="stat-number mt-2 text-[var(--gold)]">{healthScore}</p>
-              <p className="mt-1.5 font-mono text-xs text-[var(--text-tertiary)]">{healthScore >= 70 ? "Well diversified" : "Concentrated"}</p>
+            <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
+              <p className="subheading">Health Score</p>
+              <p className="stat-number mt-3 text-[var(--gold)]">{healthScore}</p>
+              <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">{healthScore >= 70 ? "Well diversified" : "Concentrated"}</p>
             </motion.div>
           </div>
 
@@ -129,18 +130,18 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
           {view === "holdings" && (
             <motion.div key="holdings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <div className="table-wrap">
+              <div className="glass-card overflow-hidden rounded-3xl">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead>
+                    <thead className="sticky top-0 z-10 backdrop-blur-xl" style={{ background: "var(--surface-alt)" }}>
                       <tr className="border-b" style={{ borderColor: "var(--line)" }}>
-                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Symbol</th>
-                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Name</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Shares</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Avg Price</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Current</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>P&amp;L</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Allocation</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Symbol</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Name</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Shares</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Avg Price</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Current</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>P&amp;L</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Allocation</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -149,22 +150,22 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
                         const pnlPct = h.costBasis > 0 ? ((h.price - h.avgPrice) / h.avgPrice) * 100 : 0
                         const alloc = allocations[idx]?.pct ?? 0
                         return (
-                          <motion.tr key={h.symbol} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05, duration: 0.5 }} className="table-row table-row--clickable group">
-                            <td className="px-5 py-4">
+                          <motion.tr initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05, duration: 0.5 }} className="group transition-colors duration-200 hover:bg-[var(--panel-2)]/60" style={{ borderColor: "var(--line)" }}>
+                            <td className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
                               <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--gold-glow)]"><span className="text-xs font-bold text-[var(--gold)]">{h.symbol.slice(0, 2)}</span></div>
                                 <span className="font-semibold text-[var(--text-primary)]">{h.symbol}</span>
                               </div>
                             </td>
-                            <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{h.name ?? "—"}</td>
-                            <td className="px-5 py-4 text-right font-mono text-sm tabular-nums text-[var(--text-primary)]">{h.quantity}</td>
-                            <td className="px-5 py-4 text-right font-mono text-sm tabular-nums text-[var(--text-primary)]">{fmt(h.avgPrice)}</td>
-                            <td className="px-5 py-4 text-right font-mono text-sm font-semibold tabular-nums text-[var(--text-primary)]">{fmt(h.price)}</td>
-                            <td className={`px-5 py-4 text-right font-mono text-sm font-semibold tabular-nums ${pnl >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>
+                            <td className="px-6 py-4 text-sm text-[var(--text-secondary)]" style={{ borderBottom: "1px solid var(--line)" }}>{h.name ?? "—"}</td>
+                            <td className="px-6 py-4 text-right font-mono text-sm tabular-nums text-[var(--text-primary)]" style={{ borderBottom: "1px solid var(--line)" }}>{h.quantity}</td>
+                            <td className="px-6 py-4 text-right font-mono text-sm tabular-nums text-[var(--text-primary)]" style={{ borderBottom: "1px solid var(--line)" }}>{fmt(h.avgPrice)}</td>
+                            <td className="px-6 py-4 text-right font-mono text-sm font-semibold tabular-nums text-[var(--text-primary)]" style={{ borderBottom: "1px solid var(--line)" }}>{fmt(h.price)}</td>
+                            <td className={`px-6 py-4 text-right font-mono text-sm font-semibold tabular-nums ${pnl >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`} style={{ borderBottom: "1px solid var(--line)" }}>
                               {pnl >= 0 ? "+" : ""}{fmt(pnl)}
                               <span className="ml-1.5 text-xs font-sans font-normal opacity-75">({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)</span>
                             </td>
-                            <td className="px-5 py-4 text-right">
+                            <td className="px-6 py-4 text-right" style={{ borderBottom: "1px solid var(--line)" }}>
                               <div className="flex items-center justify-end gap-2">
                                 <div className="h-1.5 w-12 overflow-hidden rounded-full bg-[var(--panel-2)]">
                                   <motion.div className="h-full rounded-full bg-[var(--gold)]" initial={{ width: 0 }} animate={{ width: `${alloc}%` }} transition={{ duration: 0.8, delay: idx * 0.05 }} />
@@ -184,8 +185,8 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
           {view === "allocation" && (
             <motion.div key="allocation" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid gap-6 lg:grid-cols-2">
-              <div className="bento-card p-6">
-                <h3 className="heading mb-5">Allocation by Holding</h3>
+              <div className="surface-card p-6 lg:p-8">
+                <h3 className="heading mb-6">Allocation by Holding</h3>
                 <div className="space-y-5">
                   {allocations.map((a, i) => (
                     <motion.div key={a.symbol} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}>
@@ -203,8 +204,8 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
                   ))}
                 </div>
               </div>
-              <div className="bento-card p-6">
-                <h3 className="heading mb-5">Holdings Allocation</h3>
+              <div className="surface-card p-6 lg:p-8">
+                <h3 className="heading mb-6">Holdings Allocation</h3>
                 <div className="flex flex-col items-center">
                   <div className="relative flex h-52 w-52 items-center justify-center">
                     <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
@@ -244,7 +245,7 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           {view === "performance" && (
             <motion.div key="performance" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <div className="bento-card p-8">
-                <h3 className="heading">Performance Analytics</h3>
+                <h3 className="heading mb-1">Performance Analytics</h3>
                 <p className="body mt-0.5">Portfolio performance over time</p>
                 <div className="mt-6 flex h-64 items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel)]">
                   <div className="text-center">
@@ -262,7 +263,7 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><Wallet className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">No portfolio yet</p>
           <p className="body mt-2 mx-auto max-w-sm">Add your first holding to see live valuation, P&amp;L, and allocation analytics.</p>
-          <motion.button onClick={() => setAdding(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="btn btn--gold mt-6"><Plus className="h-3.5 w-3.5" />Add Holding</motion.button>
+          <motion.button onClick={() => setAdding(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="lm-btn lm-btn-gold mt-6"><Plus className="h-3.5 w-3.5" />Add Holding</motion.button>
         </motion.div>
       )}
 
@@ -277,25 +278,25 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="meta mb-1.5 block">Symbol</label>
-                  <input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" className="glass-input w-full" />
+                  <input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" className="field__input w-full" />
                 </div>
                 <div>
                   <label className="meta mb-1.5 block">Quantity</label>
-                  <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10" className="glass-input w-full" />
+                  <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10" className="field__input w-full" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="meta mb-1.5 block">Avg Price</label>
-                  <input type="number" value={avgPrice} onChange={(e) => setAvgPrice(e.target.value)} placeholder="150.00" className="glass-input w-full" />
+                  <input type="number" value={avgPrice} onChange={(e) => setAvgPrice(e.target.value)} placeholder="150.00" className="field__input w-full" />
                 </div>
                 <div>
                   <label className="meta mb-1.5 block">Name (opt)</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc." className="glass-input w-full" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc." className="field__input w-full" />
                 </div>
               </div>
               {error && <p className="text-xs text-[var(--neg)]">{error}</p>}
-              <button onClick={handleAdd} disabled={busy} className="btn btn--gold flex w-full items-center justify-center gap-2 px-4 py-2.5 text-xs disabled:opacity-60">
+              <button onClick={handleAdd} disabled={busy} className="lm-btn lm-btn-gold flex w-full items-center justify-center gap-2 px-4 py-2.5 text-xs disabled:opacity-60">
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}Add Holding
               </button>
             </div>

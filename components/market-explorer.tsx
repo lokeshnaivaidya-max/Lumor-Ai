@@ -133,7 +133,7 @@ const BentoCard = memo(function BentoCard({ children, className = "" }: { childr
     <motion.div
       whileHover={{ y: -3, scale: 1.005 }}
       transition={{ type: "spring", stiffness: 200, damping: 15, mass: 0.6 }}
-      className={`bento-card ${className}`}
+      className={`bento-card overflow-hidden rounded-[28px] ${className}`}
     >
       {children}
     </motion.div>
@@ -159,8 +159,7 @@ const TickerTape = memo(function TickerTape({ quotes }: { quotes: Quote[] }) {
                 return (
                   <div
                     key={`${dup}-${sym}`}
-                    className="flex shrink-0 items-center gap-2.5 rounded-2xl border px-4 py-2"
-                    style={{ borderColor: "var(--glass-border)", background: "var(--glass-bg)" }}
+                    className="glass flex shrink-0 items-center gap-2.5 rounded-2xl px-4 py-2"
                   >
                     <span className="font-mono text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
                       {sym === "^GSPC" ? "S&P 500" :
@@ -264,7 +263,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         <SymbolSearch onSelect={handleSelect} />
 
         <div className="flex w-full flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full p-0.5" style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)" }}>
+          <div className="flex items-center gap-1.5 rounded-full p-0.5 glass">
             <Globe className="ml-2 h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
             {REGIONS.map((r) => (
               <button
@@ -284,12 +283,11 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
               <button
                 key={w}
                 onClick={() => handleSelect({ symbol: w, name: w, exchange: "", type: "equity" })}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                className={`chip font-mono text-[11px] transition-colors ${
                   symbol === w
-                    ? "text-[var(--gold)]"
+                    ? "chip-gold"
                     : "hover:border-[var(--gold-line)] hover:text-[var(--text-primary)]"
                 }`}
-                style={symbol === w ? { background: "var(--gold-glow)", borderColor: "var(--gold-line)" } : { borderColor: "var(--line)", color: "var(--text-tertiary)" }}
               >
                 {w}
               </button>
@@ -299,19 +297,19 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       {quoteError && !quote ? (
-        <div className="flex items-center gap-3 rounded-[32px] px-6 py-4 text-sm" style={{ border: "1px solid var(--neg-glow)", background: "rgba(255, 107, 125, 0.05)", color: "var(--neg)" }}>
+        <div className="glass flex items-center gap-3 rounded-[32px] px-6 py-4 text-sm" style={{ border: "1px solid var(--neg-glow)", background: "var(--neg-glow)", color: "var(--neg)" }}>
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>Unable to load quote data. Retrying…</span>
         </div>
       ) : null}
       <QuoteHeader quote={quote} symbol={symbol} positive={positive} ccySym={ccySym} />
 
-      <div className="mt-5 flex items-center gap-1.5">
+      <div className="mt-5 flex flex-wrap items-center gap-1.5">
         {RANGES.map((r) => (
           <button
             key={r}
             onClick={() => setRange(r)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
+                className={`chip font-medium uppercase tracking-wide transition-colors ${
                   range === r ? "" : "hover:border-[var(--gold-line)] hover:text-[var(--text-primary)]"
                 }`}
                 style={range === r ? { background: "var(--gold)", color: "#1a1407" } : { border: "1px solid var(--line)", color: "var(--text-tertiary)" }}
@@ -369,8 +367,13 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       <section className="mt-10">
-        <div className="rounded-[28px] p-6 sm:p-8" style={{ border: "1px solid var(--gold-glow)", background: "var(--gold-glow)" }}>
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="glass-card relative overflow-hidden rounded-[28px] p-6 sm:p-8" style={{ borderColor: "var(--gold-line)" }}>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full blur-3xl"
+            style={{ background: "var(--gold-glow)" }}
+          />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl">
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
@@ -386,14 +389,14 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
                 risk&nbsp;/&nbsp;reward, and position sizing. Describe it in plain language and we&apos;ll parse it for you.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3" style={{ color: "var(--gold)" }} />Target &amp; Stop-Loss</span>
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3" style={{ color: "var(--gold)" }} />Risk / Reward</span>
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3" style={{ color: "var(--gold)" }} />Position Sizing</span>
+                <span className="chip-gold flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3" />Target &amp; Stop-Loss</span>
+                <span className="chip-gold flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3" />Risk / Reward</span>
+                <span className="chip-gold flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3" />Position Sizing</span>
               </div>
             </div>
             <Link
               href="/trade-planner"
-              className="lm-btn lm-btn--gold shrink-0 px-6 py-3 text-sm"
+              className="lm-btn lm-btn-gold shrink-0 px-6 py-3 text-sm"
             >
               Open Trade Planner
             </Link>
@@ -435,7 +438,7 @@ const QuoteHeader = memo(function QuoteHeader({
         className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl"
         style={{
           background: positive
-            ? "radial-gradient(circle, oklch(0.62 0.16 168 / 0.16), transparent 70%)"
+            ? "radial-gradient(circle, var(--gold-glow), transparent 70%)"
             : "radial-gradient(circle, oklch(0.58 0.18 22 / 0.16), transparent 70%)",
         }}
       />
@@ -446,9 +449,10 @@ const QuoteHeader = memo(function QuoteHeader({
               <img
                 src={logoSrc}
                 alt=""
-                width={40}
-                height={40}
-                className="h-10 w-10 rounded-xl bg-white/10 object-contain"
+                width={44}
+                height={44}
+                className="h-11 w-11 rounded-xl object-contain"
+                style={{ background: "var(--surface-alt)", border: "1px solid var(--line)" }}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
               />
             )}
@@ -458,17 +462,16 @@ const QuoteHeader = memo(function QuoteHeader({
                 {displaySymbol(quote?.symbol ?? symbol)}
               </span>
             </div>
-            <span className="rounded-full border px-2.5 py-0.5 text-[11px]" style={{ borderColor: "var(--glass-border)", color: "var(--text-secondary)" }}>
+            <span className="chip">
               {quote?.exchange || "—"}
             </span>
             {quote?.assetType && (
-              <span className="rounded-full border px-2.5 py-0.5 text-[11px]" style={{ borderColor: "var(--glass-border)", color: "var(--text-secondary)" }}>
+              <span className="chip">
                 {quote.assetType === "CRYPTOCURRENCY" ? "CRYPTO" : quote.assetType}
               </span>
             )}
             <span
-              className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]`}
-                style={quote?.marketState === "REGULAR" ? { background: "var(--pos-glow)", color: "var(--pos)" } : { background: "var(--panel-2)", color: "var(--text-tertiary)" }}
+              className={`chip ${quote?.marketState === "REGULAR" ? "chip-pos" : ""}`}
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse" : ""}`}
@@ -490,7 +493,7 @@ const QuoteHeader = memo(function QuoteHeader({
           )}
           {quote?.website && (
             <a href={quote.website} target="_blank" rel="noopener noreferrer"
-              className="mt-0.5 inline-block max-w-md truncate text-xs transition-colors"
+              className="link-premium mt-0.5 inline-block max-w-md truncate text-xs"
               style={{ color: "var(--gold)" }}>
               {quote.website.replace(/^https?:\/\//, "")}
             </a>
@@ -498,7 +501,7 @@ const QuoteHeader = memo(function QuoteHeader({
         </div>
 
         <div className="text-right">
-          <div className="font-mono text-4xl tracking-tight sm:text-5xl" style={{ color: "var(--text-primary)" }}>
+          <div className="stat-number" style={{ color: "var(--text-primary)" }}>
             {quote ? <AnimatedPrice value={quote.price} ccySym={ccySym} /> : "—"}
           </div>
           {quote && (

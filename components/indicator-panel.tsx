@@ -11,7 +11,7 @@ function fmt(n: number | null | undefined, d = 2) {
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" | "muted" }) {
   const color = tone === "pos" ? "text-pos" : tone === "neg" ? "text-neg" : "text-foreground"
   return (
-    <div className="flex items-center justify-between border-b border-white/10 py-2.5 last:border-0">
+    <div className="flex items-center justify-between border-b border-[var(--line)] py-2.5 last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className={`font-mono text-sm tabular-nums ${color}`}>{value}</span>
     </div>
@@ -25,9 +25,14 @@ function Panel({ title, children, delay = 0 }: { title: string; children: React.
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl p-5 transition-all duration-300 hover:border-white/30 hover:bg-white/20"
+      whileHover={{ y: -3, borderColor: "var(--gold-line)" }}
+      className="glass-card group relative overflow-hidden rounded-[28px] p-5 transition-colors duration-300"
     >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[28px]" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: "var(--gold-glow)" }}
+      />
       <h3 className="relative mb-3 font-heading text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
       <div className="relative">{children}</div>
     </motion.div>
@@ -52,9 +57,9 @@ function IndicatorPanelBase({ ind }: { ind: Indicators; currency?: string }) {
               {fmt(ind.rsi, 1)}
             </span>
           </div>
-          <div className="relative h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="absolute inset-y-0 left-[30%] w-px bg-white/20" />
-            <div className="absolute inset-y-0 left-[70%] w-px bg-white/20" />
+          <div className="relative h-1.5 overflow-hidden rounded-full" style={{ background: "var(--panel-2)" }}>
+            <div className="absolute inset-y-0 left-[30%] w-px" style={{ background: "var(--line-strong)" }} />
+            <div className="absolute inset-y-0 left-[70%] w-px" style={{ background: "var(--line-strong)" }} />
             <motion.div
               className="h-full rounded-full"
               initial={{ width: 0 }}
@@ -81,22 +86,12 @@ function IndicatorPanelBase({ ind }: { ind: Indicators; currency?: string }) {
       <Panel title="Trend" delay={0.06}>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              ind.trend === "bullish"
-                ? "bg-pos/15 text-pos"
-                : ind.trend === "bearish"
-                  ? "bg-neg/15 text-neg"
-                  : "bg-white/10 text-muted-foreground"
-            }`}
+            className={`chip ${ind.trend === "bullish" ? "chip-pos" : ind.trend === "bearish" ? "chip-neg" : ""}`}
           >
             {ind.trend.toUpperCase()}
           </span>
-          <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-muted-foreground">
-            {ind.trendStrength} strength
-          </span>
-          <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-muted-foreground">
-            {ind.momentum}
-          </span>
+          <span className="chip">{ind.trendStrength} strength</span>
+          <span className="chip">{ind.momentum}</span>
         </div>
         <Stat label="ADX (14)" value={fmt(ind.adx, 1)} />
         <Stat label="EMA 20" value={fmt(ind.ema20)} />

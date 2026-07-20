@@ -230,11 +230,8 @@ export function PriceChart({
           <button
             key={t.key}
             onClick={() => toggleIndicator(t.key)}
-            className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
-              activeIndicators.has(t.key)
-                ? "bg-foreground text-background"
-                : "border border-white/20 text-muted-foreground hover:text-foreground"
-            }`}
+            className={`chip transition-colors ${activeIndicators.has(t.key) ? "" : "hover:text-[var(--text-primary)]"}`}
+            style={activeIndicators.has(t.key) ? { background: "var(--gold)", color: "#1a1407" } : undefined}
           >
             {t.label}
           </button>
@@ -267,8 +264,8 @@ export function PriceChart({
 
         {gridLines.map((gl, i) => (
           <g key={i}>
-            <line x1="0" x2={width} y1={gl.y} y2={gl.y} stroke="oklch(0.99 0 0 / 0.04)" strokeWidth="1" strokeDasharray="4 4" />
-            <text x={width - 8} y={gl.y - 4} fill="oklch(0.99 0 0 / 0.25)" fontSize="10" fontFamily="monospace" textAnchor="end">
+            <line x1="0" x2={width} y1={gl.y} y2={gl.y} stroke="var(--line-faint, oklch(0.99 0 0 / 0.06))" strokeWidth="1" strokeDasharray="4 4" />
+            <text x={width - 8} y={gl.y - 4} fill="var(--text-tertiary)" fontSize="10" fontFamily="monospace" textAnchor="end">
               {gl.label}
             </text>
           </g>
@@ -317,7 +314,7 @@ export function PriceChart({
           <>
             <circle cx={last.x} cy={last.y} r="12" fill={tone} opacity="0.12" />
             <circle cx={last.x} cy={last.y} r="4" fill={tone} />
-            <circle cx={last.x} cy={last.y} r="4" fill="oklch(0.99 0 0)" opacity="0.5" />
+            <circle cx={last.x} cy={last.y} r="4" fill="var(--surface)" opacity="0.5" />
           </>
         )}
         {first && <circle cx={first.x} cy={first.y} r="3" fill={tone} opacity="0.4" />}
@@ -326,26 +323,26 @@ export function PriceChart({
           <>
             <line x1={hp.x} y1={hp.y - 8} x2={hp.x} y2={0} stroke={tone} strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
             <line x1={hp.x} y1={hp.y + 8} x2={hp.x} y2={mainHeight} stroke={tone} strokeWidth="1" strokeDasharray="3 3" opacity="0.3" />
-            <line x1={pts[0]?.x ?? 0} y1={hp.y} x2={hp.x} y2={hp.y} stroke="oklch(0.99 0 0 / 0.15)" strokeWidth="1" strokeDasharray="2 3" />
+            <line x1={pts[0]?.x ?? 0} y1={hp.y} x2={hp.x} y2={hp.y} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2 3" opacity="0.35" />
           </>
         )}
 
         {crosshairX !== null && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
-            <motion.line x1={crosshairX} y1={0} x2={crosshairX} y2={mainHeight} stroke="oklch(0.99 0 0 / 0.12)" strokeWidth="1" vectorEffect="non-scaling-stroke" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+            <motion.line x1={crosshairX} y1={0} x2={crosshairX} y2={mainHeight} stroke="var(--text-tertiary)" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />
             <motion.circle cx={hp!.x} cy={hp!.y} r="12" fill={tone} opacity="0.15" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }} />
-            <motion.circle cx={hp!.x} cy={hp!.y} r="5" fill={tone} stroke="oklch(0.99 0 0)" strokeWidth="2" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }} />
+            <motion.circle cx={hp!.x} cy={hp!.y} r="5" fill={tone} stroke="var(--surface)" strokeWidth="2" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }} />
             <motion.circle cx={hp!.x} cy={hp!.y} r="14" fill="none" stroke={tone} strokeWidth="1" opacity="0.3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }} />
           </motion.g>
         )}
 
         {showRSI && rsiData && (
           <g>
-            <line x1={0} x2={width} y1={mainHeight + 20} y2={mainHeight + 20} stroke="oklch(0.99 0 0 / 0.06)" strokeWidth="1" />
-            <line x1={0} x2={width} y1={mainHeight + 60} y2={mainHeight + 60} stroke="oklch(0.99 0 0 / 0.06)" strokeWidth="1" />
-            <text x={4} y={mainHeight + 14} fill="oklch(0.99 0 0 / 0.25)" fontSize="9" fontFamily="monospace">RSI {indicators?.rsi?.toFixed(1)}</text>
-            <text x={4} y={mainHeight + 34} fill="oklch(0.99 0 0 / 0.2)" fontSize="8" fontFamily="monospace">70</text>
-            <text x={4} y={mainHeight + 74} fill="oklch(0.99 0 0 / 0.2)" fontSize="8" fontFamily="monospace">30</text>
+            <line x1={0} x2={width} y1={mainHeight + 20} y2={mainHeight + 20} stroke="var(--line-faint, oklch(0.99 0 0 / 0.08))" strokeWidth="1" />
+            <line x1={0} x2={width} y1={mainHeight + 60} y2={mainHeight + 60} stroke="var(--line-faint, oklch(0.99 0 0 / 0.08))" strokeWidth="1" />
+            <text x={4} y={mainHeight + 14} fill="var(--text-tertiary)" fontSize="9" fontFamily="monospace">RSI {indicators?.rsi?.toFixed(1)}</text>
+            <text x={4} y={mainHeight + 34} fill="var(--text-tertiary)" fontSize="8" fontFamily="monospace">70</text>
+            <text x={4} y={mainHeight + 74} fill="var(--text-tertiary)" fontSize="8" fontFamily="monospace">30</text>
             <motion.path
               d={candles.map((c, i) => {
                 const x = 12 + (i / Math.max(1, candles.length - 1)) * (width - 24)
@@ -353,16 +350,16 @@ export function PriceChart({
                 const y = mainHeight + 40 - ((rsiVal - 0) / 100) * 40
                 return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`
               }).join(" ")}
-              fill="none" stroke="oklch(0.55 0.18 255)" strokeWidth="1.5" opacity="0.7"
-              initial={{ opacity: 0 }} animate={{ opacity: 0.7 }} transition={{ duration: 0.8 }}
+              fill="none" stroke="var(--info)" strokeWidth="1.5" opacity="0.8"
+              initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} transition={{ duration: 0.8 }}
             />
           </g>
         )}
 
         {showMACD && macdData && (
           <g>
-            <line x1={0} x2={width} y1={mainHeight + (showRSI ? 80 : 20)} y2={mainHeight + (showRSI ? 80 : 20)} stroke="oklch(0.99 0 0 / 0.06)" strokeWidth="1" />
-            <text x={4} y={mainHeight + (showRSI ? 80 : 20) - 6} fill="oklch(0.99 0 0 / 0.25)" fontSize="9" fontFamily="monospace">
+            <line x1={0} x2={width} y1={mainHeight + (showRSI ? 80 : 20)} y2={mainHeight + (showRSI ? 80 : 20)} stroke="var(--line-faint, oklch(0.99 0 0 / 0.08))" strokeWidth="1" />
+            <text x={4} y={mainHeight + (showRSI ? 80 : 20) - 6} fill="var(--text-tertiary)" fontSize="9" fontFamily="monospace">
               MACD {macdData.macd.toFixed(2)} / Signal {macdData.signal.toFixed(2)} / Hist {macdData.histogram.toFixed(2)}
             </text>
             <motion.path
@@ -378,8 +375,8 @@ export function PriceChart({
                 const y = yBase + 20
                 return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`
               }).join(" ")}
-              fill="none" stroke="oklch(0.62 0.16 168)" strokeWidth="1" opacity="0.5"
-              initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ duration: 0.8 }}
+              fill="none" stroke="var(--pos)" strokeWidth="1" opacity="0.6"
+              initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ duration: 0.8 }}
             />
           </g>
         )}
@@ -391,8 +388,8 @@ export function PriceChart({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="pointer-events-none absolute left-4 top-[52px] rounded-2xl border bg-background/70 px-4 py-3 text-xs backdrop-blur-xl shadow-xl"
-          style={{ borderColor: `${tone}33` }}
+          className="glass pointer-events-none absolute left-4 top-[52px] rounded-2xl border px-4 py-3 text-xs shadow-xl"
+          style={{ borderColor: "var(--gold-line)" }}
         >
           <div className="flex items-center gap-2.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tone }} />

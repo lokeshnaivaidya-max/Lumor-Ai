@@ -12,16 +12,31 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { LumoraMark } from "@/components/lumora-mark"
 
-const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/markets", label: "Markets", icon: LineChart },
-  { href: "/portfolio", label: "Portfolio", icon: Briefcase },
-  { href: "/watchlist", label: "Watchlist", icon: Eye },
-  { href: "/compare", label: "Compare", icon: BarChart3 },
-  { href: "/chat", label: "AI Chat", icon: MessageSquare },
-  { href: "/activity", label: "Activity", icon: Bell },
-  { href: "/profile", label: "Profile", icon: User },
+const SECTIONS = [
+  {
+    label: "Overview",
+    items: [
+      { href: "/", label: "Home", icon: Home },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Markets",
+    items: [
+      { href: "/markets", label: "Markets", icon: LineChart },
+      { href: "/portfolio", label: "Portfolio", icon: Briefcase },
+      { href: "/watchlist", label: "Watchlist", icon: Eye },
+      { href: "/compare", label: "Compare", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { href: "/chat", label: "AI Chat", icon: MessageSquare },
+      { href: "/activity", label: "Activity", icon: Bell },
+      { href: "/profile", label: "Profile", icon: User },
+    ],
+  },
 ]
 
 export function DashboardSidebar() {
@@ -36,80 +51,72 @@ export function DashboardSidebar() {
 
   return (
     <motion.aside
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -24 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="fixed left-5 top-5 z-40 flex h-[calc(100vh-2.5rem)] flex-col rounded-3xl glass-sidebar"
-      style={{ width: open ? 232 : 76, transition: "width 0.4s var(--ease-out)" }}
+      className="glass-sidebar fixed left-5 top-5 z-40 flex h-[calc(100vh-2.5rem)] flex-col rounded-[26px]"
+      style={{ width: open ? 244 : 78, transition: "width 0.45s var(--ease-out)" }}
     >
       <div className="flex h-full w-full flex-col py-5">
         <div className={`flex items-center gap-3 px-4 ${open ? "" : "justify-center"}`}>
-          <Link href="/" className="flex items-center gap-2" aria-label="Lumora home">
-            <LumoraMark className="h-8 w-8 shrink-0" />
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Lumora home">
+            <LumoraMark className="h-8 w-8" />
             <AnimatePresence>
               {open && (
-                <motion.span
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -6 }}
-                  className="font-serif text-lg tracking-tight"
-                >
+                <motion.span initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} className="font-serif text-lg tracking-tight">
                   Lumora
                 </motion.span>
               )}
             </AnimatePresence>
           </Link>
           {open && (
-            <button
-              onClick={() => setOpen(false)}
-              className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
-              aria-label="Collapse"
-            >
+            <button onClick={() => setOpen(false)} className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]" aria-label="Collapse">
               <ChevronLeft className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        <nav className="mt-6 flex flex-1 flex-col gap-1 px-3">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-300 ${
-                  isActive
-                    ? "bg-[var(--gold-glow)] text-[var(--gold)]"
-                    : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="rail-active"
-                    className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full"
-                    style={{ background: "var(--gold)" }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  />
+        <nav className="mt-6 flex-1 space-y-5 overflow-y-auto px-3" style={{ scrollbarWidth: "none" }}>
+          {SECTIONS.map((section) => (
+            <div key={section.label}>
+              <AnimatePresence>
+                {open && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta mb-2 px-3">
+                    {section.label}
+                  </motion.p>
                 )}
-                <item.icon className="h-[18px] w-[18px] shrink-0 transition-transform duration-300 group-hover:scale-110" />
-                <AnimatePresence>
-                  {open && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -6 }}
-                      className="text-sm font-medium whitespace-nowrap"
+              </AnimatePresence>
+              <div className="flex flex-col gap-1">
+                {section.items.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={item.label}
+                      className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-300 ${
+                        isActive ? "bg-[var(--gold-glow)] text-[var(--gold)]" : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
+                      } ${open ? "" : "justify-center"}`}
                     >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </Link>
-            )
-          })}
+                      {isActive && (
+                        <motion.span layoutId="rail-active" className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full" style={{ background: "var(--gold)" }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} />
+                      )}
+                      <item.icon className="h-[18px] w-[18px] shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                      <AnimatePresence>
+                        {open && (
+                          <motion.span initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} className="text-sm font-medium whitespace-nowrap">
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <button

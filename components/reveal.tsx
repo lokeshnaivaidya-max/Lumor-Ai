@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import type { ReactNode } from "react"
+import { useRef, type MouseEvent, type ReactNode } from "react"
 
 export function FadeUp({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   return (
@@ -67,5 +67,33 @@ export function CardReveal({ children, delay = 0, index = 0 }: { children: React
     >
       {children}
     </motion.div>
+  )
+}
+
+export function Magnetic({ children, strength = 0.3 }: { children: ReactNode; strength?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  function onMove(e: MouseEvent<HTMLDivElement>) {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const x = (e.clientX - (r.left + r.width / 2)) * strength
+    const y = (e.clientY - (r.top + r.height / 2)) * strength
+    el.style.transform = `translate(${x}px, ${y}px)`
+  }
+  function onLeave() {
+    if (ref.current) ref.current.style.transform = "translate(0,0)"
+  }
+  return (
+    <div ref={ref} className="magnetic inline-flex" onMouseMove={onMove} onMouseLeave={onLeave}>
+      {children}
+    </div>
+  )
+}
+
+export function TextReveal({ text, className = "", delay = 0 }: { text: string; className?: string; delay?: number }) {
+  return (
+    <span className={`line-mask ${className}`} style={{ animationDelay: `${delay}s` }}>
+      <span className="animate-text-reveal">{text}</span>
+    </span>
   )
 }

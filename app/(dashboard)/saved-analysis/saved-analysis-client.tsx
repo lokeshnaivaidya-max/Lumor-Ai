@@ -103,10 +103,11 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
                 key={a.id}
                 layout
                 initial={{ opacity: 0, y: 16 }}
+                whileHover={{ y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.93, filter: "blur(6px)" }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: removing === a.id ? 0 : 0.04 * i }}
-                className={`bento-card relative p-5 ${
+                className={`glass-card relative p-5 float-card ${
                   removing === a.id ? "pointer-events-none scale-95 opacity-0 blur-sm" : ""
                 }`}
                 style={{ animationDelay: `${i * 0.04}s` }}
@@ -133,7 +134,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
                 <div className="mt-3 flex items-center gap-2">
                   <DirectionBadge direction={a.direction} />
                   {a.confidence != null && (
-                    <span className="meta">Confidence {Math.round(a.confidence * 100)}%</span>
+                    <span className={`chip ${a.confidence >= 0.6 ? "chip-pos" : a.confidence < 0.4 ? "chip-neg" : "chip-gold"}`}>Confidence {Math.round(a.confidence * 100)}%</span>
                   )}
                 </div>
                 <p className="body mt-3 line-clamp-3">{a.summary || "Analysis saved."}</p>

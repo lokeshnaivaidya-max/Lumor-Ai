@@ -94,14 +94,16 @@ export function NotificationsClient({ notifications: initial }: { notifications:
                 <motion.div
                   key={n.id} layout
                   initial={{ opacity: 0, x: -16, scale: 0.97 }}
+                  whileHover={{ y: -4 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 16, scale: 0.97, filter: "blur(4px)" }}
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: deleting === n.id ? 0 : 0.03 * i }}
-                  className={`bento-card flex items-start gap-3.5 p-4 transition-all ${
+                  className={`glass-card flex items-start gap-3.5 p-4 transition-all ${
                     deleting === n.id ? "pointer-events-none scale-95 opacity-0 blur-sm" : n.read ? "" : "border-l-2 border-l-gold"
                   }`}
                 >
-                  <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${n.read ? "bg-[var(--panel-2)] text-[var(--text-tertiary)]" : "bg-[var(--gold-glow)] text-[var(--gold)]"}`}>
+                  <div className={`relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${n.read ? "bg-[var(--panel-2)] text-[var(--text-tertiary)]" : "bg-[var(--gold-glow)] text-[var(--gold)]"}`}>
+                    {!n.read && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--gold)]" />}
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -109,7 +111,7 @@ export function NotificationsClient({ notifications: initial }: { notifications:
                     {n.body && <p className="body mt-0.5">{n.body}</p>}
                     <p className="meta mt-1">{new Date(n.createdAt).toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <div className="flex items-center gap-1 opacity-60 transition-opacity duration-200 hover:opacity-100">
                     {!n.read && (
                       <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => markRead(n.id)} disabled={busy === n.id} title="Mark read"
                         className="rounded-lg p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--pos-glow)] hover:text-[var(--pos)]">

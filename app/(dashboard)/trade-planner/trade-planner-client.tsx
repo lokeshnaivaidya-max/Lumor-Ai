@@ -565,7 +565,7 @@ export function TradePlannerClient() {
             {bPrice > 0 && qty > 0 && (
               <>
                 {tgt > 0 && (
-                  <div className="bento-card p-4">
+                  <div className="glass-card float-card p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                         <TrendingUp className="h-3.5 w-3.5 text-emerald" />
@@ -580,7 +580,7 @@ export function TradePlannerClient() {
                   </div>
                 )}
                 {sl > 0 && (
-                  <div className="bento-card p-4">
+                  <div className="glass-card float-card p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neg/10">
                         <TrendingDown className="h-3.5 w-3.5 text-neg" />
@@ -594,7 +594,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
                 )}
-                <div className="bento-card p-4">
+                <div className="glass-card p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="meta uppercase">Position Size</p>
@@ -607,7 +607,7 @@ export function TradePlannerClient() {
                 </div>
                 {tgt > 0 && sl > 0 && (
                   <>
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="meta uppercase">Risk/Reward Ratio</p>
@@ -615,7 +615,7 @@ export function TradePlannerClient() {
                         </div>
                       </div>
                     </div>
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="meta uppercase">Break-even Price</p>
@@ -628,7 +628,7 @@ export function TradePlannerClient() {
               </>
             )}
             {(!bPrice || !qty) && (
-              <div className="bento-card p-4">
+              <div className="glass-card p-4">
                 <p className="body text-center py-2 text-muted-foreground">Enter buy price & quantity to see bonus calculators</p>
               </div>
             )}
@@ -729,7 +729,7 @@ export function TradePlannerClient() {
                 className="space-y-4"
               >
                 {/* Recommendation */}
-                  <div className="bento-card p-5">
+                  <div className="glass-card p-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <RecommendationBadge rec={result.recommendation} />
@@ -744,7 +744,7 @@ export function TradePlannerClient() {
 
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="meta uppercase">Investment</p>
@@ -753,7 +753,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
 
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                           <ArrowUpRight className="h-4 w-4 text-emerald" />
@@ -765,7 +765,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
 
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-neg/10">
                           <ArrowDownRight className="h-4 w-4 text-neg" />
@@ -777,7 +777,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
 
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="meta uppercase">Target</p>
@@ -786,7 +786,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
 
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="meta uppercase">Stop Loss</p>
@@ -795,7 +795,7 @@ export function TradePlannerClient() {
                     </div>
                   </div>
 
-                    <div className="bento-card p-4">
+                    <div className="glass-card p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                           <RefreshCw className="h-4 w-4 text-emerald" />
@@ -812,7 +812,7 @@ export function TradePlannerClient() {
 
                 {/* Probability & AI Explanation */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="bento-card p-5">
+                    <div className="glass-card p-5">
                       <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
                         <BarChart3 className="h-4 w-4 text-gold" />
                         <span className="heading-sm" style={{ fontSize: '0.8rem' }}>Probability</span>
@@ -820,7 +820,7 @@ export function TradePlannerClient() {
                     <ProbabilityBars profit={result.probabilityOfProfit} loss={result.probabilityOfLoss} />
                   </div>
 
-                    <div className="bento-card p-5">
+                    <div className="glass-card p-5">
                       <div className="border-b border-border pb-3 mb-3">
                         <span className="heading-sm" style={{ fontSize: '0.8rem' }}>AI Explanation</span>
                       </div>

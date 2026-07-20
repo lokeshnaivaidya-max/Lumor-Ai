@@ -14,7 +14,7 @@ function WatchlistCard({ item, onRemove, delay }: { item: WatchlistView & { spar
   const pos = item.changePercent >= 0
   const ccySym = currencySymbol(item.currency)
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 * delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="bento-card flex flex-col">
+    <motion.div initial={{ opacity: 0, y: 16 }} whileHover={{ y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 * delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="glass-card float-card flex flex-col">
       <div className="flex items-start justify-between p-5">
         <div className="flex items-center gap-3">
           {item.logo ? (
@@ -32,23 +32,21 @@ function WatchlistCard({ item, onRemove, delay }: { item: WatchlistView & { spar
           <button onClick={() => onRemove(item.symbol)} className="rounded-lg p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--neg-glow)] hover:text-[var(--neg)] pressable"><Trash2 className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="px-5 pb-3">
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-2xl font-semibold tabular-nums text-[var(--text-primary)]">
-            {ccySym}{item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className={`flex items-center gap-1 text-sm font-medium ${pos ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>
-            {pos ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}{pos ? "+" : ""}{item.changePercent.toFixed(2)}%
-          </span>
-        </div>
-        {item.sparkline && <div className="mt-2 h-6" dangerouslySetInnerHTML={{ __html: item.sparkline }} />}
-        {item.exchange && (
-          <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
-            <span className="rounded-full border border-[var(--line)] px-2 py-0.5">{item.exchange}</span>
-            {item.marketState && <span>{item.marketState}</span>}
+        <div className="px-5 pb-5">
+          <div className="flex items-center justify-between">
+            <p className="stat-number">{ccySym}{item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <span className={`chip ${pos ? "chip-pos" : "chip-neg"} flex items-center gap-1`}>
+              {pos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}{pos ? "+" : ""}{item.changePercent.toFixed(2)}%
+            </span>
           </div>
-        )}
-      </div>
+          {item.sparkline && <div className="mt-3 h-6" dangerouslySetInnerHTML={{ __html: item.sparkline }} />}
+          {item.exchange && (
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
+              <span className="rounded-full border border-[var(--line)] px-2 py-0.5">{item.exchange}</span>
+              {item.marketState && <span>{item.marketState}</span>}
+            </div>
+          )}
+        </div>
     </motion.div>
   )
 }

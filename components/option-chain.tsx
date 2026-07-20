@@ -38,13 +38,13 @@ function OptionRow({ contract, atmStrike, defaultStrike }: { contract: OptionCon
   const premiumPct = contract.premium > 0 && atmStrike > 0 ? (contract.premium / atmStrike) * 100 : 0
 
   return (
-    <tr data-strike={contract.strike} className={`border-b border-white/10 transition-colors hover:bg-white/[0.04] ${isATM ? "bg-blue/[0.06]" : ""} ${isDefault ? "ring-1 ring-blue/40 bg-blue/[0.08]" : ""}`}>
+    <tr data-strike={contract.strike} className={`border-b transition-colors hover:bg-[var(--panel-2)] ${isATM ? "bg-[var(--info)]/[0.07]" : ""} ${isDefault ? "ring-1 ring-[var(--info)]/40 bg-[var(--info)]/[0.1]" : ""}`}>
       <td className="px-3 py-2.5 font-mono text-sm text-foreground tabular-nums">
         {contract.strike.toFixed(0)}
       </td>
       <td className="px-3 py-2.5">
         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-          isCall ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"
+          isCall ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"
         }`}>
           {contract.type}
         </span>
@@ -89,7 +89,7 @@ function OIHeatmapBar({ value, max }: { value: number; max: number }) {
   if (max === 0) return null
   const pct = Math.min(100, (value / max) * 100)
   return (
-    <div className="h-6 w-full rounded-full bg-white/10 overflow-hidden">
+    <div className="h-6 w-full rounded-full overflow-hidden" style={{ background: "var(--panel-2)" }}>
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${pct}%` }}
@@ -151,7 +151,7 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin text-blue" />
+        <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--gold)" }} />
         Loading options data…
       </div>
     )
@@ -167,9 +167,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
         { name: "Fyers", type: "Broker", desc: "Fyers API — options and market feed", url: "https://fyers.in", api: "Fyers API" },
       ]
       return (
-        <div className="rounded-[28px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl">
+        <div className="glass-card rounded-[28px] p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gold/20 text-gold">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
               <AlertCircle className="h-5 w-5" />
             </div>
             <div>
@@ -180,14 +180,14 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {providers.map((p) => (
               <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
-                className="group relative overflow-hidden rounded-2xl border border-white/20 bg-white/[0.06] p-4 transition-all duration-300 hover:border-white/40 hover:bg-white/[0.12] hover:shadow-lg"
+                className="glass group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold-line)]"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="font-heading text-sm font-semibold text-foreground group-hover:text-blue transition-colors">{p.name}</div>
+                    <div className="font-heading text-sm font-semibold text-foreground group-hover:text-gold transition-colors">{p.name}</div>
                     <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{p.type}</div>
                   </div>
-                  <span className="shrink-0 rounded-full bg-blue/15 px-2 py-0.5 text-[9px] font-semibold text-blue">{p.api}</span>
+                  <span className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>{p.api}</span>
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80">{p.desc}</p>
               </a>
@@ -200,9 +200,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
       )
     }
     return (
-      <div className="rounded-[28px] border border-gold/30 bg-gold/[0.07] p-6 text-center backdrop-blur-sm">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/20">
-          <AlertCircle className="h-6 w-6 text-gold" />
+      <div className="glass-card rounded-[28px] p-6 text-center" style={{ borderColor: "var(--gold-line)", background: "var(--gold-glow)" }}>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--gold-glow)" }}>
+          <AlertCircle className="h-6 w-6" style={{ color: "var(--gold)" }} />
         </div>
         <h4 className="font-heading text-sm font-medium text-foreground">Options data unavailable</h4>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -214,9 +214,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
 
   if (!chain || chain.contracts.length === 0) {
     return (
-      <div className="rounded-[28px] border border-gold/30 bg-gold/[0.07] p-6 text-center backdrop-blur-sm">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/20">
-          <AlertCircle className="h-6 w-6 text-gold" />
+      <div className="glass-card rounded-[28px] p-6 text-center" style={{ borderColor: "var(--gold-line)", background: "var(--gold-glow)" }}>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--gold-glow)" }}>
+          <AlertCircle className="h-6 w-6" style={{ color: "var(--gold)" }} />
         </div>
         <h4 className="font-heading text-sm font-medium text-foreground">Options data unavailable</h4>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -244,11 +244,8 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
               <button
                 key={e}
                 onClick={() => setExpiry(e)}
-                className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                  expiry === e
-                    ? "bg-blue text-white"
-                    : "border border-white/20 text-muted-foreground hover:text-foreground"
-                }`}
+                className={`chip transition-colors ${expiry === e ? "" : "hover:text-[var(--text-primary)]"}`}
+                style={expiry === e ? { background: "var(--gold)", color: "#1a1407" } : undefined}
               >
                 {new Date(e).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
               </button>
@@ -257,10 +254,10 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
         </div>
       )}
 
-      <div ref={tableRef} className="overflow-x-auto rounded-[28px] border border-white/20 bg-white/[0.04] backdrop-blur-sm">
+      <div ref={tableRef} className="glass overflow-x-auto rounded-[28px]">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="border-b border-white/20 bg-white/[0.04]">
+            <tr className="border-b sticky top-0" style={{ borderColor: "var(--line-strong)", background: "var(--surface)" }}>
               <th className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Strike</th>
               <th className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
               <th className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Premium</th>
@@ -293,9 +290,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-[28px] border border-white/20 bg-white/10 p-5 backdrop-blur-xl">
+        <div className="glass-card rounded-[28px] p-5">
           <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Layers className="h-3.5 w-3.5" /> CE Open Interest
+            <Layers className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> CE Open Interest
           </h4>
           <div className="space-y-2">
             {calls.slice(0, 10).map((c) => (
@@ -309,9 +306,9 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
             ))}
           </div>
         </div>
-        <div className="rounded-[28px] border border-white/20 bg-white/10 p-5 backdrop-blur-xl">
+        <div className="glass-card rounded-[28px] p-5">
           <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Layers className="h-3.5 w-3.5" /> PE Open Interest
+            <Layers className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> PE Open Interest
           </h4>
           <div className="space-y-2">
             {puts.slice(0, 10).map((p) => (
@@ -332,7 +329,7 @@ export function OptionChain({ symbol, defaultStrike, defaultExpiry }: { symbol: 
 
 function StatCard({ label, value, change, positive }: { label: string; value: string; change?: string; positive?: boolean }) {
   return (
-    <div className="rounded-[28px] border border-white/20 bg-white/10 px-4 py-3.5 backdrop-blur-xl">
+    <div className="glass-card rounded-[28px] px-4 py-3.5">
       <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-1 font-heading text-lg font-semibold text-foreground tabular-nums">{value}</div>
       {change && (
