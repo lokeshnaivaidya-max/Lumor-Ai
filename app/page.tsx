@@ -93,7 +93,8 @@ export default async function HomePage() {
       {/* CTA */}
       <section className="scene">
         <FadeScale delay={0.1}>
-          <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
+          <div className="bento-card relative mx-auto flex w-full max-w-xl flex-col items-center overflow-hidden rounded-3xl px-10 py-12 text-center">
+            <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
             <div className="divider--gold mb-6" style={{ width: 32, height: 1, alignSelf: "center" }} />
             <h2 className="title mb-4">Ready to see clearly?</h2>
             <p className="body text-center mb-8">

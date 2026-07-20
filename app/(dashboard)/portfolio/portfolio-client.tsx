@@ -42,13 +42,12 @@ function StatCard({ label, value, trend, delay }: {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay }}
-      className="dm-card dm-card--inset dm-animate"
-      style={{ animationDelay: `${delay}s` }}
+      className="bento-card"
     >
       <div className="p-6">
         <div className="space-y-2">
-          <p className="dm-meta">{label}</p>
-          <p className="dm-stat font-mono tabular-nums">{value}</p>
+          <p className="meta">{label}</p>
+          <p className="stat-number font-mono tabular-nums">{value}</p>
           {trend && (
             <p className={`flex items-center gap-1.5 text-xs font-medium ${trend.positive ? "text-emerald" : "text-neg"}`}>
               {trend.value}
@@ -127,17 +126,18 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
   return (
     <div className="p-6 lg:p-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        className="page-head mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <h1 className="dm-heading dm-animate">Portfolio</h1>
-          <p className="dm-body dm-animate dm-animate--delay-1">Manage your holdings and track performance</p>
+        <div className="glow-page">
+          <p className="subheading"><span className="dot-gold" /> Portfolio</p>
+          <h1 className="heading mt-1">Your Holdings</h1>
+          <p className="body mt-2">Manage your holdings and track performance</p>
         </div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-2">
           <Link href="/chat" className="lm-btn flex items-center gap-1.5 px-4 py-2.5 text-xs"><BarChart3 className="h-3.5 w-3.5" />AI Review</Link>
@@ -161,18 +161,18 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
           {view === "holdings" && (
             <motion.div key="holdings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+              <div className="table-wrap">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-border">
-                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Symbol</th>
-                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Name</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Shares</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Avg Price</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Current</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">P&amp;L</th>
-                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Allocation</th>
+                      <tr className="border-b" style={{ borderColor: "var(--glass-border)" }}>
+                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Symbol</th>
+                        <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Name</th>
+                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Shares</th>
+                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Avg Price</th>
+                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Current</th>
+                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>P&amp;L</th>
+                        <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text-tertiary)" }}>Allocation</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -182,7 +182,7 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
                         const alloc = allocations[idx]?.pct ?? 0
                         return (
                           <motion.tr key={h.symbol} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05, duration: 0.5 }}
-                            className="group transition-colors hover:bg-foreground/[0.02]">
+                            className="table-row table-row--clickable group">
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/10">
@@ -224,9 +224,9 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
           {view === "allocation" && (
             <motion.div key="allocation" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid gap-6 lg:grid-cols-2">
-              <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+              <div className="bento-card">
                 <div className="p-6">
-                  <h3 className="dm-heading mb-5">Allocation by Holding</h3>
+                  <h3 className="heading mb-5">Allocation by Holding</h3>
                   <div className="space-y-5">
                     {allocations.map((a, i) => (
                       <motion.div key={a.symbol} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}>
@@ -246,9 +246,9 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
                 </div>
               </div>
 
-              <div className="dm-card dm-card--inset dm-animate dm-animate--delay-2">
+              <div className="bento-card">
                 <div className="p-6">
-                  <h3 className="dm-heading mb-5">Holdings Allocation</h3>
+                  <h3 className="heading mb-5">Holdings Allocation</h3>
                   <div className="flex flex-col items-center">
                     <div className="relative flex h-52 w-52 items-center justify-center">
                       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
@@ -288,14 +288,14 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
 
           {view === "performance" && (
             <motion.div key="performance" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+              <div className="bento-card">
                 <div className="p-8">
-                  <h3 className="dm-heading">Performance Analytics</h3>
-                  <p className="dm-body mt-0.5">Portfolio performance over time</p>
+                  <h3 className="heading">Performance Analytics</h3>
+                  <p className="body mt-0.5">Portfolio performance over time</p>
                   <div className="mt-6 flex h-64 items-center justify-center rounded-2xl border border-dashed border-border bg-card">
                     <div className="text-center">
-                      <p className="dm-body font-medium text-foreground">Chart coming soon</p>
-                      <p className="dm-body mt-0.5">Interactive performance charts will appear here</p>
+                      <p className="body font-medium text-foreground">Chart coming soon</p>
+                      <p className="body mt-0.5">Interactive performance charts will appear here</p>
                     </div>
                   </div>
                 </div>
@@ -304,11 +304,27 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <p className="dm-body">No portfolio yet.</p>
-          <p className="dm-body mt-1 max-w-sm">Add your first holding to see live valuation, P&amp;L, and allocation analytics.</p>
-          <button onClick={() => setAdding(true)} className="lm-btn lm-btn--gold mt-6 px-5 py-2.5 text-xs">Add Holding</button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bento-card relative overflow-hidden px-8 py-16 text-center"
+        >
+          <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--gold-glow)' }}>
+            <Wallet className="h-7 w-7" style={{ color: 'var(--gold)' }} />
+          </div>
+          <p className="heading-sm">No portfolio yet</p>
+          <p className="body mt-2 max-w-sm mx-auto">Add your first holding to see live valuation, P&amp;L, and allocation analytics.</p>
+          <motion.button
+            onClick={() => setAdding(true)}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn btn--gold mt-6"
+          >
+            <Plus className="h-3.5 w-3.5" />Add Holding
+          </motion.button>
+        </motion.div>
       )}
 
       {adding && (
@@ -316,27 +332,27 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="glass-card w-full max-w-md rounded-3xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="dm-heading">Add Holding</h3>
+              <h3 className="heading">Add Holding</h3>
               <button onClick={() => !busy && setAdding(false)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-foreground/10"><X className="h-4 w-4" /></button>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="dm-meta mb-1.5 block">Symbol</label>
+                  <label className="meta mb-1.5 block">Symbol</label>
                   <input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" className="glass-input w-full" />
                 </div>
                 <div>
-                  <label className="dm-meta mb-1.5 block">Quantity</label>
+                  <label className="meta mb-1.5 block">Quantity</label>
                   <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10" className="glass-input w-full" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="dm-meta mb-1.5 block">Avg Price</label>
+                  <label className="meta mb-1.5 block">Avg Price</label>
                   <input type="number" value={avgPrice} onChange={(e) => setAvgPrice(e.target.value)} placeholder="150.00" className="glass-input w-full" />
                 </div>
                 <div>
-                  <label className="dm-meta mb-1.5 block">Name (opt)</label>
+                  <label className="meta mb-1.5 block">Name (opt)</label>
                   <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc." className="glass-input w-full" />
                 </div>
               </div>

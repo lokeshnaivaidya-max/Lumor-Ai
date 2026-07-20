@@ -141,11 +141,12 @@ export function CompareClient() {
 
   return (
     <div className="p-6 lg:p-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
-        <h1 className="dm-heading dm-animate">Compare Stocks</h1>
-        <p className="dm-body dm-animate dm-animate--delay-1">Side-by-side comparison with live market data.</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 glow-page">
+        <p className="subheading"><span className="dot-gold" /> Compare</p>
+        <h1 className="heading mt-1">Side-by-Side Analysis</h1>
+        <p className="body mt-2">Compare any two stocks with live market data.</p>
       </motion.div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
@@ -204,13 +205,13 @@ export function CompareClient() {
       {a.quote && b.quote ? (
         <>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="p-5">
                 <div className="mb-2 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-gold" />
-                  <span className="dm-meta">Live Snapshot</span>
+                  <span className="meta">Live Snapshot</span>
                 </div>
-                <p className="dm-body leading-relaxed">
+                <p className="body leading-relaxed">
                   <strong className="text-gold">{a.symbol}</strong> is trading at {fmtPrice(a.quote.price)} ({a.quote.changePercent >= 0 ? "+" : ""}{a.quote.changePercent.toFixed(2)}%) and{" "}
                   <strong className="text-gold">{b.symbol}</strong> at {fmtPrice(b.quote.price)} ({b.quote.changePercent >= 0 ? "+" : ""}{b.quote.changePercent.toFixed(2)}%).
                   {aWins > bWins ? ` ${a.symbol} leads on ${aWins} of ${aWins + bWins} metrics.` : bWins > aWins ? ` ${b.symbol} leads on ${bWins} of ${aWins + bWins} metrics.` : " The two are tied on the compared metrics."}
@@ -220,7 +221,7 @@ export function CompareClient() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-6">
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-2">
+            <div className="bento-card">
               <div className="p-6">
                 <div className="mb-6 grid grid-cols-3 gap-4">
                   <div className="text-center">
@@ -228,7 +229,7 @@ export function CompareClient() {
                       <span className={`text-xs font-medium ${aWins >= bWins ? "text-foreground" : "text-muted-foreground/50"}`}>{a.symbol} — {aWins} {aWins === 1 ? "lead" : "leads"}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center"><span className="dm-meta">Metric</span></div>
+                  <div className="flex items-center justify-center"><span className="meta">Metric</span></div>
                   <div className="text-center">
                     <div className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 ${bWins > aWins ? "bg-card" : "bg-card"}`}>
                       <span className={`text-xs font-medium ${bWins > aWins ? "text-foreground" : "text-muted-foreground/50"}`}>{b.symbol} — {bWins} {bWins === 1 ? "lead" : "leads"}</span>
@@ -239,7 +240,7 @@ export function CompareClient() {
                   {rows.map((row) => (
                     <div key={row.label}>
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="dm-meta">{row.label}</span>
+                        <span className="meta">{row.label}</span>
                         <div className="flex items-center gap-3 text-xs">
                           <span className={`font-medium tabular-nums flex items-center gap-1 ${row.winner === "a" ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                             {row.winner === "a" && <span className="h-1.5 w-1.5 rounded-full bg-gold" />}{row.a}
@@ -271,14 +272,14 @@ export function CompareClient() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[a, b].map((side, idx) => (
               <motion.div key={side.symbol} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 + idx * 0.1 }}>
-                <div className="dm-card dm-card--inset dm-animate" style={{ animationDelay: `${0.25 + idx * 0.1}s` }}>
+                <div className="bento-card">
                   <div className="p-6">
                     <div className="mb-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl font-heading text-sm font-bold bg-card text-foreground">{side.symbol.slice(0, 2)}</div>
                         <div>
-                          <p className="dm-heading text-sm">{side.symbol}</p>
-                          <p className="dm-meta">{side.quote?.name}</p>
+                          <p className="heading-sm">{side.symbol}</p>
+                          <p className="meta">{side.quote?.name}</p>
                         </div>
                       </div>
                       <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${side.quote!.changePercent >= 0 ? "text-emerald bg-emerald/10" : "text-neg bg-neg/10"}`}>
@@ -287,13 +288,13 @@ export function CompareClient() {
                       </span>
                     </div>
                     <Sparkline candles={side.candles} positive={side.quote!.changePercent >= 0} />
-                    <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl bg-card p-3">
-                      <div className="text-center"><p className="dm-meta">Price</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.price)}</p></div>
-                      <div className="text-center"><p className="dm-meta">Change</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.change >= 0 ? "+" : ""}{side.quote!.change.toFixed(2)}</p></div>
-                      <div className="text-center"><p className="dm-meta">Prev Close</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.previousClose)}</p></div>
-                      <div className="text-center"><p className="dm-meta">Mkt Cap</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.marketCap)}</p></div>
-                      <div className="text-center"><p className="dm-meta">P/E</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.trailingPE != null ? side.quote!.trailingPE.toFixed(1) : "n/a"}</p></div>
-                      <div className="text-center"><p className="dm-meta">Volume</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.volume)}</p></div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl bg-glass p-3">
+                      <div className="text-center"><p className="meta">Price</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.price)}</p></div>
+                      <div className="text-center"><p className="meta">Change</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.change >= 0 ? "+" : ""}{side.quote!.change.toFixed(2)}</p></div>
+                      <div className="text-center"><p className="meta">Prev Close</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtPrice(side.quote!.previousClose)}</p></div>
+                      <div className="text-center"><p className="meta">Mkt Cap</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.marketCap)}</p></div>
+                      <div className="text-center"><p className="meta">P/E</p><p className="text-xs font-semibold font-mono tabular-nums">{side.quote!.trailingPE != null ? side.quote!.trailingPE.toFixed(1) : "n/a"}</p></div>
+                      <div className="text-center"><p className="meta">Volume</p><p className="text-xs font-semibold font-mono tabular-nums">{fmtNum(side.quote!.volume)}</p></div>
                     </div>
                   </div>
                 </div>
@@ -302,10 +303,19 @@ export function CompareClient() {
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <p className="dm-body">Select two symbols to compare</p>
-          <p className="dm-body mt-1 max-w-sm">Search and pick two tickers above to see a live side-by-side comparison.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bento-card relative overflow-hidden px-8 py-16 text-center"
+        >
+          <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--gold-glow)' }}>
+            <BarChart3 className="h-7 w-7" style={{ color: 'var(--gold)' }} />
+          </div>
+          <p className="heading-sm">Select two symbols to compare</p>
+          <p className="body mt-2 max-w-sm mx-auto">Search and pick two tickers above to see a live side-by-side comparison.</p>
+        </motion.div>
       )}
     </div>
   )

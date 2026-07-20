@@ -51,6 +51,12 @@ export async function updateProfile(input: ProfileInput) {
   }
   revalidatePath("/profile")
   revalidatePath("/dashboard")
+  
+  // Log theme update for debugging
+  if (input.theme) {
+    console.log("[PROFILE] Theme updated:", input.theme)
+  }
+  
   return { ok: true }
 }
 

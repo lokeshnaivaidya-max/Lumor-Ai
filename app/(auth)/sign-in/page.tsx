@@ -23,9 +23,11 @@ export default async function SignInPage() {
 
   return (
     <div className="relative w-full max-w-md">
+      <div className="pointer-events-none absolute -inset-32 opacity-30" style={{ background: 'radial-gradient(circle at 50% 20%, var(--gold-glow-strong), transparent 60%)' }} />
       <Link
         href="/"
-        className="absolute -top-14 left-0 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="relative flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        style={{ marginBottom: "3.5rem" }}
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to home

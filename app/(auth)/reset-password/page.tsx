@@ -128,8 +128,8 @@ function ResetPasswordInner() {
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}>
           <CheckCircle2 className="h-14 w-14 text-emerald" />
         </motion.div>
-        <h2 className="dm-heading dm-heading--small mt-5">Password reset!</h2>
-        <p className="dm-body mt-1.5">Redirecting to your home…</p>
+        <h2 className="heading mt-5">Password reset!</h2>
+        <p className="body mt-1.5">Redirecting to your home…</p>
       </motion.div>
     )
   }
@@ -139,7 +139,7 @@ function ResetPasswordInner() {
       <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-      <div className="dm-card dm-card--inset overflow-hidden">
+      <div className="bento-card overflow-hidden">
         <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full blur-[120px] bg-primary/[0.04]" />
         <div className="relative">
           <div className="flex items-center justify-center gap-2 mb-6">
@@ -148,11 +148,11 @@ function ResetPasswordInner() {
 
           {needsEmail ? (
             <>
-              <h1 className="dm-heading dm-heading--small text-center">Reset your password</h1>
-              <p className="dm-body mt-1.5 text-center">Enter your email to receive a reset code.</p>
+              <h1 className="heading text-center">Reset your password</h1>
+              <p className="body mt-1.5 text-center">Enter your email to receive a reset code.</p>
               <div className="mt-6">
                 <label className="flex flex-col gap-1">
-                  <span className="dm-meta flex items-center gap-1.5">
+                  <span className="meta flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5" /> Email
                   </span>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" />
@@ -180,8 +180,8 @@ function ResetPasswordInner() {
             </>
           ) : (
             <>
-              <h1 className="dm-heading dm-heading--small text-center">Reset your password</h1>
-              <p className="dm-body mt-1.5 text-center">
+              <h1 className="heading text-center">Reset your password</h1>
+              <p className="body mt-1.5 text-center">
                 Code sent to <strong className="text-foreground">{email}</strong>
               </p>
 
@@ -312,7 +312,7 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="dm-card dm-card--inset h-64 w-full max-w-sm animate-pulse" />}>
+    <Suspense fallback={<div className="bento-card h-64 w-full max-w-sm animate-pulse" />}>
       <ResetPasswordInner />
     </Suspense>
   )

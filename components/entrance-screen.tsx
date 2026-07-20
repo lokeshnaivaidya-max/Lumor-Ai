@@ -41,7 +41,7 @@ export function EntranceScreen() {
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-                filter: "drop-shadow(0 0 40px var(--gold-glow))",
+                filter: "drop-shadow(0 0 60px var(--gold-glow-strong))",
               }}
             >
               Lumora
@@ -51,7 +51,7 @@ export function EntranceScreen() {
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="mt-4 h-px origin-left"
-              style={{ width: 120, background: "linear-gradient(90deg, transparent, var(--gold), transparent)", opacity: 0.4 }}
+              style={{ width: 120, background: "linear-gradient(90deg, transparent, var(--gold), transparent)", opacity: 0.5 }}
             />
             <motion.p
               initial={{ opacity: 0, y: 8 }}

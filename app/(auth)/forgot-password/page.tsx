@@ -39,12 +39,12 @@ export default function ForgotPasswordPage() {
         <Link href="/sign-in" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
         </Link>
-        <div className="dm-card dm-card--inset overflow-hidden text-center">
+        <div className="bento-card overflow-hidden text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald/10">
             <CheckCircle2 className="h-6 w-6 text-emerald" />
           </div>
-          <h2 className="dm-heading dm-heading--small mt-4">Check your email</h2>
-          <p className="dm-body mt-2">
+          <h2 className="heading mt-4">Check your email</h2>
+          <p className="body mt-2">
             We sent a reset code to <strong className="text-foreground">{email}</strong>
           </p>
           <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-primary/[0.06] px-4 py-3 text-xs leading-relaxed text-primary text-left">
@@ -83,16 +83,16 @@ export default function ForgotPasswordPage() {
       <Link href="/sign-in" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
       </Link>
-      <div className="dm-card dm-card--inset overflow-hidden">
+      <div className="bento-card overflow-hidden">
         <div className="flex items-center gap-3 mb-6">
           <span className="font-heading text-base font-semibold tracking-tight text-foreground">Lumora</span>
         </div>
-        <h1 className="dm-heading dm-heading--small">Forgot password?</h1>
-        <p className="dm-body mt-1.5">Enter your email and we&apos;ll send a reset code.</p>
+        <h1 className="heading">Forgot password?</h1>
+        <p className="body mt-1.5">Enter your email and we&apos;ll send a reset code.</p>
 
         <form onSubmit={handleSubmit} className="mt-6">
           <label className="flex flex-col gap-1">
-            <span className="dm-meta flex items-center gap-1.5">
+            <span className="meta flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5" /> Email
             </span>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="glass-input" autoComplete="email" />

@@ -32,12 +32,12 @@ export function HowItWorks() {
         From ticker to insight in seconds. No terminal experience needed.
       </p>
 
-      <div className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
+      <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-6">
         {STEPS.map((step, i) => (
-          <div key={step.title} className="relative flex flex-col items-center text-center">
+          <div key={step.title} className="glass-card relative flex flex-col items-center rounded-2xl p-8 text-center">
             {i < STEPS.length - 1 && (
               <div className="absolute left-[60%] top-8 hidden h-px w-[80%] md:block" style={{
-                background: "linear-gradient(90deg, rgba(196,149,106,0.12), transparent)",
+                background: "linear-gradient(90deg, var(--gold-glow), transparent)",
               }} />
             )}
 
@@ -55,7 +55,7 @@ export function HowItWorks() {
               <step.icon className="h-5 w-5" style={{ color: step.color }} />
             </div>
 
-            <h3 className="heading--small mt-4">{step.title}</h3>
+            <h3 className="heading-sm mt-4">{step.title}</h3>
             <p className="body mt-2 text-center">{step.desc}</p>
           </div>
         ))}

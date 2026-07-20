@@ -79,10 +79,6 @@ function useScrollPreserve() {
   const scrollRef = useRef(0)
   const lockedRef = useRef(true)
   useEffect(() => {
-    // Capture the scroll position at mount, then re-lock it once after the
-    // initial layout settles. After that we let the user scroll freely and
-    // never yank the page back — earlier this observer ran on EVERY resize
-    // and trapped the user on the page.
     scrollRef.current = window.scrollY
     const id = setTimeout(() => {
       lockedRef.current = false
@@ -123,12 +119,9 @@ const STATE_LABEL: Record<string, string> = {
   CLOSED: "Closed",
 }
 
-
-
-
 function ChartSkeleton() {
   return (
-    <div className="glass-card flex h-80 items-center justify-center rounded-[32px] text-sm text-muted-foreground">
+    <div className="bento-card flex h-80 items-center justify-center text-sm" style={{ color: "var(--text-tertiary)" }}>
       <Clock className="mr-2 h-4 w-4 animate-spin" />
       Loading chart…
     </div>
@@ -140,9 +133,8 @@ const BentoCard = memo(function BentoCard({ children, className = "" }: { childr
     <motion.div
       whileHover={{ y: -3, scale: 1.005 }}
       transition={{ type: "spring", stiffness: 200, damping: 15, mass: 0.6 }}
-      className={`group relative overflow-hidden rounded-[32px] border border-white/20 bg-white/20 backdrop-blur-xl transition-all duration-500 hover:border-white/40 hover:shadow-2xl hover:shadow-black/10 ${className}`}
+      className={`bento-card ${className}`}
     >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-[32px]" />
       {children}
     </motion.div>
   )
@@ -167,9 +159,10 @@ const TickerTape = memo(function TickerTape({ quotes }: { quotes: Quote[] }) {
                 return (
                   <div
                     key={`${dup}-${sym}`}
-                    className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-sm"
+                    className="flex shrink-0 items-center gap-2.5 rounded-2xl border px-4 py-2"
+                    style={{ borderColor: "var(--glass-border)", background: "var(--glass-bg)" }}
                   >
-                    <span className="font-mono text-xs font-semibold text-foreground">
+                    <span className="font-mono text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
                       {sym === "^GSPC" ? "S&P 500" :
                        sym === "^IXIC" ? "NASDAQ" :
                        sym === "^DJI" ? "DOW" :
@@ -179,10 +172,10 @@ const TickerTape = memo(function TickerTape({ quotes }: { quotes: Quote[] }) {
                        sym === "CL=F" ? "OIL" :
                        sym === "INR=X" ? "USD/INR" : sym}
                     </span>
-                    <span className="font-mono text-xs font-semibold tabular-nums text-foreground">
+                    <span className="font-mono text-xs font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
                       {found ? found.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                     </span>
-                    <span className={`flex items-center gap-0.5 font-mono text-[11px] tabular-nums ${pos ? "text-pos" : "text-neg"}`}>
+                    <span className={`flex items-center gap-0.5 font-mono text-[11px] tabular-nums ${pos ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>
                       {pos ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
                       {found ? `${pos ? "+" : ""}${found.changePercent.toFixed(2)}%` : "—"}
                     </span>
@@ -271,15 +264,16 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         <SymbolSearch onSelect={handleSelect} />
 
         <div className="flex w-full flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 backdrop-blur-sm p-0.5">
-            <Globe className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 rounded-full p-0.5" style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)" }}>
+            <Globe className="ml-2 h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
             {REGIONS.map((r) => (
               <button
                 key={r}
                 onClick={() => handleRegion(r)}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                  region === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  region === r ? "text-background" : "hover:text-foreground"
                 }`}
+                style={region === r ? { background: "var(--text-primary)", color: "var(--text-inverse)" } : { color: "var(--text-tertiary)" }}
               >
                 {r}
               </button>
@@ -292,9 +286,10 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
                 onClick={() => handleSelect({ symbol: w, name: w, exchange: "", type: "equity" })}
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
                   symbol === w
-                    ? "border-accent/50 bg-accent/10 text-accent"
-                    : "border-white/20 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                    ? "border-[var(--gold)] text-[var(--gold)]"
+                    : "hover:border-foreground/30 hover:text-foreground"
                 }`}
+                style={symbol === w ? { background: "var(--gold-glow)" } : { borderColor: "var(--glass-border)", color: "var(--text-tertiary)" }}
               >
                 {w}
               </button>
@@ -304,7 +299,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       {quoteError && !quote ? (
-        <div className="flex items-center gap-3 rounded-[32px] border border-neg/20 bg-neg/5 px-6 py-4 text-sm text-neg">
+        <div className="flex items-center gap-3 rounded-[32px] px-6 py-4 text-sm" style={{ border: "1px solid var(--rose-glow)", background: "rgba(201, 122, 122, 0.05)", color: "var(--rose)" }}>
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>Unable to load quote data. Retrying…</span>
         </div>
@@ -317,10 +312,9 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
             key={r}
             onClick={() => setRange(r)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
-              range === r
-                ? "bg-foreground text-background"
-                : "border border-white/20 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+              range === r ? "text-background" : "hover:border-foreground/30 hover:text-foreground"
             }`}
+            style={range === r ? { background: "var(--text-primary)", color: "var(--text-inverse)" } : { border: "1px solid var(--glass-border)", color: "var(--text-tertiary)" }}
           >
             {r === "ytd" ? "YTD" : r === "max" ? "MAX" : r}
           </button>
@@ -329,21 +323,21 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
 
       <BentoCard className="mt-4 min-h-80">
         {chartError && !candles.length ? (
-          <div className="flex h-80 items-center justify-center gap-3 text-sm text-muted-foreground">
-            <AlertCircle className="h-4 w-4 shrink-0 text-neg" />
+          <div className="flex h-80 items-center justify-center gap-3 text-sm" style={{ color: "var(--text-tertiary)" }}>
+            <AlertCircle className="h-4 w-4 shrink-0" style={{ color: "var(--rose)" }} />
             Chart data unavailable
           </div>
         ) : chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} indicators={indicators} />}
       </BentoCard>
 
-      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
         Company Details
       </h2>
       <StatsGrid quote={quote} ccySym={ccySym} />
 
       {(!quote || quote.assetType !== "EQUITY") && (
         <div className="mt-6">
-          <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          <h2 className="mb-4 font-heading text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
             Options Chain
           </h2>
           <BentoCard className="!p-0">
@@ -360,12 +354,12 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
               document.getElementById("ai-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" })
             })
           }}
-          className="glass-btn glass-btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium"
+          className="lm-btn lm-btn--gold flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium"
         >
           <LineChart className="h-4 w-4" />
           Analyze Stock
         </button>
-        <span className="text-xs text-muted-foreground">AI analysis runs below, grounded in live market data.</span>
+        <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>AI analysis runs below, grounded in live market data.</span>
       </div>
 
       <div className="mt-6" id="ai-analysis">
@@ -375,26 +369,26 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       <section className="mt-10">
-        <div className="rounded-[28px] border border-gold/15 bg-gold/[0.04] p-6 sm:p-8">
+        <div className="rounded-[28px] p-6 sm:p-8" style={{ border: "1px solid var(--gold-glow)", background: "var(--gold-glow)" }}>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
                   <BarChart3 className="h-4 w-4" />
                 </div>
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">Trade Planner</p>
+                <p className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "var(--gold)" }}>Trade Planner</p>
               </div>
-              <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight text-foreground">
+              <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
                 Plan your trade before you place it
               </h2>
-              <p className="mt-2 text-pretty text-muted-foreground">
+              <p className="mt-2 text-pretty" style={{ color: "var(--text-secondary)" }}>
                 Enter your entry price, quantity, and style — intraday or swing — and get AI-computed target, stop-loss,
                 risk&nbsp;/&nbsp;reward, and position sizing. Describe it in plain language and we&apos;ll parse it for you.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3 text-gold" />Target &amp; Stop-Loss</span>
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3 text-gold" />Risk / Reward</span>
-                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3 text-gold" />Position Sizing</span>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Target className="h-3 w-3" style={{ color: "var(--gold)" }} />Target &amp; Stop-Loss</span>
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><Scale className="h-3 w-3" style={{ color: "var(--gold)" }} />Risk / Reward</span>
+                <span className="glass-card flex items-center gap-1.5 rounded-full px-3 py-1.5"><ShieldAlert className="h-3 w-3" style={{ color: "var(--gold)" }} />Position Sizing</span>
               </div>
             </div>
             <Link
@@ -407,7 +401,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
         </div>
       </section>
 
-      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+      <h2 className="mb-4 mt-10 font-heading text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
         Technical Indicators
       </h2>
       <IndicatorPanel ind={indicators} />
@@ -459,55 +453,56 @@ const QuoteHeader = memo(function QuoteHeader({
               />
             )}
             <div className="flex flex-col">
-              <h1 className="font-heading text-3xl tracking-tight text-foreground">{quote?.name || displaySymbol(symbol)}</h1>
-              <span className="font-mono text-sm text-muted-foreground/80">
+              <h1 className="font-heading text-3xl tracking-tight" style={{ color: "var(--text-primary)" }}>{quote?.name || displaySymbol(symbol)}</h1>
+              <span className="font-mono text-sm" style={{ color: "var(--text-tertiary)" }}>
                 {displaySymbol(quote?.symbol ?? symbol)}
               </span>
             </div>
-            <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-foreground/80">
+            <span className="rounded-full border px-2.5 py-0.5 text-[11px]" style={{ borderColor: "var(--glass-border)", color: "var(--text-secondary)" }}>
               {quote?.exchange || "—"}
             </span>
             {quote?.assetType && (
-              <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-foreground/80">
+              <span className="rounded-full border px-2.5 py-0.5 text-[11px]" style={{ borderColor: "var(--glass-border)", color: "var(--text-secondary)" }}>
                 {quote.assetType === "CRYPTOCURRENCY" ? "CRYPTO" : quote.assetType}
               </span>
             )}
             <span
-              className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] ${
-                quote?.marketState === "REGULAR" ? "bg-pos/10 text-pos" : "bg-muted/40 text-muted-foreground"
-              }`}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]`}
+              style={quote?.marketState === "REGULAR" ? { background: "var(--emerald-glow)", color: "var(--emerald)" } : { background: "var(--glass-bg)", color: "var(--text-tertiary)" }}
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse bg-pos" : "bg-muted-foreground"}`}
+                className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse" : ""}`}
+                style={quote?.marketState === "REGULAR" ? { background: "var(--emerald)" } : { background: "var(--text-tertiary)" }}
               />
               {STATE_LABEL[quote?.marketState ?? "CLOSED"]}
             </span>
           </div>
-          <p className="mt-2 max-w-md truncate text-sm text-muted-foreground">{quote?.name ?? "Loading…"}</p>
+          <p className="mt-2 max-w-md truncate text-sm" style={{ color: "var(--text-secondary)" }}>{quote?.name ?? "Loading…"}</p>
           {(quote?.sector || quote?.industry) && (
-            <p className="mt-1 max-w-md truncate text-xs text-muted-foreground/70">
+            <p className="mt-1 max-w-md truncate text-xs" style={{ color: "var(--text-tertiary)" }}>
               {[quote?.sector, quote?.industry].filter(Boolean).join(" · ")}
             </p>
           )}
           {quote?.ceo && (
-            <p className="mt-0.5 max-w-md truncate text-xs text-muted-foreground/50">
+            <p className="mt-0.5 max-w-md truncate text-xs" style={{ color: "var(--text-tertiary)" }}>
               CEO: {quote.ceo}
             </p>
           )}
           {quote?.website && (
             <a href={quote.website} target="_blank" rel="noopener noreferrer"
-              className="mt-0.5 inline-block max-w-md truncate text-xs text-blue/60 hover:text-blue transition-colors">
+              className="mt-0.5 inline-block max-w-md truncate text-xs transition-colors"
+              style={{ color: "var(--blue)" }}>
               {quote.website.replace(/^https?:\/\//, "")}
             </a>
           )}
         </div>
 
         <div className="text-right">
-          <div className="font-mono text-4xl tracking-tight text-foreground sm:text-5xl">
+          <div className="font-mono text-4xl tracking-tight sm:text-5xl" style={{ color: "var(--text-primary)" }}>
             {quote ? <AnimatedPrice value={quote.price} ccySym={ccySym} /> : "—"}
           </div>
           {quote && (
-            <div className={`mt-1.5 flex items-center justify-end gap-1.5 font-mono text-sm ${positive ? "text-pos" : "text-neg"}`}>
+            <div className={`mt-1.5 flex items-center justify-end gap-1.5 font-mono text-sm ${positive ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>
               {positive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
               <AnimatedChange value={quote.change} />
               {" ("}
@@ -515,7 +510,7 @@ const QuoteHeader = memo(function QuoteHeader({
               {")"}
             </div>
           )}
-          <div className="mt-1 text-[11px] text-muted-foreground">{ccySym || quote?.currency || ""}</div>
+          <div className="mt-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>{ccySym || quote?.currency || ""}</div>
         </div>
       </div>
     </BentoCard>
@@ -566,15 +561,14 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative group overflow-hidden rounded-[28px] border border-white/20 bg-white/15 backdrop-blur-xl px-4 py-3.5 transition-all duration-300 hover:border-white/40 hover:shadow-xl hover:bg-white/25 ${spanMap[s.span ?? "sm"]}`}
+          className={`bento-card px-4 py-3.5 ${spanMap[s.span ?? "sm"]}`}
         >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-[28px]" />
           <div className="relative">
-            <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+            <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
               <IconFor label={s.label} />
               {s.label}
             </div>
-            <div className="mt-1 font-mono text-sm font-semibold text-foreground tabular-nums">{s.value}</div>
+            <div className="mt-1 font-mono text-sm font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>{s.value}</div>
           </div>
         </motion.div>
       ))}
@@ -584,26 +578,26 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
 
 function IconFor({ label }: { label: string }) {
   const icons: Record<string, React.ReactNode> = {
-    "Currency": <DollarSign className="h-3.5 w-3.5 text-blue/60" />,
-    "Market Status": <Activity className="h-3.5 w-3.5 text-blue/60" />,
-    "Exchange": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
-    "Previous Close": <BarChart3 className="h-3.5 w-3.5 text-blue/60" />,
-    "Open": <Activity className="h-3.5 w-3.5 text-blue/60" />,
-    "Day High": <TrendingUp className="h-3.5 w-3.5 text-blue/60" />,
-    "Day Low": <TrendingDown className="h-3.5 w-3.5 text-blue/60" />,
-    "Volume": <Layers className="h-3.5 w-3.5 text-blue/60" />,
-    "Market Cap": <Hash className="h-3.5 w-3.5 text-blue/60" />,
-    "P/E (TTM)": <Percent className="h-3.5 w-3.5 text-blue/60" />,
-    "EPS (TTM)": <BarChart3 className="h-3.5 w-3.5 text-blue/60" />,
-    "Dividend Yield": <Percent className="h-3.5 w-3.5 text-blue/60" />,
-    "Beta": <Activity className="h-3.5 w-3.5 text-blue/60" />,
-    "52W Range": <TrendingUpDown className="h-3.5 w-3.5 text-blue/60" />,
-    "52W High": <TrendingUp className="h-3.5 w-3.5 text-blue/60" />,
-    "52W Low": <TrendingDown className="h-3.5 w-3.5 text-blue/60" />,
-    "Sector": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
-    "Industry": <Layers className="h-3.5 w-3.5 text-blue/60" />,
-    "CEO": <Building2 className="h-3.5 w-3.5 text-blue/60" />,
-    "Updated": <Clock className="h-3.5 w-3.5 text-blue/60" />,
+    "Currency": <DollarSign className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Market Status": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Exchange": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Previous Close": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Open": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Day High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Day Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Volume": <Layers className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Market Cap": <Hash className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "P/E (TTM)": <Percent className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "EPS (TTM)": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Dividend Yield": <Percent className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Beta": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "52W Range": <TrendingUpDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "52W High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "52W Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Sector": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Industry": <Layers className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "CEO": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Updated": <Clock className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
   }
   return <>{icons[label] ?? null}</>
 }

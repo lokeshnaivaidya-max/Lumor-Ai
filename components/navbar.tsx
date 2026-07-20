@@ -48,18 +48,21 @@ export function Navbar() {
       className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4"
     >
       <nav
-        className={`glass-nav flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-all duration-500 ${
-          scrolled ? "shadow-lg" : ""
+        className={`glass-nav flex w-full max-w-5xl items-center justify-between rounded-full px-3 py-2 transition-shadow duration-500 ${
+          scrolled ? "shadow-xl" : "shadow-lg"
         }`}
       >
-        <Link href="/" className="flex items-center gap-2 pl-2">
-          <span className="font-serif text-sm italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
+        <Link href="/" className="flex items-center gap-2 pl-2 group">
+          <span className="font-serif text-sm italic transition-colors duration-300 group-hover:text-[var(--gold)]" style={{ color: "var(--text-primary)" }}>
+            Lumora
+          </span>
         </Link>
 
         <div className="hidden items-center gap-0.5 md:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="nav-link">
+            <Link key={l.href} href={l.href} className="nav-link group relative">
               {l.label}
+              <span className="absolute inset-x-2 bottom-0 h-px origin-right scale-x-0 bg-[var(--gold)] transition-transform duration-300 group-hover:origin-left group-hover:scale-x-100" />
             </Link>
           ))}
         </div>
@@ -71,7 +74,7 @@ export function Navbar() {
           </div>
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className="btn btn--icon md:hidden"
+            className="btn btn--icon pressable md:hidden"
             aria-label="Menu"
           >
             {mobileOpen ? (
@@ -88,7 +91,7 @@ export function Navbar() {
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="glass-dialog absolute left-0 right-0 top-full mt-3 overflow-hidden p-2"
               style={{ borderRadius: "1rem" }}
             >
@@ -98,7 +101,7 @@ export function Navbar() {
                     key={l.href}
                     href={l.href}
                     onClick={() => setMobileOpen(false)}
-                    className="nav-link rounded-lg px-3.5 py-2.5 text-sm"
+                    className="nav-link rounded-lg px-3.5 py-2.5 text-sm transition-all duration-200 hover:translate-x-1"
                   >
                     {l.label}
                   </Link>

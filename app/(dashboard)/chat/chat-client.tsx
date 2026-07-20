@@ -22,7 +22,8 @@ function TypingDots() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ background: "var(--text-tertiary)" }}
           animate={{ opacity: [0.3, 1, 0.3] }}
           transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
         />
@@ -38,9 +39,9 @@ function Markdown({ content }: { content: string }) {
         components={{
           code({ className, children, ...props }: any) {
             const inline = !className
-            if (inline) return <code className="rounded bg-foreground/10 px-1 py-0.5 text-xs font-mono">{children}</code>
+            if (inline) return <code className="rounded px-1 py-0.5 text-xs font-mono" style={{ background: "rgba(255,255,255,0.1)" }}>{children}</code>
             return (
-              <pre className="my-2 overflow-x-auto rounded-xl bg-black/30 p-3 text-xs">
+              <pre className="my-2 overflow-x-auto rounded-xl p-3 text-xs" style={{ background: "rgba(0,0,0,0.3)" }}>
                 <code className={className} {...props}>{children}</code>
               </pre>
             )
@@ -175,20 +176,22 @@ export function ChatClient() {
         <button onClick={startNew} className="lm-btn lm-btn--gold flex items-center justify-center gap-2 px-3 py-2.5 text-xs">
           <Plus className="h-3.5 w-3.5" />New chat
         </button>
-        <div className="flex-1 space-y-1 overflow-y-auto pr-1">
+        <div className="glass-strong flex-1 overflow-y-auto rounded-2xl p-2">
           {conversations.length === 0 ? (
-            <p className="dm-meta px-2 py-3">No conversations yet.</p>
+            <p className="meta px-2 py-3">No conversations yet.</p>
           ) : (
             conversations.map((c) => (
               <div
                 key={c.id}
-                className={`group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors ${activeId === c.id ? "bg-foreground/[0.06]" : "hover:bg-foreground/[0.04]"}`}
+                className={`group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors ${
+                  activeId === c.id ? "bg-foreground/[0.06]" : "hover:bg-foreground/[0.04]"
+                }`}
               >
                 <button onClick={() => selectConversation(c.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <MessageSquare className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} />
                   <span className="truncate">{c.title}</span>
                 </button>
-                <button onClick={() => handleDelete(c.id)} className="rounded-md p-1 text-muted-foreground/40 opacity-0 transition-opacity hover:text-neg group-hover:opacity-100">
+                <button onClick={() => handleDelete(c.id)} className="rounded-md p-1 opacity-0 transition-opacity hover:text-[var(--rose)] group-hover:opacity-100" style={{ color: "var(--text-tertiary)" }}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -197,27 +200,27 @@ export function ChatClient() {
         </div>
       </div>
 
-      <div className="glass-card flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
-        <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/10 text-gold">
+      <div className="bento-card flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
+        <div className="flex items-center gap-2 border-b px-5 py-3.5" style={{ borderColor: "var(--glass-border)" }}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
             <MessageSquare className="h-4 w-4" />
           </div>
           <div>
-            <p className="dm-body font-medium">Lumora AI</p>
-            <p className="dm-meta">Grounded in real market data</p>
+            <p className="body font-medium">Lumora AI</p>
+            <p className="meta">Grounded in real market data</p>
           </div>
         </div>
 
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-2 py-4 lg:px-6">
           {loadingMsgs ? (
-            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--text-tertiary)" }} /></div>
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <p className="dm-body">Ask Lumora about the markets</p>
-              <p className="dm-body mt-1 text-muted-foreground">Get grounded insights on stocks, strategies, and investing.</p>
+              <p className="body">Ask Lumora about the markets</p>
+              <p className="body mt-1" style={{ color: "var(--text-tertiary)" }}>Get grounded insights on stocks, strategies, and investing.</p>
               <div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s} onClick={() => send(s)} className="glass-card rounded-2xl px-3 py-2.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground">
+                  <button key={s} onClick={() => send(s)} className="glass-card rounded-2xl px-3 py-2.5 text-left text-xs transition-colors" style={{ color: "var(--text-tertiary)" }}>
                     {s}
                   </button>
                 ))}
@@ -231,29 +234,38 @@ export function ChatClient() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
               >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${m.role === "user" ? "bg-gold/10 text-gold" : "bg-card text-muted-foreground"}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                  m.role === "user"
+                    ? "text-[var(--gold)]"
+                    : "text-[var(--text-tertiary)]"
+                }`} style={m.role === "user" ? { background: "var(--gold-glow)" } : { background: "var(--glass-bg)" }}>
                   {m.role === "user" ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                 </div>
-                <div className={`max-w-[92%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-gold/10" : "bg-foreground/[0.04]"}`}>
+                <div
+                  className={`max-w-[92%] rounded-2xl px-4 py-3 ${
+                    m.role === "user" ? "" : ""
+                  }`}
+                  style={m.role === "user" ? { background: "var(--gold-glow)" } : { background: "var(--glass-bg)" }}
+                >
                   {m.role === "assistant" && !m.content ? <TypingDots /> : <Markdown content={m.content} />}
                 </div>
               </motion.div>
             ))
           )}
           {streaming && messages[messages.length - 1]?.content && (
-            <p className="dm-meta px-1">Generating…</p>
+            <p className="meta px-1">Generating…</p>
           )}
           <div ref={endRef} />
         </div>
 
-        {error && <p className="dm-meta px-5 pb-1 text-neg">{error}</p>}
+        {error && <p className="meta px-5 pb-1" style={{ color: "var(--rose)" }}>{error}</p>}
 
-        <div className="border-t border-border p-3">
-          <p className="dm-meta mb-2 flex items-center gap-1.5 text-muted-foreground/70">
+        <div className="border-t p-3" style={{ borderColor: "var(--glass-border)" }}>
+          <p className="meta mb-2 flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
             <span aria-hidden>⚠️</span>
             Lumora AI can make mistakes. Responses are for educational purposes only and should not be considered financial advice.
           </p>
-          <div className="flex items-end gap-2 rounded-2xl border border-border bg-card/40 px-3 py-2">
+          <div className="flex items-end gap-2 rounded-2xl px-3 py-2" style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)" }}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -263,6 +275,7 @@ export function ChatClient() {
               rows={1}
               placeholder="Message Lumora…"
               className="max-h-32 flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+              style={{ color: "var(--text-primary)" }}
             />
             <button
               onClick={() => send(input)}

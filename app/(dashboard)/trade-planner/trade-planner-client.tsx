@@ -112,7 +112,7 @@ function ConfidenceGauge({ score }: { score: number }) {
           {score}%
         </motion.span>
       </div>
-      <span className="dm-meta uppercase">Confidence</span>
+      <span className="meta uppercase">Confidence</span>
     </div>
   )
 }
@@ -184,7 +184,7 @@ function RiskRewardVisual({ ratio }: { ratio: string }) {
         </motion.div>
       </div>
       <div className="text-center">
-        <span className="dm-heading text-sm font-semibold">{ratio}</span>
+        <span className="heading-sm font-semibold">{ratio}</span>
       </div>
     </div>
   )
@@ -330,23 +330,17 @@ export function TradePlannerClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-10"
+        className="page-head mb-10 glow-page"
       >
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-[28px] bg-gold/10">
-            <BarChart3 className="h-6 w-6 text-gold" />
-          </div>
-          <div>
-            <h1 className="dm-heading dm-animate">AI Trade Planner</h1>
-            <p className="dm-body dm-animate dm-animate--delay-1">Plan, analyze, and optimize your trades with AI-powered insights</p>
-          </div>
-        </div>
+        <p className="subheading"><span className="dot-gold" /> Trade Planning</p>
+        <h1 className="heading mt-1">AI Trade Planner</h1>
+        <p className="body mt-2">Plan, analyze, and optimize your trades with AI-powered insights</p>
       </motion.div>
 
       <div className="grid gap-8 lg:grid-cols-12">
@@ -357,20 +351,20 @@ export function TradePlannerClient() {
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-5 space-y-6"
         >
-          <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1 p-6">
+          <div className="bento-card p-6">
             <div className="space-y-5">
               <div className="flex items-center gap-2 border-b border-border pb-4">
-                <span className="dm-heading text-sm">Trade Details</span>
+                <span className="heading-sm">Trade Details</span>
               </div>
 
               <div>
-                <label className="dm-meta mb-1.5 block">Symbol</label>
+                <label className="meta mb-1.5 block">Symbol</label>
                 <SymbolSearch onSelect={(r) => setSymbol(r.symbol)} />
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="dm-meta mb-1.5 block">Buy Price</label>
+                  <label className="meta mb-1.5 block">Buy Price</label>
                   <input
                     type="number"
                     step="any"
@@ -381,7 +375,7 @@ export function TradePlannerClient() {
                   />
                 </div>
                 <div>
-                  <label className="dm-meta mb-1.5 block">Quantity</label>
+                  <label className="meta mb-1.5 block">Quantity</label>
                   <input
                     type="number"
                     step="1"
@@ -394,7 +388,7 @@ export function TradePlannerClient() {
               </div>
 
               <div>
-                <label className="dm-meta mb-1.5 block">Budget (auto-calculated)</label>
+                <label className="meta mb-1.5 block">Budget (auto-calculated)</label>
                 <input
                   type="number"
                   step="any"
@@ -407,7 +401,7 @@ export function TradePlannerClient() {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="dm-meta mb-1.5 block">Target Price</label>
+                  <label className="meta mb-1.5 block">Target Price</label>
                   <input
                     type="number"
                     step="any"
@@ -418,7 +412,7 @@ export function TradePlannerClient() {
                   />
                 </div>
                 <div>
-                  <label className="dm-meta mb-1.5 block">Stop Loss</label>
+                  <label className="meta mb-1.5 block">Stop Loss</label>
                   <input
                     type="number"
                     step="any"
@@ -432,7 +426,7 @@ export function TradePlannerClient() {
 
               {/* Holding Period */}
               <div className="relative">
-                <label className="dm-meta mb-1.5 block">Holding Period</label>
+                <label className="meta mb-1.5 block">Holding Period</label>
                 <button
                   onClick={() => setShowHoldingDropdown(!showHoldingDropdown)}
                   className="glass-input flex items-center justify-between text-left"
@@ -470,7 +464,7 @@ export function TradePlannerClient() {
 
               {/* Risk Level */}
               <div className="relative">
-                <label className="dm-meta mb-1.5 block">Risk Level</label>
+                <label className="meta mb-1.5 block">Risk Level</label>
                 <button
                   onClick={() => setShowRiskDropdown(!showRiskDropdown)}
                   className="glass-input flex items-center justify-between text-left"
@@ -506,7 +500,7 @@ export function TradePlannerClient() {
                             opt.value === "Low" ? "bg-emerald" : opt.value === "Medium" ? "bg-gold" : "bg-neg"
                           }`} />
                           <span>{opt.label}</span>
-                          <span className="dm-meta ml-auto">{opt.desc}</span>
+                          <span className="meta ml-auto">{opt.desc}</span>
                         </button>
                       ))}
                     </motion.div>
@@ -515,9 +509,9 @@ export function TradePlannerClient() {
               </div>
 
               {/* Natural Language */}
-              <hr className="dm-rule" />
+              <hr className="divider" />
               <div>
-                <label className="dm-meta mb-1.5 block">Describe your trade plan</label>
+                <label className="meta mb-1.5 block">Describe your trade plan</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -537,7 +531,7 @@ export function TradePlannerClient() {
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="dm-meta mt-1.5">
+                <p className="meta mt-1.5">
                   Try: &ldquo;Buy at ₹999&rdquo; &middot; &ldquo;Budget ₹50,000&rdquo; &middot; &ldquo;I want 59 shares&rdquo;
                 </p>
               </div>
@@ -566,18 +560,18 @@ export function TradePlannerClient() {
           {/* Bonus Calculators */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="dm-heading text-xs">Bonus Calculators</span>
+              <span className="heading-sm" style={{ fontSize: '0.8rem' }}>Bonus Calculators</span>
             </div>
             {bPrice > 0 && qty > 0 && (
               <>
                 {tgt > 0 && (
-                  <div className="dm-card dm-card--inset p-4">
+                  <div className="bento-card p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
                         <TrendingUp className="h-3.5 w-3.5 text-emerald" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="dm-meta uppercase">Profit</span>
+                        <span className="meta uppercase">Profit</span>
                         <p className="font-mono text-sm font-semibold text-emerald tabular-nums">
                           +{profitAmt.toFixed(2)} ({profitPct.toFixed(2)}%)
                         </p>
@@ -586,13 +580,13 @@ export function TradePlannerClient() {
                   </div>
                 )}
                 {sl > 0 && (
-                  <div className="dm-card dm-card--inset p-4">
+                  <div className="bento-card p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neg/10">
                         <TrendingDown className="h-3.5 w-3.5 text-neg" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="dm-meta uppercase">Loss</span>
+                        <span className="meta uppercase">Loss</span>
                         <p className="font-mono text-sm font-semibold text-neg tabular-nums">
                           -{lossAmt.toFixed(2)} ({lossPct.toFixed(2)}%)
                         </p>
@@ -600,10 +594,10 @@ export function TradePlannerClient() {
                     </div>
                   </div>
                 )}
-                <div className="dm-card dm-card--inset p-4">
+                <div className="bento-card p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="dm-meta uppercase">Position Size</p>
+                      <p className="meta uppercase">Position Size</p>
                       <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
                         {qty} shares x {bPrice} = {totCost.toFixed(2)}
                         {budget ? ` (${posSizePct.toFixed(1)}% of budget)` : ""}
@@ -613,18 +607,18 @@ export function TradePlannerClient() {
                 </div>
                 {tgt > 0 && sl > 0 && (
                   <>
-                    <div className="dm-card dm-card--inset p-4">
+                    <div className="bento-card p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="dm-meta uppercase">Risk/Reward Ratio</p>
+                          <p className="meta uppercase">Risk/Reward Ratio</p>
                           <p className="font-mono text-sm font-semibold text-foreground tabular-nums">1:{rrRatio}</p>
                         </div>
                       </div>
                     </div>
-                    <div className="dm-card dm-card--inset p-4">
+                    <div className="bento-card p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="dm-meta uppercase">Break-even Price</p>
+                          <p className="meta uppercase">Break-even Price</p>
                           <p className="font-mono text-sm font-semibold text-foreground tabular-nums">{breakevenPrice.toFixed(2)}</p>
                         </div>
                       </div>
@@ -634,8 +628,8 @@ export function TradePlannerClient() {
               </>
             )}
             {(!bPrice || !qty) && (
-              <div className="dm-card dm-card--inset p-4">
-                <p className="dm-body text-center py-2 text-muted-foreground">Enter buy price & quantity to see bonus calculators</p>
+              <div className="bento-card p-4">
+                <p className="body text-center py-2 text-muted-foreground">Enter buy price & quantity to see bonus calculators</p>
               </div>
             )}
           </div>
@@ -657,7 +651,7 @@ export function TradePlannerClient() {
             >
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neg" />
-                <p className="dm-body text-neg">{error}</p>
+                <p className="body text-neg">{error}</p>
               </div>
             </motion.div>
           )}
@@ -666,10 +660,10 @@ export function TradePlannerClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 dm-card dm-card--inset p-12 text-center"
+              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 bento-card p-12 text-center"
             >
-              <h3 className="dm-heading">Ready to Plan</h3>
-              <p className="dm-body max-w-sm text-muted-foreground">
+              <h3 className="heading">Ready to Plan</h3>
+              <p className="body max-w-sm text-muted-foreground">
                 Fill in your trade details on the left and click Analyze to get AI-powered insights on your trade plan.
               </p>
             </motion.div>
@@ -679,11 +673,11 @@ export function TradePlannerClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 dm-card dm-card--inset p-12"
+              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 bento-card p-12"
             >
               <div className="space-y-2 text-center">
-                <h3 className="dm-heading">Analyzing Your Trade Plan</h3>
-                <p className="dm-body text-muted-foreground">Calculating risk metrics and generating AI insights...</p>
+                <h3 className="heading">Analyzing Your Trade Plan</h3>
+                <p className="body text-muted-foreground">Calculating risk metrics and generating AI insights...</p>
               </div>
               <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
@@ -708,13 +702,13 @@ export function TradePlannerClient() {
                 className="space-y-4"
               >
                 {/* Recommendation */}
-                <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <RecommendationBadge rec={result.recommendation} />
-                      <div>
-                        <p className="dm-body font-medium">{result.recommendationReason}</p>
-                        <p className="dm-meta mt-0.5">Better Entry: {result.betterEntry}</p>
+                  <div className="bento-card p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <RecommendationBadge rec={result.recommendation} />
+                        <div>
+                          <p className="body font-medium">{result.recommendationReason}</p>
+                          <p className="meta mt-0.5">Better Entry: {result.betterEntry}</p>
                       </div>
                     </div>
                     <ConfidenceGauge score={result.confidenceScore} />
@@ -723,64 +717,64 @@ export function TradePlannerClient() {
 
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">Investment</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">Investment</p>
                         <AnimatedValue value={result.investmentRequired} prefix="₹" className="!text-lg" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
-                        <ArrowUpRight className="h-4 w-4 text-emerald" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">Est. Profit</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
+                          <ArrowUpRight className="h-4 w-4 text-emerald" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">Est. Profit</p>
                         <AnimatedValue value={result.estimatedProfit} prefix="₹" className="!text-lg !text-emerald" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-neg/10">
-                        <ArrowDownRight className="h-4 w-4 text-neg" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">Est. Loss</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-neg/10">
+                          <ArrowDownRight className="h-4 w-4 text-neg" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">Est. Loss</p>
                         <AnimatedValue value={Math.abs(result.estimatedLoss)} prefix="₹" className="!text-lg !text-neg" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">Target</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">Target</p>
                         <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">{result.suggestedTarget}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">Stop Loss</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">Stop Loss</p>
                         <p className="font-heading text-lg font-semibold tracking-tight text-foreground tabular-nums">{result.suggestedStopLoss}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="dm-card dm-card--inset p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
-                        <RefreshCw className="h-4 w-4 text-emerald" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="dm-meta uppercase">R:R</p>
+                    <div className="bento-card p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald/10">
+                          <RefreshCw className="h-4 w-4 text-emerald" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="meta uppercase">R:R</p>
                         <div className="mt-1">
                           <RiskRewardVisual ratio={result.riskRewardRatio} />
                         </div>
@@ -791,19 +785,19 @@ export function TradePlannerClient() {
 
                 {/* Probability & AI Explanation */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="dm-card dm-card--inset p-5">
-                    <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
-                      <BarChart3 className="h-4 w-4 text-gold" />
-                      <span className="dm-heading text-xs">Probability</span>
+                    <div className="bento-card p-5">
+                      <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
+                        <BarChart3 className="h-4 w-4 text-gold" />
+                        <span className="heading-sm" style={{ fontSize: '0.8rem' }}>Probability</span>
                     </div>
                     <ProbabilityBars profit={result.probabilityOfProfit} loss={result.probabilityOfLoss} />
                   </div>
 
-                  <div className="dm-card dm-card--inset p-5">
-                    <div className="border-b border-border pb-3 mb-3">
-                      <span className="dm-heading text-xs">AI Explanation</span>
-                    </div>
-                    <p className="dm-body leading-relaxed text-muted-foreground">{result.beginnerExplanation}</p>
+                    <div className="bento-card p-5">
+                      <div className="border-b border-border pb-3 mb-3">
+                        <span className="heading-sm" style={{ fontSize: '0.8rem' }}>AI Explanation</span>
+                      </div>
+                      <p className="body leading-relaxed text-muted-foreground">{result.beginnerExplanation}</p>
                   </div>
                 </div>
 

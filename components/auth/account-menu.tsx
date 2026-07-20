@@ -100,7 +100,7 @@ export function AccountMenu() {
         ref={btnRef}
         type="button"
         onClick={toggle}
-        className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-all duration-300 hover:border-white/20"
+        className="glass-card flex items-center gap-2 rounded-full p-0.5 pr-2.5 transition-all duration-300 hover:border-white/20 pressable"
         aria-label="Account menu"
         aria-expanded={open}
       >
@@ -141,7 +141,7 @@ export function AccountMenu() {
                     right: Math.max(coords.right, 12),
                     pointerEvents: "auto",
                   }}
-                  className="glass-strong w-64 overflow-hidden rounded-2xl p-2 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/10"
+                  className="glass-dialog w-64 overflow-hidden rounded-2xl p-2 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.55)]"
                 >
                   <div className="px-3 pb-3 pt-2">
                     <p className="truncate text-sm font-medium text-foreground">

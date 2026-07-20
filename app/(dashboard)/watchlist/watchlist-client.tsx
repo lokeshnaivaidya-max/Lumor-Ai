@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { useRouter } from "next/navigation"
-import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2 } from "lucide-react"
+import { Trash2, TrendingUp, TrendingDown, Plus, Search, X, Loader2, Star } from "lucide-react"
 import { addToWatchlist, removeFromWatchlist } from "@/app/actions/portfolio"
 import type { WatchlistView } from "@/lib/portfolio"
 import { currencySymbol, sparklineSvg, fetchSparkline } from "@/lib/utils"
@@ -19,8 +19,7 @@ function WatchlistCard({ item, onRemove, delay }: { item: WatchlistView & { spar
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.04 * delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="dm-card dm-card--inset dm-animate"
-      style={{ animationDelay: `${delay * 0.04}s` }}
+      className="bento-card"
     >
       <div className="flex items-start justify-between p-5">
         <div className="flex items-center gap-3">
@@ -32,13 +31,13 @@ function WatchlistCard({ item, onRemove, delay }: { item: WatchlistView & { spar
             </div>
           )}
           <div>
-            <p className="dm-heading text-base">{item.symbol}</p>
-            <p className="dm-meta line-clamp-1">{item.name}</p>
+            <p className="heading-sm">{item.symbol}</p>
+            <p className="meta line-clamp-1">{item.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {item.marketState === "REGULAR" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald" />}
-          <button onClick={() => onRemove(item.symbol)} className="rounded-lg p-2 text-muted-foreground/50 transition-colors hover:bg-neg/10 hover:text-neg">
+          <button onClick={() => onRemove(item.symbol)} className="rounded-lg p-2 text-muted-foreground/50 transition-colors hover:bg-neg/10 hover:text-neg pressable">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -136,11 +135,12 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
 
   return (
     <div className="p-6 lg:p-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="mb-8">
-        <h1 className="dm-heading dm-animate">Watchlist</h1>
-        <p className="dm-body dm-animate dm-animate--delay-1">Track your favorite symbols with live prices and sparklines.</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="page-head mb-8 glow-page">
+        <p className="subheading"><span className="dot-gold" /> Watchlist</p>
+        <h1 className="heading mt-1">Stocks You Follow</h1>
+        <p className="body mt-2">Track your favorite symbols with live prices and sparklines.</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }} className="relative mb-6 max-w-xl" ref={boxRef}>
@@ -170,7 +170,7 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
                 >
                   <div className="flex flex-col">
                     <span className="font-semibold">{s.symbol}</span>
-                    <span className="dm-meta">{s.name}</span>
+                    <span className="meta">{s.name}</span>
                   </div>
                   {adding === s.symbol ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 </motion.button>
@@ -182,11 +182,27 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
       </motion.div>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <p className="dm-body">Add your first stock</p>
-          <p className="dm-body mt-1 max-w-sm">Search a ticker above and add it to start tracking live prices, moves, and alerts.</p>
-          <button onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()} className="lm-btn lm-btn--gold mt-6 px-4 py-2 text-xs">Add a stock</button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bento-card relative overflow-hidden px-8 py-16 text-center"
+        >
+          <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--gold-glow)' }}>
+            <Star className="h-7 w-7" style={{ color: 'var(--gold)' }} />
+          </div>
+          <p className="heading-sm">Add your first stock</p>
+          <p className="body mt-2 max-w-sm mx-auto">Search a ticker above and add it to start tracking live prices, moves, and alerts.</p>
+          <motion.button
+            onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn btn--gold mt-6"
+          >
+            <Plus className="h-3.5 w-3.5" />Add a stock
+          </motion.button>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, i) => (

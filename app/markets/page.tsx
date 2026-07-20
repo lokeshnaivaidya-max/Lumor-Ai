@@ -32,15 +32,18 @@ export default async function MarketsPage({ searchParams }: { searchParams?: Pro
       </header>
 
       <main className="relative z-10">
-        <div className="mx-auto w-full max-w-6xl px-4 pb-2 pt-4">
-          <p className="text-xs font-medium uppercase tracking-[0.3em] text-emerald">Markets Terminal</p>
-          <h1 className="font-heading mt-3 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            Search any market. See the <span className="text-gradient">signal.</span>
-          </h1>
-          <p className="mt-3 max-w-xl text-pretty text-muted-foreground">
-            Live quotes, interactive charts, and technical indicators — paired with on-demand AI analysis for global
-            equities, indices, and crypto.
-          </p>
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-2 pt-4">
+          <div className="pointer-events-none absolute -inset-40 opacity-25" style={{ background: 'radial-gradient(circle at 30% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+          <div className="relative">
+            <p className="text-xs font-medium uppercase tracking-[0.3em] text-emerald">Markets Terminal</p>
+            <h1 className="font-heading mt-3 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              Search any market. See the <span className="text-gradient">signal.</span>
+            </h1>
+            <p className="mt-3 max-w-xl text-pretty text-muted-foreground">
+              Live quotes, interactive charts, and technical indicators — paired with on-demand AI analysis for global
+              equities, indices, and crypto.
+            </p>
+          </div>
         </div>
         <MarketExplorer initialSymbol={symbol} />
       </main>

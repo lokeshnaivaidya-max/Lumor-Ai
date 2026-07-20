@@ -54,12 +54,13 @@ export function NotificationsClient({ notifications: initial }: { notifications:
 
   return (
     <div className="p-6 lg:p-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="dm-heading dm-animate">Notifications</h1>
-          <p className="dm-body dm-animate dm-animate--delay-1">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="page-head mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="glow-page">
+          <p className="subheading"><span className="dot-gold" /> Notifications</p>
+          <h1 className="heading mt-1">Alerts &amp; Updates</h1>
+          <p className="body mt-2">
             {items.length > 0
               ? unread > 0
                 ? `${unread} unread ${unread === 1 ? "notification" : "notifications"}`
@@ -98,10 +99,19 @@ export function NotificationsClient({ notifications: initial }: { notifications:
       </AnimatePresence>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <p className="dm-body">You're all caught up</p>
-          <p className="dm-body dm-animate dm-animate--delay-1 mt-1 max-w-sm">New price alerts and AI insights will appear here as they happen.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bento-card relative overflow-hidden px-8 py-16 text-center"
+        >
+          <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
+          <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--gold-glow)' }}>
+            <Bell className="h-7 w-7" style={{ color: 'var(--gold)' }} />
+          </div>
+          <p className="heading-sm">You're all caught up</p>
+          <p className="body mt-2 max-w-sm mx-auto">New price alerts and AI insights will appear here as they happen.</p>
+        </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">
           {items.map((n, i) => {
@@ -114,7 +124,7 @@ export function NotificationsClient({ notifications: initial }: { notifications:
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 16, scale: 0.97, filter: "blur(4px)" }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: deleting === n.id ? 0 : 0.03 * i }}
-                className={`dm-card dm-card--inset dm-animate flex items-start gap-3.5 p-4 transition-all ${
+                className={`bento-card flex items-start gap-3.5 p-4 transition-all ${
                   deleting === n.id
                     ? "pointer-events-none scale-95 opacity-0 blur-sm"
                     : n.read
@@ -129,9 +139,9 @@ export function NotificationsClient({ notifications: initial }: { notifications:
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="dm-body font-medium">{n.title}</p>
-                  {n.body && <p className="dm-body mt-0.5">{n.body}</p>}
-                  <p className="dm-meta mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                  <p className="body font-medium">{n.title}</p>
+                  {n.body && <p className="body mt-0.5">{n.body}</p>}
+                  <p className="meta mt-1">{new Date(n.createdAt).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   {!n.read && (

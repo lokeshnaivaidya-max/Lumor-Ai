@@ -126,6 +126,9 @@ async function safeForward(request: Request): Promise<Response> {
       const cloned = response.clone()
       const body = await cloned.json().catch(() => ({}))
       const msg = String((body as Record<string, unknown>)?.message || (body as Record<string, unknown>)?.error || "Request failed.")
+      if (response.status >= 500) {
+        console.error("[AUTH API 5xx BODY]", JSON.stringify({ status: response.status, body }, null, 2))
+      }
       if (response.status === 422 || response.status === 409) {
         return error("An account with this email already exists. Please sign in instead.", 409)
       }
@@ -134,6 +137,13 @@ async function safeForward(request: Request): Promise<Response> {
     return response
   } catch (e) {
     const err = e as any
+    // Better Auth's verifyPassword throws "Invalid password hash" (not a 401)
+    // when a stored credential is in an incompatible format. That must surface
+    // as a normal auth failure, not a generic 500 "internal error".
+    if (err?.message === "Invalid password hash") {
+      console.warn("[AUTH] incompatible stored password hash for sign-in; returning 401")
+      return error("Invalid email or password", 401)
+    }
     const sql = err?.cause?.code || err?.code || err?.meta?.code || err?.meta?.target || null
     console.error("[AUTH API THROW]", JSON.stringify({
       name: err?.name,

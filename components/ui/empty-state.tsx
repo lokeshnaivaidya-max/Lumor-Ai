@@ -21,7 +21,7 @@ export function EmptyState({
       className="flex flex-col items-center justify-center px-6 py-16 text-center"
     >
       <p className="font-heading text-lg font-semibold tracking-tight">{title}</p>
-      {description && <p className="dm-body mt-1.5 max-w-sm">{description}</p>}
+      {description && <p className="body mt-1.5 max-w-sm">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
     </motion.div>
   )

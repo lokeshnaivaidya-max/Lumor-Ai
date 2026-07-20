@@ -6,7 +6,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import { authClient } from "@/lib/auth-client"
 import { GoogleIcon, YahooIcon, AppleIcon } from "./provider-icons"
-import { Loader2, Eye, EyeOff, AlertCircle, Check } from "lucide-react"
+import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react"
 import { recordAgreement } from "@/app/actions/agreement"
 
 type Provider = "google" | "yahoo" | "apple"
@@ -58,7 +58,6 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
 
     try {
       if (isSignUp) {
-        console.log("[OTP-TRACE] >>> auth-form handleSubmit signUp START", { email, stack: new Error().stack })
         const result = await (authClient.signUp.email as any)({
           email, password, name, agreedToLegal: true, acceptedTerms: true,
           acceptedPrivacyPolicy: true, acceptedLegalVersion: "1.0",
@@ -108,7 +107,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="w-full max-w-sm"
     >
-      <div className={`glass-dialog rounded-3xl ${isSignUp ? "p-8" : "p-8 sm:p-10"}`}>
+      <div className="glass-dialog rounded-3xl p-8 sm:p-10">
         <div className="mb-6">
           <span className="font-serif text-lg italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </div>

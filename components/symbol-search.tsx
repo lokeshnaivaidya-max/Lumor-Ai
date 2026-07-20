@@ -78,8 +78,8 @@ export function SymbolSearch({ onSelect }: { onSelect: (result: SearchResult) =>
   return (
     <div ref={boxRef} className="relative w-full max-w-2xl">
       <motion.div
-        className={`flex items-center gap-3 rounded-[28px] px-5 py-3.5 border border-white/20 bg-white/15 backdrop-blur-xl transition-all duration-300 ${
-          focused ? "border-white/40 shadow-2xl shadow-black/10 bg-white/20" : ""
+        className={`flex items-center gap-3 rounded-[28px] px-5 py-3.5 glass-strong transition-all duration-300 ${
+          focused ? "!border-[var(--gold)] shadow-2xl shadow-black/10" : ""
         }`}
         animate={focused ? { scale: 1.01 } : { scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 15 }}

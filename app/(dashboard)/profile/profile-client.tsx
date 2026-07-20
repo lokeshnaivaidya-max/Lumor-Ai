@@ -62,10 +62,13 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
   )
 }
 
-function SaveButton({ onSave, busy, disabled, label = "Save changes" }: { onSave: () => void; busy: boolean; disabled?: boolean; label?: string }) {
+function SaveButton({ onSave, busy, disabled, isDirty, label = "Save changes" }: { onSave: () => void; busy: boolean; disabled?: boolean; isDirty: boolean; label?: string }) {
   const isDisabled = disabled || busy
   return (
-    <motion.button onClick={onSave} disabled={isDisabled} whileHover={{ scale: isDisabled ? 1 : 1.03 }} whileTap={{ scale: isDisabled ? 1 : 0.97 }}
+    <motion.button onClick={() => {
+      console.log("[SAVE CLICK]", { busy, disabled: isDisabled, isDirty })
+      onSave()
+    }} disabled={isDisabled} whileHover={{ scale: isDisabled ? 1 : 1.03 }} whileTap={{ scale: isDisabled ? 1 : 0.97 }}
       className="lm-btn lm-btn--gold flex items-center gap-2 px-5 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
       {busy ? "Saving…" : label}
@@ -76,7 +79,7 @@ function SaveButton({ onSave, busy, disabled, label = "Save changes" }: { onSave
 function Field({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div>
-      <label className="dm-meta mb-1.5 flex items-center gap-1.5">
+      <label className="meta mb-1.5 flex items-center gap-1.5">
         <Icon className="h-3 w-3" />{label}
       </label>
       {children}
@@ -178,8 +181,10 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
   const MAX_BYTES = 4 * 1024 * 1024
 
   function handleFile(file?: File | null) {
+    console.log("[AVATAR] handleFile entered", { hasFile: !!file })
     setError(null)
     if (!file) return
+    console.log("[AVATAR] file selected", { name: file.name, type: file.type, size: file.size })
     if (!file.type.startsWith("image/")) {
       setError("Please choose an image file (PNG, JPG, WEBP, GIF).")
       return
@@ -189,14 +194,23 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
       return
     }
     const reader = new FileReader()
-    reader.onload = () => onChange(typeof reader.result === "string" ? reader.result : "")
-    reader.onerror = () => setError("Could not read the selected file.")
+    reader.onload = () => {
+      console.log("[AVATAR] reader.onload fired")
+      const result = typeof reader.result === "string" ? reader.result : ""
+      console.log("[AVATAR] onChange invoked", { imageLength: result.length })
+      onChange(result)
+    }
+    reader.onerror = () => {
+      console.error("[AVATAR] reader.onerror fired", reader.error)
+      setError("Could not read the selected file.")
+    }
+    console.log("[AVATAR] reader.readAsDataURL called")
     reader.readAsDataURL(file)
   }
 
   return (
     <div>
-      <label className="dm-meta mb-1.5 flex items-center gap-1.5">
+      <label className="meta mb-1.5 flex items-center gap-1.5">
         <Camera className="h-3 w-3" />Profile photo
       </label>
       <div
@@ -204,7 +218,7 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${dragOver ? "border-gold bg-gold/5" : "border-border hover:border-gold/50"}`}
+        className={`bento-card flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${dragOver ? "border-[var(--gold)]" : "hover:border-[var(--gold)]"}`}
       >
         {image ? (
           <img src={image} alt="" className="h-14 w-14 rounded-full object-cover" />
@@ -228,10 +242,10 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
       {error && <p className="mt-1.5 text-xs text-neg">{error}</p>}
       {image && (
         <div className="mt-2 flex gap-3">
-          <button type="button" onClick={() => inputRef.current?.click()} className="dm-meta text-xs text-gold hover:underline">
+          <button type="button" onClick={() => inputRef.current?.click()} className="meta text-xs text-gold hover:underline">
             Replace
           </button>
-          <button type="button" onClick={() => onChange("")} className="dm-meta flex items-center gap-1 text-xs text-muted-foreground hover:text-neg">
+          <button type="button" onClick={() => onChange("")} className="meta flex items-center gap-1 text-xs text-muted-foreground hover:text-neg">
             <X className="h-3 w-3" />Remove
           </button>
         </div>
@@ -368,19 +382,34 @@ export function ProfileClient({ user }: {
   }
 
   async function saveProfile() {
+    console.log("[SAVE START]", { image, initialImage: initialRef.current.image, busy })
     setBusy(true); setError(null)
     try {
+      console.log("[SAVE] before updateProfile")
       await updateProfile({ name, image: image || null, timezone, country, bio })
+      console.log("[SAVE] after updateProfile")
       // Keep better-auth session (avatar/name) in sync and refresh caches.
-      await authClient.updateUser({ name: name || undefined, image: image || null }).catch(() => {})
+      console.log("[SAVE] before authClient.updateUser")
+      await authClient.updateUser({ name: name || undefined, image: image || null }).catch((error) => {
+        console.error("[SAVE] authClient.updateUser failed", error)
+      })
+      console.log("[SAVE] after authClient.updateUser")
+      console.log("[SAVE] before refreshSessionCache")
       await refreshSessionCache()
+      console.log("[SAVE] after refreshSessionCache")
       // Update the dirty baseline so Save disables again until a new change.
+      console.log("[SAVE] before initialRef update")
       initialRef.current = { ...initialRef.current, name, image, timezone, country, bio }
+      console.log("[SAVE] after initialRef update")
       toast("Profile saved", "success")
     } catch (e: any) {
+      console.error(e)
       setError(e?.message || "Failed to save")
       toast(e?.message || "Failed to save", "error")
-    } finally { setBusy(false) }
+    } finally {
+      console.log("[SAVE] busy=false")
+      setBusy(false)
+    }
   }
 
   async function saveNotif() {
@@ -538,17 +567,31 @@ export function ProfileClient({ user }: {
     (activeTab === "notifications" && dirtyNotif) ||
     (activeTab === "appearance" && dirtyTheme)
 
+  useEffect(() => {
+    console.log("[IMAGE]", image)
+  }, [image])
+
+  useEffect(() => {
+    console.log("[DIRTY]", {
+      isDirty,
+      image,
+      initialImage: initialRef.current.image,
+      busy,
+    })
+  }, [isDirty, image, busy])
+
   return (
     <div className="p-6 lg:p-8">
-      <hr className="dm-rule dm-rule--gold dm-animate" />
+      <hr className="divider divider--gold" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="dm-heading dm-animate">Settings</h1>
-          <p className="dm-body dm-animate dm-animate--delay-1">Manage your profile, preferences, and account settings.</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="page-head mb-8 flex items-center justify-between">
+        <div className="glow-page">
+          <p className="subheading"><span className="dot-gold" /> Settings</p>
+          <h1 className="heading mt-1">Your Preferences</h1>
+          <p className="body mt-2">Manage your profile, preferences, and account settings.</p>
         </div>
         {activeTab !== "privacy" && (
-          <SaveButton onSave={activeTab === "profile" ? saveProfile : activeTab === "notifications" ? saveNotif : saveTheme} busy={busy} disabled={!isDirty} />
+          <SaveButton onSave={activeTab === "profile" ? saveProfile : activeTab === "notifications" ? saveNotif : saveTheme} busy={busy} disabled={!isDirty} isDirty={isDirty} />
         )}
       </motion.div>
 
@@ -577,7 +620,7 @@ export function ProfileClient({ user }: {
       <AnimatePresence mode="wait">
         {activeTab === "profile" && (
           <motion.div key="profile" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="space-y-6 p-6">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
                   <div className="relative shrink-0">
@@ -592,12 +635,12 @@ export function ProfileClient({ user }: {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <h2 className="dm-heading">{name || "Unnamed"}</h2>
+                    <h2 className="heading">{name || "Unnamed"}</h2>
                     <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{user.email}</span></div>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString()}</span></div>
                   </div>
                 </div>
-                <hr className="dm-rule" />
+                <hr className="divider" />
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full" /></Field>
                   <div className="sm:col-span-2">
@@ -628,7 +671,7 @@ export function ProfileClient({ user }: {
 
         {activeTab === "notifications" && (
           <motion.div key="notifications" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="space-y-1 p-6">
                 {notifSupport === "unsupported" && (
                   <p className="mb-3 flex items-center gap-2 rounded-xl bg-neg/10 px-4 py-2.5 text-xs text-neg">
@@ -646,8 +689,8 @@ export function ProfileClient({ user }: {
                   <motion.div key={item.key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                     className="flex items-center justify-between rounded-xl px-4 py-3.5 transition-colors hover:bg-foreground/[0.02]">
                     <div>
-                      <p className="dm-body font-medium">{item.label}</p>
-                      <p className="dm-meta mt-0.5">{item.desc}</p>
+                      <p className="body font-medium">{item.label}</p>
+                      <p className="meta mt-0.5">{item.desc}</p>
                     </div>
                     <ToggleSwitch
                       checked={!!notif[item.key]}
@@ -670,10 +713,10 @@ export function ProfileClient({ user }: {
 
         {activeTab === "appearance" && (
           <motion.div key="appearance" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="space-y-6 p-6">
                 <div>
-                  <p className="dm-body mb-3 flex items-center gap-1.5 font-medium"><Monitor className="h-4 w-4 text-muted-foreground" />Theme</p>
+                  <p className="body mb-3 flex items-center gap-1.5 font-medium"><Monitor className="h-4 w-4 text-muted-foreground" />Theme</p>
                   <div className="flex gap-3">
                     {([{ mode: "dark" as ThemeMode, icon: Moon, label: "Dark", desc: "Easy on the eyes" },
                       { mode: "light" as ThemeMode, icon: Sun, label: "Light", desc: "Classic bright" },
@@ -682,11 +725,15 @@ export function ProfileClient({ user }: {
                       const active = theme === t.mode
                       return (
                         <motion.button key={t.mode} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setTheme(t.mode); applyTheme(t.mode) }}
-                          className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm transition-colors ${active ? "border-gold bg-gold/10 text-gold" : "border-border text-muted-foreground hover:border-border/60 hover:text-foreground"}`}>
+                          className={`flex flex-1 items-center gap-3 rounded-2xl px-4 py-3.5 text-sm transition-colors ${
+                            active
+                              ? "bento-card !border-[var(--gold)]"
+                              : "glass-card"
+                          }`}>
                           <div className={`rounded-xl p-2 ${active ? "bg-gold/10" : "bg-foreground/5"}`}><Icon className="h-4 w-4" /></div>
                           <div className="text-left">
                             <p className="text-sm font-medium">{t.label}</p>
-                            <p className="dm-meta">{t.desc}</p>
+                            <p className="meta">{t.desc}</p>
                           </div>
                           {active && <Check className="ml-auto h-4 w-4 text-gold" />}
                         </motion.button>
@@ -701,9 +748,9 @@ export function ProfileClient({ user }: {
 
         {activeTab === "privacy" && (
           <motion.div key="privacy" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="space-y-4">
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="space-y-4 p-6">
-                <p className="dm-body flex items-center gap-1.5 font-medium"><KeyRound className="h-4 w-4 text-muted-foreground" />Change password</p>
+                <p className="body flex items-center gap-1.5 font-medium"><KeyRound className="h-4 w-4 text-muted-foreground" />Change password</p>
                 <Field label="Current password" icon={KeyRound}><input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="glass-input w-full" /></Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="New password" icon={KeyRound}><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="glass-input w-full" /></Field>
@@ -713,18 +760,18 @@ export function ProfileClient({ user }: {
               </div>
             </div>
 
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-2">
+            <div className="bento-card">
               <div className="space-y-4 p-6">
-                <p className="dm-body flex items-center gap-1.5 font-medium"><Mail className="h-4 w-4 text-muted-foreground" />Change email</p>
+                <p className="body flex items-center gap-1.5 font-medium"><Mail className="h-4 w-4 text-muted-foreground" />Change email</p>
                 <Field label="New email" icon={Mail}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={user.email} className="glass-input w-full" /></Field>
                 <button onClick={handleUpdateEmail} disabled={busy} className="lm-btn lm-btn--gold px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
               </div>
             </div>
 
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-3">
+            <div className="bento-card">
               <div className="space-y-4 p-6">
-                <p className="dm-body flex items-center gap-1.5 font-medium text-neg"><Trash2 className="h-4 w-4" />Delete account</p>
-                <p className="dm-body text-muted-foreground">Permanently remove your account and all associated data. This cannot be undone.</p>
+                <p className="body flex items-center gap-1.5 font-medium text-neg"><Trash2 className="h-4 w-4" />Delete account</p>
+                <p className="body text-muted-foreground">Permanently remove your account and all associated data. This cannot be undone.</p>
                 <Field label="Confirm password" icon={KeyRound}><input type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} className="glass-input w-full" /></Field>
                 <button onClick={handleDelete} disabled={busy} className="lm-btn flex items-center gap-2 bg-neg/15 px-4 py-2.5 text-xs text-neg hover:bg-neg/25 disabled:opacity-60">
                   <Trash2 className="h-3.5 w-3.5" />Delete account
@@ -736,10 +783,10 @@ export function ProfileClient({ user }: {
 
         {activeTab === "legal" && (
           <motion.div key="legal" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-            <div className="dm-card dm-card--inset dm-animate dm-animate--delay-1">
+            <div className="bento-card">
               <div className="space-y-4 p-6">
-                <p className="dm-body flex items-center gap-1.5 font-medium"><FileText className="h-4 w-4 text-muted-foreground" />Legal</p>
-                <p className="dm-body text-muted-foreground">
+                <p className="body flex items-center gap-1.5 font-medium"><FileText className="h-4 w-4 text-muted-foreground" />Legal</p>
+                <p className="body text-muted-foreground">
                   Review the legal agreements that govern your use of Lumora.
                 </p>
                 <div className="space-y-3">
@@ -750,7 +797,7 @@ export function ProfileClient({ user }: {
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">Terms &amp; Conditions</p>
-                      <p className="dm-meta mt-0.5">Acceptable use, disclaimers, and legal agreements</p>
+                      <p className="meta mt-0.5">Acceptable use, disclaimers, and legal agreements</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-muted-foreground/50" />
                   </Link>
@@ -761,7 +808,7 @@ export function ProfileClient({ user }: {
                   >
                     <div>
                       <p className="text-sm font-medium text-foreground">Privacy Policy</p>
-                      <p className="dm-meta mt-0.5">How we collect, use, and protect your data</p>
+                      <p className="meta mt-0.5">How we collect, use, and protect your data</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-muted-foreground/50" />
                   </Link>
