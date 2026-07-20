@@ -9,3 +9,17 @@ out/
 
 .vercel
 .env*
+
+# local QA / temp scripts (not part of app)
+qa-e2e.mjs
+start-server.ps1
+_direct.js
+_direct.mjs
+_fixhash.mjs
+_restore.mjs
+_setbad.mjs
+_setbadhash.js
+_trig*.js
+_trig*.mjs
+_trigger.js
+_trigglo.js

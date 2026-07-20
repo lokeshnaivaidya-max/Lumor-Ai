@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react"
 import { FadeUp, CardReveal } from "@/components/reveal"
-import { Clock, Sparkles } from "lucide-react"
+import { Clock, MessageSquare } from "lucide-react"
 
 const COMING_SOON = [
   {
@@ -13,7 +13,7 @@ const COMING_SOON = [
   {
     title: "Verified desk notes",
     desc: "Curated notes from professional desks — published only with consent and attribution.",
-    icon: Sparkles,
+    icon: MessageSquare,
   },
   {
     title: "Community spotlight",

@@ -48,16 +48,78 @@ if (!BETTER_AUTH_SECRET) {
   )
 }
 
+// Resolve a concrete base URL for Better Auth. A missing base URL makes
+// Better Auth call `new URL(undefined)` inside `createAuthContext`, which
+// throws "Invalid URL" during session init. That throw surfaces as an
+// unhandled rejection and crashes the Server Components render (the red
+// "Server Components error" banner) and breaks every auth API call (500s).
+// We therefore always provide a valid URL: prefer explicit env, then the
+// Vercel-provided hosts, then a localhost default in development. When even
+// that is unavailable (production with no configured host) we OMIT baseURL so
+// Better Auth falls back to deriving it from the incoming request headers.
+function resolveBaseUrl(): string | undefined {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  if (process.env.VERCEL_URL)
+    return process.env.VERCEL_URL.startsWith("http")
+      ? process.env.VERCEL_URL
+      : `https://${process.env.VERCEL_URL}`
+  if (process.env.V0_RUNTIME_URL) return process.env.V0_RUNTIME_URL
+  if (process.env.NODE_ENV !== "production") return "http://localhost:3000"
+  return undefined
+}
+
+const RESOLVED_BASE_URL = resolveBaseUrl()
+
+// Better Auth derives its base URL from `process.env.BETTER_AUTH_URL` (or, at
+// request time, from forwarded headers). When that env var is unset the library
+// calls `new URL(<origin>)` with an empty/invalid value during `init()`, which
+// throws "Invalid URL". That throw is what surfaces as a 500 on every auth API
+// call and as an unhandled rejection that crashes the Server Components render.
+// We therefore guarantee the env var is populated whenever we can determine a
+// host. This is a targeted fix for missing configuration, not a change to the
+// auth flow, routes, or business logic.
+if (!process.env.BETTER_AUTH_URL && RESOLVED_BASE_URL) {
+  process.env.BETTER_AUTH_URL = RESOLVED_BASE_URL
+}
+
+// Origins we accept auth requests from. Always include the resolved base URL's
+// origin so the app can authenticate against itself (sign-in, callbacks, RSC
+// session reads). Without this, CSRF origin validation rejects same-origin
+// requests and every sign-in fails.
+const TRUSTED_ORIGINS = (() => {
+  const list: string[] = []
+  const add = (value: string | undefined) => {
+    if (!value) return
+    try {
+      const origin = new URL(value).origin
+      if (origin && !list.includes(origin)) list.push(origin)
+    } catch {
+      /* ignore malformed url */
+    }
+  }
+  add(RESOLVED_BASE_URL)
+  // In development the app is reached via localhost and/or 127.0.0.1; accept
+  // both so auth works regardless of which the browser/devtools use.
+  if (process.env.NODE_ENV !== "production") {
+    add("http://localhost:3000")
+    add("http://127.0.0.1:3000")
+  }
+  add(process.env.V0_RUNTIME_URL)
+  add(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
+  add(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined,
+  )
+  return list
+})()
+
 const _auth = betterAuth({
   database: pool,
   secret: BETTER_AUTH_SECRET,
-  baseURL:
-    process.env.BETTER_AUTH_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.V0_RUNTIME_URL),
+  ...(RESOLVED_BASE_URL ? { baseURL: RESOLVED_BASE_URL } : {}),
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -89,13 +151,7 @@ const _auth = betterAuth({
       },
     }),
   ],
-  trustedOrigins: [
-    ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
-    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-    ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
-      : []),
-  ],
+  trustedOrigins: TRUSTED_ORIGINS,
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
