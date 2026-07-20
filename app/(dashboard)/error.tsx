@@ -22,9 +22,9 @@ export default function DashboardError({
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="bento-card relative mx-auto mt-12 max-w-md overflow-hidden px-8 py-16 text-center"
     >
-      <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--rose-glow), transparent 60%)' }} />
-      <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--rose-glow)' }}>
-        <AlertTriangle className="h-7 w-7" style={{ color: 'var(--rose)' }} />
+      <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--neg-glow), transparent 60%)' }} />
+      <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--neg-glow)' }}>
+        <AlertTriangle className="h-7 w-7" style={{ color: 'var(--neg)' }} />
       </div>
       <p className="meta">Something went wrong</p>
       <h1 className="heading mt-4">Dashboard error</h1>

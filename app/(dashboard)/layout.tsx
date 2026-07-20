@@ -17,18 +17,18 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       <DashboardSidebar />
-      <main className="relative ml-56 min-h-screen flex-1">
+      <main className="relative ml-24 min-h-screen flex-1">
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
           <div
-            className="absolute -top-[10%] right-[5%] h-[400px] w-[400px] opacity-30"
+            className="absolute -top-[10%] right-[5%] h-[400px] w-[400px] opacity-40"
             style={{
-              background: "radial-gradient(circle, var(--gold-glow-strong), transparent 70%)",
-              filter: "blur(80px)",
+              background: "radial-gradient(circle, var(--gold-glow-strong), transparent 60%)",
+              filter: "blur(90px)",
             }}
           />
         </div>
         <DashboardShell>
-          <div className="relative z-10 mx-auto max-w-7xl px-8 py-8 lg:px-10 lg:py-10">
+          <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-8 lg:px-10 lg:py-10">
             {children}
           </div>
         </DashboardShell>

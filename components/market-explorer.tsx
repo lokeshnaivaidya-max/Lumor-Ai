@@ -271,9 +271,9 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
                 key={r}
                 onClick={() => handleRegion(r)}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                  region === r ? "text-background" : "hover:text-foreground"
+                  region === r ? "" : "hover:text-[var(--text-primary)]"
                 }`}
-                style={region === r ? { background: "var(--text-primary)", color: "var(--text-inverse)" } : { color: "var(--text-tertiary)" }}
+                style={region === r ? { background: "var(--gold)", color: "#1a1407" } : { color: "var(--text-tertiary)" }}
               >
                 {r}
               </button>
@@ -286,10 +286,10 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
                 onClick={() => handleSelect({ symbol: w, name: w, exchange: "", type: "equity" })}
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
                   symbol === w
-                    ? "border-[var(--gold)] text-[var(--gold)]"
-                    : "hover:border-foreground/30 hover:text-foreground"
+                    ? "text-[var(--gold)]"
+                    : "hover:border-[var(--gold-line)] hover:text-[var(--text-primary)]"
                 }`}
-                style={symbol === w ? { background: "var(--gold-glow)" } : { borderColor: "var(--glass-border)", color: "var(--text-tertiary)" }}
+                style={symbol === w ? { background: "var(--gold-glow)", borderColor: "var(--gold-line)" } : { borderColor: "var(--line)", color: "var(--text-tertiary)" }}
               >
                 {w}
               </button>
@@ -299,7 +299,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       </div>
 
       {quoteError && !quote ? (
-        <div className="flex items-center gap-3 rounded-[32px] px-6 py-4 text-sm" style={{ border: "1px solid var(--rose-glow)", background: "rgba(201, 122, 122, 0.05)", color: "var(--rose)" }}>
+        <div className="flex items-center gap-3 rounded-[32px] px-6 py-4 text-sm" style={{ border: "1px solid var(--neg-glow)", background: "rgba(255, 107, 125, 0.05)", color: "var(--neg)" }}>
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>Unable to load quote data. Retrying…</span>
         </div>
@@ -311,10 +311,10 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
           <button
             key={r}
             onClick={() => setRange(r)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
-              range === r ? "text-background" : "hover:border-foreground/30 hover:text-foreground"
-            }`}
-            style={range === r ? { background: "var(--text-primary)", color: "var(--text-inverse)" } : { border: "1px solid var(--glass-border)", color: "var(--text-tertiary)" }}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
+                  range === r ? "" : "hover:border-[var(--gold-line)] hover:text-[var(--text-primary)]"
+                }`}
+                style={range === r ? { background: "var(--gold)", color: "#1a1407" } : { border: "1px solid var(--line)", color: "var(--text-tertiary)" }}
           >
             {r === "ytd" ? "YTD" : r === "max" ? "MAX" : r}
           </button>
@@ -324,7 +324,7 @@ export function MarketExplorer({ initialSymbol }: { initialSymbol: string }) {
       <BentoCard className="mt-4 min-h-80">
         {chartError && !candles.length ? (
           <div className="flex h-80 items-center justify-center gap-3 text-sm" style={{ color: "var(--text-tertiary)" }}>
-            <AlertCircle className="h-4 w-4 shrink-0" style={{ color: "var(--rose)" }} />
+            <AlertCircle className="h-4 w-4 shrink-0" style={{ color: "var(--neg)" }} />
             Chart data unavailable
           </div>
         ) : chartLoading && !candles.length ? <ChartSkeleton /> : <PriceChart candles={candles} positive={positive} indicators={indicators} />}
@@ -468,11 +468,11 @@ const QuoteHeader = memo(function QuoteHeader({
             )}
             <span
               className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]`}
-              style={quote?.marketState === "REGULAR" ? { background: "var(--emerald-glow)", color: "var(--emerald)" } : { background: "var(--glass-bg)", color: "var(--text-tertiary)" }}
+                style={quote?.marketState === "REGULAR" ? { background: "var(--pos-glow)", color: "var(--pos)" } : { background: "var(--panel-2)", color: "var(--text-tertiary)" }}
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${quote?.marketState === "REGULAR" ? "animate-pulse" : ""}`}
-                style={quote?.marketState === "REGULAR" ? { background: "var(--emerald)" } : { background: "var(--text-tertiary)" }}
+                style={quote?.marketState === "REGULAR" ? { background: "var(--pos)" } : { background: "var(--text-tertiary)" }}
               />
               {STATE_LABEL[quote?.marketState ?? "CLOSED"]}
             </span>
@@ -491,7 +491,7 @@ const QuoteHeader = memo(function QuoteHeader({
           {quote?.website && (
             <a href={quote.website} target="_blank" rel="noopener noreferrer"
               className="mt-0.5 inline-block max-w-md truncate text-xs transition-colors"
-              style={{ color: "var(--blue)" }}>
+              style={{ color: "var(--gold)" }}>
               {quote.website.replace(/^https?:\/\//, "")}
             </a>
           )}
@@ -578,26 +578,26 @@ const StatsGrid = memo(function StatsGrid({ quote, ccySym }: { quote: Quote | nu
 
 function IconFor({ label }: { label: string }) {
   const icons: Record<string, React.ReactNode> = {
-    "Currency": <DollarSign className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Market Status": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Exchange": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Previous Close": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Open": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Day High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Day Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Volume": <Layers className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Market Cap": <Hash className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "P/E (TTM)": <Percent className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "EPS (TTM)": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Dividend Yield": <Percent className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Beta": <Activity className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "52W Range": <TrendingUpDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "52W High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "52W Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Sector": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Industry": <Layers className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "CEO": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
-    "Updated": <Clock className="h-3.5 w-3.5" style={{ color: "var(--blue)" }} />,
+    "Currency": <DollarSign className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Market Status": <Activity className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Exchange": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Previous Close": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Open": <Activity className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Day High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Day Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Volume": <Layers className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Market Cap": <Hash className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "P/E (TTM)": <Percent className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "EPS (TTM)": <BarChart3 className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Dividend Yield": <Percent className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Beta": <Activity className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "52W Range": <TrendingUpDown className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "52W High": <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "52W Low": <TrendingDown className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Sector": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Industry": <Layers className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "CEO": <Building2 className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
+    "Updated": <Clock className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} />,
   }
   return <>{icons[label] ?? null}</>
 }

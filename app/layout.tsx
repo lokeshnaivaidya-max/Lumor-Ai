@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#f8f4ef",
+  themeColor: "#0a0a0c",
   width: "device-width",
   initialScale: 1,
 }
@@ -77,10 +77,10 @@ export default async function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )lumora-theme=([^;]+)/);var v=m?decodeURIComponent(m[1]):"light";var d=v==="dark"||(v==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`,
+            __html: `(function(){try{document.documentElement.classList.add("dark");}catch(e){}})();`,
           }}
         />
-        <ThemeProvider initial={theme as "dark" | "light" | "system" | undefined}>
+        <ThemeProvider initial="dark">
           <EntranceScreen />
           <AmbientBackground />
           <PageTransition>{children}</PageTransition>

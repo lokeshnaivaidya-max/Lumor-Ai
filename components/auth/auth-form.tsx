@@ -242,7 +242,7 @@ export function AuthForm({ mode, enabledProviders }: { mode: "sign-in" | "sign-u
                 exit={{ opacity: 0, y: -4 }}
                 className="alert alert--error"
               >
-                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--rose)" }} />
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--neg)" }} />
                 <span>{error}</span>
               </motion.div>
             )}

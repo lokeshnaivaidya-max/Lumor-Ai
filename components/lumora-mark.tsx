@@ -12,17 +12,17 @@ export function LumoraMark({ className = "h-8 w-8" }: { className?: string }) {
     >
       <defs>
         <linearGradient id="lumora-spine" x1="14" y1="4" x2="30" y2="44" gradientUnits="userSpaceOnUse">
-          <stop stopColor="oklch(0.92 0.02 250)" />
-          <stop offset="0.5" stopColor="oklch(0.7 0.06 250)" />
-          <stop offset="1" stopColor="oklch(0.52 0.05 255)" />
+          <stop stopColor="#f4d58b" />
+          <stop offset="0.5" stopColor="#e3b341" />
+          <stop offset="1" stopColor="#b8892a" />
         </linearGradient>
         <linearGradient id="lumora-foot" x1="14" y1="34" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-          <stop stopColor="oklch(0.66 0.05 252)" />
-          <stop offset="1" stopColor="oklch(0.44 0.04 258)" />
+          <stop stopColor="#e3b341" />
+          <stop offset="1" stopColor="#b8892a" />
         </linearGradient>
         <linearGradient id="lumora-facet" x1="24" y1="14" x2="32" y2="34" gradientUnits="userSpaceOnUse">
-          <stop stopColor="oklch(0.98 0.01 250)" stopOpacity="0.95" />
-          <stop offset="1" stopColor="oklch(0.9 0.02 250)" stopOpacity="0.4" />
+          <stop stopColor="#fff3d4" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#f4d58b" stopOpacity="0.4" />
         </linearGradient>
       </defs>
 

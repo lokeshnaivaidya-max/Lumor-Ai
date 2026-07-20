@@ -33,7 +33,7 @@ export function StatsSection() {
                 <p className="stat-label">{s.label}</p>
               </div>
               {i < stats.length - 1 && (
-                <div className="h-12 w-px" style={{ background: "var(--glass-border)" }} />
+                <div className="h-12 w-px" style={{ background: "var(--line)" }} />
               )}
             </div>
           ))}

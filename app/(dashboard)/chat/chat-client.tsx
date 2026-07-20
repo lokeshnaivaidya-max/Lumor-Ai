@@ -191,7 +191,7 @@ export function ChatClient() {
                   <MessageSquare className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} />
                   <span className="truncate">{c.title}</span>
                 </button>
-                <button onClick={() => handleDelete(c.id)} className="rounded-md p-1 opacity-0 transition-opacity hover:text-[var(--rose)] group-hover:opacity-100" style={{ color: "var(--text-tertiary)" }}>
+                <button onClick={() => handleDelete(c.id)} className="rounded-md p-1 opacity-0 transition-opacity hover:text-[var(--neg)] group-hover:opacity-100" style={{ color: "var(--text-tertiary)" }}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -258,7 +258,7 @@ export function ChatClient() {
           <div ref={endRef} />
         </div>
 
-        {error && <p className="meta px-5 pb-1" style={{ color: "var(--rose)" }}>{error}</p>}
+        {error && <p className="meta px-5 pb-1" style={{ color: "var(--neg)" }}>{error}</p>}
 
         <div className="border-t p-3" style={{ borderColor: "var(--glass-border)" }}>
           <p className="meta mb-2 flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>

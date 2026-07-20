@@ -5,6 +5,7 @@ import { motion } from "motion/react"
 import { ThemeToggle } from "./theme-toggle"
 import { AccountMenu } from "./auth/account-menu"
 import { useSession } from "@/lib/auth-client"
+import { LumoraMark } from "./lumora-mark"
 
 const LINKS = [
   { label: "Markets", href: "/markets" },
@@ -22,31 +23,25 @@ export function LandingNav() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
     >
-      <nav className="glass-nav flex items-center gap-4 rounded-full px-2 py-1.5">
+      <nav className="glass-nav flex items-center gap-3 rounded-full px-2.5 py-2">
         <Link href="/" className="flex items-center gap-2 px-3 py-1" aria-label="Lumora home">
-          <span className="font-serif text-sm italic" style={{ color: "var(--text-primary)" }}>Lumora</span>
+          <LumoraMark className="h-6 w-6" />
+          <span className="font-serif text-base" style={{ color: "var(--text-primary)" }}>Lumora</span>
         </Link>
-        <div className="flex items-center gap-0.5">
+        <div className="hidden items-center gap-0.5 md:flex">
           {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="nav-link">
-              {link.label}
-            </Link>
+            <Link key={link.href} href={link.href} className="nav-link">{link.label}</Link>
           ))}
         </div>
-        <div className="flex items-center gap-1">
-          <ThemeToggle />
+        <div className="flex items-center gap-1.5">
           {isPending ? (
             <div className="h-9 w-9 animate-pulse rounded-full bg-white/5" />
           ) : session?.user ? (
             <AccountMenu />
           ) : (
             <>
-              <Link href="/sign-in" className="btn btn--ghost btn--sm">
-                Sign In
-              </Link>
-              <Link href="/sign-up" className="btn btn--gold btn--sm">
-                Sign Up
-              </Link>
+              <Link href="/sign-in" className="btn btn--ghost btn--sm">Sign In</Link>
+              <Link href="/sign-up" className="btn btn--gold btn--sm">Sign Up</Link>
             </>
           )}
         </div>

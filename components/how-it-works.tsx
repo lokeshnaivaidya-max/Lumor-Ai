@@ -7,56 +7,43 @@ const STEPS = [
     icon: Search,
     title: "Search any market",
     desc: "Type a ticker or company name. Lumora pulls live data from 60+ exchanges instantly.",
-    color: "#7a9ec4",
+    color: "var(--info)",
   },
   {
     icon: LayoutDashboard,
     title: "Review the data",
     desc: "See prices, fundamentals, news — all unified in one clean dashboard.",
-    color: "#c4956a",
+    color: "var(--gold)",
   },
   {
     icon: Lightbulb,
     title: "Understand the story",
     desc: "Lumora explains what the data means in plain language. No jargon, no noise.",
-    color: "#4a9e7a",
+    color: "var(--pos)",
   },
 ]
 
 export function HowItWorks() {
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-5xl">
       <p className="subheading text-center">How it works</p>
       <h2 className="title mt-3 text-center">Three steps to clarity</h2>
-      <p className="body mt-3 text-center mx-auto">
+      <p className="body mt-3 mx-auto text-center">
         From ticker to insight in seconds. No terminal experience needed.
       </p>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-6">
+      <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-3">
         {STEPS.map((step, i) => (
-          <div key={step.title} className="glass-card relative flex flex-col items-center rounded-2xl p-8 text-center">
-            {i < STEPS.length - 1 && (
-              <div className="absolute left-[60%] top-8 hidden h-px w-[80%] md:block" style={{
-                background: "linear-gradient(90deg, var(--gold-glow), transparent)",
-              }} />
-            )}
-
-            <div className="flex h-7 w-7 items-center justify-center rounded-full" style={{
-              background: "rgba(196,149,106,0.08)",
-              border: "1px solid rgba(196,149,106,0.12)",
-            }}>
-              <span className="text-[10px] font-semibold" style={{ color: "var(--gold)" }}>{i + 1}</span>
+          <div key={step.title} className="bento-card relative flex flex-col p-7">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-sm font-semibold text-[var(--gold)]">0{i + 1}</span>
+              <span className="h-px flex-1 ml-4" style={{ background: "linear-gradient(90deg, var(--gold-line), transparent)" }} />
             </div>
-
-            <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-xl" style={{
-              background: `${step.color}10`,
-              border: `1px solid ${step.color}15`,
-            }}>
+            <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
               <step.icon className="h-5 w-5" style={{ color: step.color }} />
             </div>
-
-            <h3 className="heading-sm mt-4">{step.title}</h3>
-            <p className="body mt-2 text-center">{step.desc}</p>
+            <h3 className="heading-sm mt-5">{step.title}</h3>
+            <p className="body mt-2">{step.desc}</p>
           </div>
         ))}
       </div>
