@@ -660,12 +660,39 @@ export function TradePlannerClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 bento-card p-12 text-center"
+              className="flex h-full min-h-[400px] flex-col items-center justify-center gap-6 bento-card p-10 text-center"
             >
-              <h3 className="heading">Ready to Plan</h3>
-              <p className="body max-w-sm text-muted-foreground">
-                Fill in your trade details on the left and click Analyze to get AI-powered insights on your trade plan.
-              </p>
+              <div>
+                <h3 className="heading">Ready to Plan</h3>
+                <p className="body mt-2 max-w-sm text-muted-foreground">
+                  Fill in your trade details on the left and click Analyze to get AI-powered insights on your trade plan.
+                </p>
+              </div>
+
+              <div className="grid w-full max-w-xl gap-3 sm:grid-cols-3">
+                {[
+                  { t: "Swing Trade", d: "Hold 1–3 weeks, balanced risk", tag: "1 month" },
+                  { t: "Intraday", d: "Same-day exit, tight stops", tag: "1 day" },
+                  { t: "Position", d: "Long horizon, low frequency", tag: "1 year" },
+                ].map((ex) => (
+                  <button
+                    key={ex.t}
+                    onClick={() => { setHoldingPeriod(ex.tag as any); setRiskLevel("Medium") }}
+                    className="rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1"
+                    style={{ border: "1px solid var(--line)", background: "var(--surface-alt)" }}
+                  >
+                    <p className="text-sm font-medium text-foreground">{ex.t}</p>
+                    <p className="meta mt-1">{ex.d}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-full max-w-xl rounded-2xl p-4 text-left" style={{ border: "1px solid var(--gold-line)", background: "var(--gold-glow)" }}>
+                <p className="meta mb-1.5 text-gold">Try a natural-language plan</p>
+                <code className="font-mono text-xs text-foreground">
+                  &ldquo;Buy RELIANCE.NS at ₹2,450, target ₹2,600, stop ₹2,380, budget ₹1,00,000&rdquo;
+                </code>
+              </div>
             </motion.div>
           )}
 

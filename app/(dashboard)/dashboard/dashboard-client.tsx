@@ -4,10 +4,11 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import {
   TrendingUp, TrendingDown, Wallet, BarChart3, ArrowUpRight, ArrowDownRight,
-  Plus, Bell, LineChart, ArrowRight, Star, Sparkles, Activity, Search,
+  Plus, Bell, LineChart, ArrowRight, Star, Activity, Search,
   Eye, Layers,
 } from "lucide-react"
 import type { PortfolioSummary, WatchlistView } from "@/lib/portfolio"
+import { MarketFocus } from "./market-focus"
 
 type NotifView = { id: number; type: string; title: string; body: string | null; read: boolean; createdAt: string }
 type AnalysisView = { id: number; symbol: string; kind: string; summary: string | null; confidence: number | null; direction: string; createdAt: string }
@@ -118,7 +119,7 @@ function InsightsPanel({ analyses }: { analyses: AnalysisView[] }) {
         </div>
         <p className="heading-sm">No AI insights yet</p>
         <p className="body-sm mt-2 mb-6 max-w-xs">Run analysis on any stock to surface signals here.</p>
-        <Link href="/markets" className="btn btn--gold"><Sparkles className="h-3.5 w-3.5" /> Analyze a stock</Link>
+        <Link href="/markets" className="btn btn--gold"><BarChart3 className="h-3.5 w-3.5" /> Analyze a stock</Link>
       </div>
     )
   }
@@ -271,7 +272,7 @@ export function DashboardClient({
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link href="/markets" className="btn btn--gold"><LineChart className="h-3.5 w-3.5" /> Explore markets</Link>
-              <Link href="/chat" className="btn"><Sparkles className="h-3.5 w-3.5" /> Ask AI</Link>
+              <Link href="/chat" className="btn"><Activity className="h-3.5 w-3.5" /> Ask AI</Link>
             </div>
           </div>
 
@@ -310,6 +311,9 @@ export function DashboardClient({
         <Kpi label="Watching" value={String(watchlist.length)} delay={0.15} />
         <Kpi label="AI Analyses" value={String(analyses.length)} delay={0.2} />
       </div>
+
+      {/* MARKETS IN FOCUS — stock summary, chart, AI analysis, news */}
+      <MarketFocus initialSymbol={watchlist[0]?.symbol || "AAPL"} />
 
       {/* ASYMMETRIC BENTO — 6-col grid */}
       <div className="bento-grid bento-grid--dashboard">

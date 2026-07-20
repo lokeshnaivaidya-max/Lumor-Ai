@@ -22,7 +22,6 @@ import {
   UserCheck,
   ChevronDown,
   RefreshCw,
-  Sparkles,
 } from "lucide-react"
 
 const HORIZONS = [
@@ -368,7 +367,7 @@ export function AiAnalysis({
             className="group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-gold via-amber-400 to-gold px-5 py-2 text-xs font-bold text-black shadow-[0_0_20px_rgba(212,175,55,0.45)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(212,175,55,0.65)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="absolute inset-0 -translate-x-full bg-white/25 transition-transform duration-700 group-hover:translate-x-full" />
-            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <TrendingUp className="h-3.5 w-3.5" />}
             {loading ? "Analyzing…" : "Analyze with AI"}
           </motion.button>
           {loading && (

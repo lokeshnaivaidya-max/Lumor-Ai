@@ -1,11 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import {
   Home, LayoutDashboard, LineChart, Briefcase, Eye, BarChart3,
-  MessageSquare, Bell, User, LogOut,
+  MessageSquare, Bell, User, LogOut, ChevronLeft,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
@@ -23,15 +24,10 @@ const NAV_ITEMS = [
   { href: "/profile", label: "Profile", icon: User },
 ]
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.035, delayChildren: 0.15 } as any },
-}
-const itemAnim = { hidden: { opacity: 0, x: -12 }, show: { opacity: 1, x: 0 } }
-
 export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [open, setOpen] = useState(false)
 
   async function handleLogout() {
     await authClient.signOut()
@@ -43,54 +39,86 @@ export function DashboardSidebar() {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed left-5 top-5 z-40 flex h-[calc(100vh-2.5rem)] w-[76px] flex-col items-center rounded-3xl glass-sidebar"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      className="fixed left-5 top-5 z-40 flex h-[calc(100vh-2.5rem)] flex-col rounded-3xl glass-sidebar"
+      style={{ width: open ? 232 : 76, transition: "width 0.4s var(--ease-out)" }}
     >
-      <div className="flex h-full w-full flex-col items-center py-5">
-        <Link href="/" className="mb-8 flex flex-col items-center gap-1" aria-label="Lumora home">
-          <LumoraMark className="h-8 w-8" />
-          <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--gold)]">L</span>
-        </Link>
+      <div className="flex h-full w-full flex-col py-5">
+        <div className={`flex items-center gap-3 px-4 ${open ? "" : "justify-center"}`}>
+          <Link href="/" className="flex items-center gap-2" aria-label="Lumora home">
+            <LumoraMark className="h-8 w-8 shrink-0" />
+            <AnimatePresence>
+              {open && (
+                <motion.span
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  className="font-serif text-lg tracking-tight"
+                >
+                  Lumora
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+          {open && (
+            <button
+              onClick={() => setOpen(false)}
+              className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
+              aria-label="Collapse"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-        <motion.nav
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="flex flex-1 flex-col items-center gap-1.5"
-        >
+        <nav className="mt-6 flex flex-1 flex-col gap-1 px-3">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href
             return (
-              <motion.div key={item.href} variants={itemAnim} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="relative w-full flex justify-center">
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.label}
+                className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-300 ${
+                  isActive
+                    ? "bg-[var(--gold-glow)] text-[var(--gold)]"
+                    : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
+                }`}
+              >
                 {isActive && (
                   <motion.span
                     layoutId="rail-active"
-                    className="absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-full"
-                    style={{ background: "var(--gold)", boxShadow: "0 0 12px 2px var(--gold-glow-strong)" }}
+                    className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full"
+                    style={{ background: "var(--gold)" }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   />
                 )}
-                <Link
-                  href={item.href}
-                  title={item.label}
-                  className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300 ${
-                    isActive
-                      ? "bg-[var(--gold-glow)] text-[var(--gold)]"
-                      : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]"
-                  }`}
-                >
-                  <item.icon className="h-[18px] w-[18px] transition-transform duration-300 group-hover:scale-110" />
-                </Link>
-              </motion.div>
+                <item.icon className="h-[18px] w-[18px] shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                <AnimatePresence>
+                  {open && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      className="text-sm font-medium whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Link>
             )
           })}
-        </motion.nav>
+        </nav>
 
         <button
           onClick={handleLogout}
           title="Sign out"
-          className="mt-2 flex h-11 w-11 items-center justify-center rounded-2xl text-[var(--text-tertiary)] transition-all duration-300 hover:bg-[var(--neg-glow)] hover:text-[var(--neg)]"
+          className={`mt-2 mx-3 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[var(--text-tertiary)] transition-all duration-300 hover:bg-[var(--neg-glow)] hover:text-[var(--neg)] ${open ? "" : "justify-center"}`}
         >
-          <LogOut className="h-[18px] w-[18px]" />
+          <LogOut className="h-[18px] w-[18px] shrink-0" />
+          {open && <span className="text-sm font-medium whitespace-nowrap">Sign out</span>}
         </button>
       </div>
     </motion.aside>

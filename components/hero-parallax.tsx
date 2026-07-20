@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "motion/react"
-import { Globe, Database, Shield, TrendingUp, ArrowRight, Sparkles } from "lucide-react"
+import { Globe, Database, Shield, TrendingUp, ArrowRight } from "lucide-react"
 
 const FEATURES = [
   { icon: Globe, label: "60+ Global Exchanges", desc: "One unified real-time feed", color: "var(--info)" },
@@ -27,7 +27,6 @@ export function HeroParallax() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="mb-6 flex items-center gap-3"
             >
-              <span className="dot-gold" />
               <span className="subheading">AI-Powered Market Intelligence</span>
             </motion.div>
 
@@ -35,7 +34,7 @@ export function HeroParallax() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
-              className="display hero-title leading-[0.85]"
+              className="display leading-[0.85]"
             >
               The market,
               <br />
@@ -89,7 +88,7 @@ export function HeroParallax() {
                 className="mt-1 flex items-center justify-between rounded-2xl border border-[var(--gold-line)] bg-[var(--gold-glow)] px-5 py-4"
               >
                 <span className="flex items-center gap-2 text-sm font-medium text-[var(--gold-light)]">
-                  <Sparkles className="h-4 w-4" /> Ask the AI anything
+                  Ask the AI anything
                 </span>
                 <Link href="/chat" className="link-premium font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--gold)]">Open chat <ArrowRight className="inline h-3 w-3" /></Link>
               </motion.div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import ReactMarkdown from "react-markdown"
-import { Send, Plus, Trash2, User, Loader2, MessageSquare, Search, X, Paperclip, Sparkles, BarChart3, TrendingUp, Newspaper, Activity } from "lucide-react"
+import { Send, Plus, Trash2, User, Loader2, MessageSquare, Search, X, Paperclip, BarChart3, TrendingUp, Newspaper, Activity } from "lucide-react"
 import { getConversations, getMessages, createConversation, deleteConversation } from "@/app/actions/chat"
 
 type Conversation = { id: number; title: string; updatedAt: string; preview?: string | null; messageCount?: number }
@@ -329,7 +329,7 @@ export function ChatClient() {
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 lg:px-5" style={{ borderColor: "var(--glass-border)" }}>
           <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
-            <Sparkles className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="body font-medium">Lumora AI</p>
@@ -429,7 +429,7 @@ export function ChatClient() {
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--gold-glow)", color: "var(--gold)" }}>
-                <Sparkles className="h-6 w-6" />
+                <MessageSquare className="h-6 w-6" />
               </div>
               <p className="body">Ask Lumora about the markets</p>
               <p className="body mt-1" style={{ color: "var(--text-tertiary)" }}>Get grounded insights on stocks, strategies, and investing.</p>

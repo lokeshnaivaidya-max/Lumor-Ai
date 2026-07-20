@@ -57,9 +57,12 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0c",
   width: "device-width",
   initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0d0f" },
+  ],
 }
 
 export default async function RootLayout({
@@ -67,7 +70,9 @@ export default async function RootLayout({
 }: {
   children: ReactNode
 }) {
-  const theme = (await cookies()).get("lumora-theme")?.value ?? "light"
+  const rawTheme = (await cookies()).get("lumora-theme")?.value ?? "system"
+  const theme: "dark" | "light" | "system" =
+    rawTheme === "dark" || rawTheme === "light" || rawTheme === "system" ? rawTheme : "system"
   return (
     <html
       lang="en"
@@ -77,10 +82,10 @@ export default async function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{document.documentElement.classList.add("dark");}catch(e){}})();`,
+            __html: `(function(){try{var t=(document.cookie.match(/(?:^|; )lumora-theme=([^;]+)/)||[])[1]||"system";var d=window.matchMedia("(prefers-color-scheme: dark)").matches;if(t==="dark"||(t==="system"&&d)){document.documentElement.classList.add("dark");document.documentElement.classList.add("dark-root");}else{document.documentElement.classList.add("light-root");}}catch(e){}})();`,
           }}
         />
-        <ThemeProvider initial="dark">
+        <ThemeProvider initial={theme === "system" ? "system" : theme}>
           <EntranceScreen />
           <AmbientBackground />
           <PageTransition>{children}</PageTransition>
