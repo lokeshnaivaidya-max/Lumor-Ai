@@ -681,7 +681,7 @@ export function ProfileClient({ user }: {
                       <span className="chip chip-gold whitespace-nowrap">Verified</span>
                     </div>
                     <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground sm:justify-start"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{user.email}</span></div>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString()}</span></div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })}</span></div>
                   </div>
                 </div>
               </div>

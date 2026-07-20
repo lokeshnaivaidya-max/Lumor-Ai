@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import {
   Activity, Star, Briefcase, LineChart, MessageSquare, Bell,
@@ -17,9 +18,19 @@ const ICONS: Record<string, LucideIcon> = {
   compare: GitCompare, "trade-planner": TrendingUp,
 }
 
-function timeAgo(iso: string): string {
+function absoluteDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
+}
+
+function timeAgo(iso: string, now: number | null): string {
+  if (now == null) return absoluteDate(iso)
   const then = new Date(iso).getTime()
-  const diff = Date.now() - then
+  const diff = now - then
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return "just now"
   if (mins < 60) return `${mins}m ago`
@@ -27,10 +38,20 @@ function timeAgo(iso: string): string {
   if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
   if (days < 7) return `${days}d ago`
-  return new Date(iso).toLocaleDateString()
+  return absoluteDate(iso)
 }
 
 export function ActivityClient({ items }: { items: ActivityItem[] }) {
+  // Relative timestamps depend on the current time, which differs between the
+  // server render and the client hydration (and would cause a hydration
+  // mismatch). We only compute the relative "ago" string after mount; the
+  // server and first client render both use the stable absolute UTC date.
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(id)
+  }, [])
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <hr className="divider divider--gold" />
@@ -75,7 +96,8 @@ export function ActivityClient({ items }: { items: ActivityItem[] }) {
                     <p className="truncate text-sm font-medium text-[var(--text-primary)]">{item.title}</p>
                     <p className="meta mt-0.5">
                       {item.ticker ? <span className="text-[var(--gold)]">{item.ticker} · </span> : null}
-                      {timeAgo(item.timestamp)}
+                       {timeAgo(item.timestamp, now)}
+
                     </p>
                   </div>
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--line-strong)]" />

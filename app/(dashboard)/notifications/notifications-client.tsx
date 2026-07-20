@@ -119,7 +119,7 @@ export function NotificationsClient({ notifications: initial }: { notifications:
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-[var(--text-primary)]">{n.title}</p>
                     {n.body && <p className="body mt-0.5">{n.body}</p>}
-                    <p className="meta mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                    <p className="meta mt-1">{new Date(n.createdAt).toLocaleString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                   </div>
                   <div className="flex items-center gap-1 opacity-60 transition-opacity duration-200 hover:opacity-100">
                     {!n.read && (

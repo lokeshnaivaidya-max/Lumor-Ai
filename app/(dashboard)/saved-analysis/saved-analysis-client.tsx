@@ -154,7 +154,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
                   )}
                 </div>
                 <p className="body mt-3 line-clamp-3">{a.summary || "Analysis saved."}</p>
-                <p className="meta mt-3">{new Date(a.createdAt).toLocaleDateString()}</p>
+                <p className="meta mt-3">{new Date(a.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })}</p>
               </motion.div>
             ))}
           </motion.div>

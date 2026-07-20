@@ -852,10 +852,11 @@ function ProbBar({ label, value, tone, icon }: { label: string; value: number; t
 
 function CockpitMetric({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: "blue" | "emerald" | "rose" | "violet" | "gold" | "cyan" }) {
   const dotMap = { blue: "bg-info", emerald: "bg-emerald", rose: "bg-rose", violet: "bg-violet", gold: "bg-gold", cyan: "bg-cyan" }
+  const display = value && value.trim() ? value : "Not available"
   return (
     <motion.div whileHover={{ y: -3 }} className="glass-card flex flex-col items-center justify-center gap-1 rounded-[28px] p-3 text-center transition-all duration-300 hover:border-[var(--gold-line)]">
       <span className="text-muted-foreground/70">{icon}</span>
-      <span className="font-mono text-sm font-semibold text-foreground tabular-nums">{value}</span>
+      <span className={`font-mono text-sm font-semibold tabular-nums ${value && value.trim() ? "text-foreground" : "text-muted-foreground/50"}`}>{display}</span>
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
         <span className={`inline-block h-1 w-1 rounded-full ${dotMap[accent]}`} />
         {label}
@@ -923,9 +924,9 @@ function TimelineLevel({ icon, label, value, note, accent, side }: { icon: React
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
-          className="font-mono text-sm font-semibold text-foreground tabular-nums"
+          className={`font-mono text-sm font-semibold tabular-nums ${value && value.trim() ? "text-foreground" : "text-muted-foreground/50"}`}
         >
-          {value}
+          {value && value.trim() ? value : "Not available"}
         </motion.span>
       </div>
       <p className="mt-1.5 text-sm leading-relaxed text-foreground/75">{note}</p>

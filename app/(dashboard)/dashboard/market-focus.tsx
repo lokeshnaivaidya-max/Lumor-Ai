@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useId } from "react"
 import { motion } from "motion/react"
 import { TrendingUp, TrendingDown, Search, Newspaper, BarChart3, X, ArrowRight } from "lucide-react"
 import { Counter } from "@/components/reveal"
@@ -28,7 +28,7 @@ function StockChart({ candles, color }: { candles: Candle[]; color: string }) {
   if (!path) return <div className="flex h-[180px] items-center justify-center text-xs text-[var(--text-tertiary)]">No chart data</div>
 
   const area = `M0,180 L${path.replace(/^M/, "")} L600,180 Z`
-  const id = "cg-" + Math.random().toString(36).slice(2, 8)
+  const id = "cg-" + useId().replace(/[^a-zA-Z0-9]/g, "")
 
   const lastPt = useMemo(() => {
     if (!path) return null
