@@ -102,35 +102,40 @@ export async function POST(req: Request) {
   // Resolve or create the conversation.
   let conversationId = body.conversationId
   let isNewConversation = false
-  if (!conversationId) {
-    const [conv] = await db
-      .insert(chatConversation)
-      .values({ userId, title: message.slice(0, 60) || "New chat" })
-      .returning()
-    conversationId = conv.id
-    isNewConversation = true
-  } else {
-    const conv = await db
-      .select({ id: chatConversation.id })
-      .from(chatConversation)
-      .where(and(eq(chatConversation.id, conversationId), eq(chatConversation.userId, userId)))
-      .limit(1)
-    if (!conv.length) {
-      return Response.json({ error: "Conversation not found." }, { status: 404 })
+  try {
+    if (!conversationId) {
+      const [conv] = await db
+        .insert(chatConversation)
+        .values({ userId, title: message.slice(0, 60) || "New chat" })
+        .returning()
+      conversationId = conv.id
+      isNewConversation = true
+    } else {
+      const conv = await db
+        .select({ id: chatConversation.id })
+        .from(chatConversation)
+        .where(and(eq(chatConversation.id, conversationId), eq(chatConversation.userId, userId)))
+        .limit(1)
+      if (!conv.length) {
+        return Response.json({ error: "Conversation not found." }, { status: 404 })
+      }
     }
-  }
 
-  // Persist the user's message.
-  await db.insert(chatMessage).values({
-    conversationId,
-    role: "user",
-    content: message,
-  })
+    // Persist the user's message.
+    await db.insert(chatMessage).values({
+      conversationId,
+      role: "user",
+      content: message,
+    })
 
-  // Log a single "asked AI" activity per conversation (no duplicates).
-  if (isNewConversation) {
-    const preview = message.length > 60 ? message.slice(0, 60).trimEnd() + "…" : message
-    logActivity({ type: "chat", title: `Asked Lumora AI: ${preview}`, href: "/chat" }).catch(() => {})
+    // Log a single "asked AI" activity per conversation (no duplicates).
+    if (isNewConversation) {
+      const preview = message.length > 60 ? message.slice(0, 60).trimEnd() + "…" : message
+      logActivity({ type: "chat", title: `Asked Lumora AI: ${preview}`, href: "/chat" }).catch(() => {})
+    }
+  } catch (err) {
+    console.error("[Chat] conversation setup failed", err)
+    return Response.json({ error: "Could not start the chat. Please try again." }, { status: 500 })
   }
 
   // Build the model context: prior history (without the just-sent message) + the new user turn.

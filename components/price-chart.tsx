@@ -87,8 +87,12 @@ export function PriceChart({
       const y = padY + h - ((c.c - mn) / rng) * h
       return { x, y }
     })
-    const pt = p.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ")
-    const ar = `${pt} L ${p[p.length - 1]?.x.toFixed(2)} ${mainHeight - padY} L ${p[0]?.x.toFixed(2)} ${mainHeight - padY} Z`
+    const pt = p.length
+      ? p.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ")
+      : ""
+    const ar = p.length
+      ? `${pt} L ${p[p.length - 1].x.toFixed(2)} ${mainHeight - padY} L ${p[0].x.toFixed(2)} ${mainHeight - padY} Z`
+      : ""
     const gl = [0.2, 0.35, 0.5, 0.65, 0.8].map((g) => ({
       y: mainHeight * g,
       label: (mx - (mx - mn) * g).toFixed(2),
