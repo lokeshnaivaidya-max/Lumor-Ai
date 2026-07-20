@@ -7,6 +7,7 @@ import {
   Plus, Bell, LineChart, ArrowRight, Star, Activity, Search,
   Eye, Layers,
 } from "lucide-react"
+import { Counter } from "@/components/reveal"
 import type { PortfolioSummary, WatchlistView } from "@/lib/portfolio"
 import { MarketFocus } from "./market-focus"
 
@@ -17,19 +18,32 @@ type IndexView = { symbol: string; name: string; price: number; changePercent: n
 function Kpi({ label, value, change, trend, delay }: {
   label: string; value: string; change?: string; trend?: "up" | "down"; delay?: number
 }) {
+  const numeric = value === "—" ? null : Number(value.replace(/[^0-9.\-]/g, ""))
+  const prefix = value.startsWith("$") ? "$" : ""
+  const hasPercent = value.includes("%")
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay }}
-      className="bento-card flex flex-col justify-between p-6"
+      className="bento-card sweep flex flex-col justify-between p-6"
     >
       <div className="flex items-center justify-between">
         <span className="meta">{label}</span>
       </div>
       <div className="mt-4">
         <p className={`stat-number ${trend === "up" ? "text-[var(--pos)]" : trend === "down" ? "text-[var(--neg)]" : "text-[var(--text-primary)]"}`}>
-          {value}
+          {numeric === null ? (
+            "—"
+          ) : (
+            <Counter
+              value={numeric}
+              decimals={hasPercent ? 2 : 0}
+              prefix={prefix}
+              suffix={hasPercent ? "%" : ""}
+              delay={delay}
+            />
+          )}
         </p>
         {change && (
           <p className={`mt-1.5 flex items-center gap-1 font-mono text-xs ${trend === "up" ? "text-[var(--pos)]" : trend === "down" ? "text-[var(--neg)]" : "text-[var(--text-tertiary)]"}`}>
@@ -82,6 +96,7 @@ function WatchlistPanel({ items }: { items: WatchlistView[] }) {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 + i * 0.05 }}
+              whileHover={{ y: -2 }}
               className="group flex items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-300 hover:bg-[var(--panel-2)] hover:pl-5"
             >
               <div className="flex items-center gap-3">
@@ -133,6 +148,7 @@ function InsightsPanel({ analyses }: { analyses: AnalysisView[] }) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.25 + i * 0.05 }}
+            whileHover={{ y: -2 }}
             className="group rounded-xl px-3 py-2.5 transition-all duration-300 hover:bg-[var(--panel-2)] hover:pl-5"
           >
             <div className="flex items-center gap-3">
@@ -181,6 +197,7 @@ function ActivityPanel({ notifications }: { notifications: NotifView[] }) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.3 + i * 0.05 }}
+            whileHover={{ y: -2 }}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-300 hover:bg-[var(--panel-2)]"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--gold-glow)] text-[var(--gold)]">
@@ -215,7 +232,7 @@ function IndexTicker({ indices }: { indices: IndexView[] }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 + i * 0.06 }}
-            className="flex shrink-0 items-center gap-3"
+            className="flex shrink-0 items-center gap-3 rounded-xl px-2 py-1 transition-colors duration-300 hover:bg-[var(--panel-2)]"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--panel-2)]">
               <Layers className="h-4 w-4 text-[var(--gold)]" />
@@ -281,7 +298,7 @@ export function DashboardClient({
             <p className="meta">Portfolio Value</p>
             <p className="stat-number mt-2 text-[clamp(2.5rem,5vw,3.6rem)] text-[var(--gold)]">
               {hasPortfolio
-                ? `$${portfolio.value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                ? <Counter value={portfolio.value} decimals={2} prefix="$" delay={0.2} />
                 : "—"}
             </p>
             <p className={`mt-2 flex items-center justify-end gap-1.5 font-mono text-sm ${hasPortfolio ? (portfolio.returnsPercent >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]") : "text-[var(--text-tertiary)]"}`}>

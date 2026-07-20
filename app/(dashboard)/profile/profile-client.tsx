@@ -69,7 +69,7 @@ function SaveButton({ onSave, busy, disabled, isDirty, label = "Save changes" }:
       console.log("[SAVE CLICK]", { busy, disabled: isDisabled, isDirty })
       onSave()
     }} disabled={isDisabled} whileHover={{ scale: isDisabled ? 1 : 1.03 }} whileTap={{ scale: isDisabled ? 1 : 0.97 }}
-      className="lm-btn lm-btn--gold flex items-center gap-2 px-5 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">
+      className="lm-btn lm-btn--gold sweep flex items-center gap-2 px-5 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
       {busy ? "Saving…" : label}
     </motion.button>
@@ -78,7 +78,7 @@ function SaveButton({ onSave, busy, disabled, isDirty, label = "Save changes" }:
 
 function Field({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <div className="field-ring group">
+    <div className="field-ring group min-w-0">
       <label className="meta mb-1.5 flex items-center gap-1.5">
         <Icon className="h-3 w-3 text-gold/70" />{label}
       </label>
@@ -227,8 +227,8 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
       {image ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative shrink-0">
-            <div className="h-20 w-20 overflow-hidden rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-[2px] shadow-lg">
-              <img src={image} alt="" className="h-full w-full rounded-[14px] object-cover" />
+            <div className="sweep h-20 w-20 overflow-hidden rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-[2px] shadow-lg transition-shadow hover:shadow-[0_0_18px_var(--gold)/0.35]">
+              <img src={image} alt="" className="h-full w-full rounded-[14px] object-cover ring-2 ring-transparent transition-all hover:ring-gold/40" />
             </div>
             {progress !== null && (
               <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
@@ -239,10 +239,10 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
           <div className="min-w-0 flex-1">
             <p className="meta mb-2">Photo selected</p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={openPicker} className="lm-btn lm-btn-soft flex items-center gap-1.5 px-3 py-2 text-xs">
+              <button type="button" onClick={openPicker} className="lm-btn lm-btn-soft sweep flex items-center gap-1.5 px-3 py-2 text-xs">
                 <Upload className="h-3.5 w-3.5" />Replace
               </button>
-              <button type="button" onClick={() => { onChange(""); setError(null) }} className="lm-btn lm-btn-ghost flex items-center gap-1.5 px-3 py-2 text-xs text-neg">
+              <button type="button" onClick={() => { onChange(""); setError(null) }} className="lm-btn lm-btn-ghost sweep flex items-center gap-1.5 px-3 py-2 text-xs text-neg">
                 <X className="h-3.5 w-3.5" />Remove
               </button>
             </div>
@@ -254,7 +254,7 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
           onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-all duration-200 ${dragOver ? "border-[var(--gold)] bg-gold/[0.06]" : "border-[var(--line-strong)] bg-[var(--surface)] hover:border-[var(--gold)] hover:bg-gold/[0.04]"}`}
+          className={`sweep flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-all duration-200 ${dragOver ? "border-[var(--gold)] bg-gold/[0.06]" : "border-[var(--line-strong)] bg-[var(--surface)] hover:border-[var(--gold)] hover:bg-gold/[0.04]"}`}
         >
           <div className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors ${dragOver ? "bg-gold/15 text-gold" : "bg-foreground/[0.06] text-muted-foreground"}`}>
             <Upload className="h-5 w-5" />
@@ -285,7 +285,8 @@ function AvatarUpload({ image, onChange }: { image: string; onChange: (v: string
         )}
       </AnimatePresence>
 
-      {error && <p className="mt-2 text-xs text-neg">{error}</p>}
+      {error && <p className="mt-2 flex items-center gap-1.5 text-xs text-neg"><AlertTriangle className="h-3 w-3 shrink-0" />{error}</p>}
+      {!image && !error && <p className="mt-2 text-[10px] text-muted-foreground/50">Tip: square images look best. You&apos;ll need to click Save changes to keep your new photo.</p>}
     </div>
   )
 }
@@ -631,7 +632,7 @@ export function ProfileClient({ user }: {
         )}
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.06 }} className="mb-7 flex gap-2 overflow-x-auto">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.06 }} className="mb-7 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
         {TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
@@ -662,7 +663,7 @@ export function ProfileClient({ user }: {
             <div className="glass-card overflow-hidden">
               <div className="relative p-6 sm:p-8">
                 <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
-                <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:text-left">
                   <div className="relative shrink-0">
                     <div className="h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-gold via-gold/50 to-gold/30 p-[2px] shadow-[0_0_30px_var(--gold)/0.25]">
                       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--bg)]">
@@ -674,12 +675,12 @@ export function ProfileClient({ user }: {
                       <Check className="h-3.5 w-3.5" />
                     </span>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="heading">{name || "Unnamed"}</h2>
-                      <span className="chip chip-gold">Verified</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                      <h2 className="heading truncate">{name || "Unnamed"}</h2>
+                      <span className="chip chip-gold whitespace-nowrap">Verified</span>
                     </div>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{user.email}</span></div>
+                    <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground sm:justify-start"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{user.email}</span></div>
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50"><Clock className="h-3 w-3" /><span>Member since {new Date(user.createdAt).toLocaleDateString()}</span></div>
                   </div>
                 </div>
@@ -689,7 +690,7 @@ export function ProfileClient({ user }: {
                 <p className="subheading">Account details</p>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Full Name" icon={User}><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full" /></Field>
-                  <div className="sm:col-span-2">
+                  <div className="min-w-0 sm:col-span-2">
                     <AvatarUpload image={image} onChange={setImage} />
                   </div>
                   <Field label="Timezone" icon={Clock}>
@@ -805,7 +806,7 @@ export function ProfileClient({ user }: {
                   <Field label="New password" icon={KeyRound}><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="glass-input w-full" /></Field>
                   <Field label="Confirm new password" icon={KeyRound}><input type="password" value={confPw} onChange={(e) => setConfPw(e.target.value)} className="glass-input w-full" /></Field>
                 </div>
-                <button onClick={handleChangePw} disabled={busy} className="lm-btn lm-btn--gold px-4 py-2.5 text-xs disabled:opacity-60">Update password</button>
+                <button onClick={handleChangePw} disabled={busy} className="lm-btn lm-btn--gold sweep px-4 py-2.5 text-xs disabled:opacity-60">Update password</button>
               </div>
             </div>
 
@@ -813,7 +814,7 @@ export function ProfileClient({ user }: {
               <div className="space-y-4 p-6 sm:p-8">
                 <p className="body flex items-center gap-1.5 font-medium"><Mail className="h-4 w-4 text-gold/70" />Change email</p>
                 <Field label="New email" icon={Mail}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={user.email} className="glass-input w-full" /></Field>
-                <button onClick={handleUpdateEmail} disabled={busy} className="lm-btn lm-btn--gold px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
+                <button onClick={handleUpdateEmail} disabled={busy} className="lm-btn lm-btn--gold sweep px-4 py-2.5 text-xs disabled:opacity-60">Send verification</button>
               </div>
             </div>
 

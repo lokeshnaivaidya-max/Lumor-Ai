@@ -148,7 +148,7 @@ export function WatchlistClient({ items: initialItems }: { items: WatchlistView[
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><Star className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">Add your first stock</p>
           <p className="body mt-2 mx-auto max-w-sm">Search a ticker above and add it to start tracking live prices, moves, and alerts.</p>
-          <motion.button onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="btn btn--gold mt-6"><Plus className="h-3.5 w-3.5" />Add a stock</motion.button>
+          <motion.button onClick={() => document.querySelector<HTMLInputElement>("input[placeholder*='Search a symbol']")?.focus()} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="btn btn--gold sweep mt-6"><Plus className="h-3.5 w-3.5" />Add a stock</motion.button>
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

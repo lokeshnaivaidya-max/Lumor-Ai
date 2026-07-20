@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { useRef, type MouseEvent, type ReactNode } from "react"
+import { useEffect, useRef, type MouseEvent, type ReactNode } from "react"
 
 export function FadeUp({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   return (
@@ -95,5 +95,66 @@ export function TextReveal({ text, className = "", delay = 0 }: { text: string; 
     <span className={`line-mask ${className}`} style={{ animationDelay: `${delay}s` }}>
       <span className="animate-text-reveal">{text}</span>
     </span>
+  )
+}
+
+export function Counter({
+  value,
+  decimals = 0,
+  prefix = "",
+  suffix = "",
+  duration = 1.4,
+  className = "",
+  delay = 0,
+}: {
+  value: number
+  decimals?: number
+  prefix?: string
+  suffix?: string
+  duration?: number
+  className?: string
+  delay?: number
+}) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (reduce) {
+      el.textContent = `${prefix}${value.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`
+      return
+    }
+    let raf = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / (duration * 1000))
+      const eased = 1 - Math.pow(1 - p, 3)
+      const v = value * eased
+      el.textContent = `${prefix}${v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    const t = setTimeout(() => { raf = requestAnimationFrame(tick) }, delay * 1000)
+    return () => { clearTimeout(t); cancelAnimationFrame(raf) }
+  }, [value, decimals, prefix, suffix, duration, delay])
+  return <span ref={ref} className={className}>{prefix}0{suffix}</span>
+}
+
+export function Stagger({ children, className = "", stagger = 0.06, baseDelay = 0 }: { children: ReactNode; className?: string; stagger?: number; baseDelay?: number }) {
+  return (
+    <div className={className}>
+      {Array.isArray(children)
+        ? children.map((child, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.55, delay: baseDelay + i * stagger, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {child}
+            </motion.div>
+          ))
+        : children}
+    </div>
   )
 }

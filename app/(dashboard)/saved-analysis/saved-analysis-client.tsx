@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
+import Link from "next/link"
 import { Trash2, ArrowUpRight, ArrowDownRight, Minus, Plus, LineChart, FileText } from "lucide-react"
 import { deleteSavedAnalysis } from "@/app/actions/saved-analysis"
 import { useRouter } from "next/navigation"
@@ -78,7 +79,7 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="bento-card relative overflow-hidden px-8 py-16 text-center"
+          className="bento-card relative overflow-hidden px-8 py-14 text-center"
         >
           <div className="pointer-events-none absolute -inset-20 opacity-30" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--gold-glow)' }}>
@@ -90,10 +91,25 @@ export function SavedAnalysisClient({ analyses: initial }: { analyses: Analysis[
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => router.push("/markets")}
-            className="btn btn--gold mt-6"
+            className="btn btn--gold sweep mt-6"
           >
             <Plus className="h-3.5 w-3.5" />Analyze a stock
           </motion.button>
+          <div className="relative mt-8">
+            <p className="meta mb-3">Or try a prompt in chat</p>
+            <div className="grid max-w-2xl gap-3 sm:grid-cols-3">
+              {[
+                { q: "Should I buy NVDA now?", t: "Entry timing" },
+                { q: "Is AAPL overvalued?", t: "Valuation" },
+                { q: "TSLA outlook next quarter", t: "Forecast" },
+              ].map((ex) => (
+                <Link key={ex.t} href={`/chat?prompt=${encodeURIComponent(ex.q)}`} className="glass-card sweep flex flex-col gap-1 rounded-2xl p-4 text-left transition-transform hover:-translate-y-1">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{ex.t}</span>
+                  <span className="meta line-clamp-2">{ex.q}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">

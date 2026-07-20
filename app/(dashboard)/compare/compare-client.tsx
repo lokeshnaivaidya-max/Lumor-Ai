@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
+import Link from "next/link"
 import { Search, TrendingUp, TrendingDown, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
 import { logActivity } from "@/app/actions/activity"
 
@@ -267,11 +268,21 @@ export function CompareClient() {
           </div>
         </>
       ) : (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-16 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-14 text-center">
           <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><BarChart3 className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">Select two symbols to compare</p>
           <p className="body mt-2 mx-auto max-w-sm">Search and pick two tickers above to see a live side-by-side comparison.</p>
+          <div className="relative mt-8">
+            <p className="meta mb-3">Popular comparisons</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[
+                { a: "AAPL", b: "MSFT" }, { a: "TSLA", b: "NVDA" }, { a: "AMZN", b: "GOOGL" }, { a: "META", b: "NFLX" },
+              ].map((pair) => (
+                <Link key={`${pair.a}-${pair.b}`} href={`/markets?symbol=${pair.a}`} className="chip chip-gold transition-colors hover:bg-[var(--gold)] hover:text-[var(--bg)]">{pair.a} <span className="px-1 text-[var(--text-tertiary)]">vs</span> {pair.b}</Link>
+              ))}
+            </div>
+          </div>
         </motion.div>
       )}
     </div>

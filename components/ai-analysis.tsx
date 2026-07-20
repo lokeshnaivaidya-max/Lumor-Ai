@@ -418,11 +418,101 @@ export function AiAnalysis({
       {data && <Report data={data} indicators={indicators} />}
 
       {!data && !loading && !error && (
-        <p className="relative mt-4 text-sm text-muted-foreground">
-          Get a simple, honest breakdown of {symbol} — what to do, why, and what could go wrong, explained in plain
-          language anyone can understand.
-        </p>
+        <div className="relative mt-5 space-y-5 border-t pt-5" style={{ borderColor: "var(--line)" }}>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Get a simple, honest breakdown of {symbol} — what to do, why, and what could go wrong, explained in plain
+            language anyone can understand.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TrendingStocks symbol={symbol} />
+            <SuggestedPrompts symbol={symbol} />
+          </div>
+
+          <RecentActivity symbol={symbol} onAnalyze={run} />
+        </div>
       )}
+    </div>
+  )
+}
+
+const TRENDING = [
+  { sym: "AAPL", note: "Earnings setup" },
+  { sym: "NVDA", note: "AI momentum" },
+  { sym: "TSLA", note: "Volatile tape" },
+  { sym: "MSFT", note: "Steady trend" },
+]
+
+const PROMPTS = [
+  "Should I hold or trim into earnings?",
+  "What's the risk/reward here?",
+  "Where's the strongest support?",
+  "Is now a good entry?",
+]
+
+function TrendingStocks({ symbol }: { symbol: string }) {
+  return (
+    <div className="glass-card rounded-[28px] p-4">
+      <p className="meta mb-3 flex items-center gap-1.5">
+        <TrendingUp className="h-3.5 w-3.5 text-gold" /> Trending stocks
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {TRENDING.map((t) => (
+          <Link
+            key={t.sym}
+            href={`/markets?symbol=${encodeURIComponent(t.sym)}`}
+            className={`group flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors ${
+              t.sym === symbol ? "border-[var(--gold-line)] bg-gold/[0.06]" : "border-[var(--line)] hover:border-[var(--gold-line)] hover:bg-[var(--surface-alt)]"
+            }`}
+          >
+            <span className="font-mono text-sm font-semibold text-foreground">{t.sym}</span>
+            <span className="text-[10px] text-muted-foreground">{t.note}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SuggestedPrompts({ symbol }: { symbol: string }) {
+  return (
+    <div className="glass-card rounded-[28px] p-4">
+      <p className="meta mb-3 flex items-center gap-1.5">
+        <LineChart className="h-3.5 w-3.5 text-gold" /> Suggested AI prompts
+      </p>
+      <div className="space-y-2">
+        {PROMPTS.map((p) => (
+          <Link
+            key={p}
+            href={`/chat?symbol=${encodeURIComponent(symbol)}`}
+            className="flex items-center gap-2 rounded-xl border border-[var(--line)] px-3 py-2 text-sm text-foreground/85 transition-colors hover:border-[var(--gold-line)] hover:bg-[var(--surface-alt)]"
+          >
+            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-gold" />
+            <span className="truncate">{p}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RecentActivity({ symbol, onAnalyze }: { symbol: string; onAnalyze: () => void }) {
+  return (
+    <div className="glass-card rounded-[28px] p-4">
+      <p className="meta mb-3 flex items-center gap-1.5">
+        <Clock className="h-3.5 w-3.5 text-gold" /> Try a quick read
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={onAnalyze}
+          className="lm-btn lm-btn-gold rounded-full px-4 py-1.5 text-xs"
+        >
+          <TrendingUp className="h-3.5 w-3.5" /> Run AI analysis on {symbol}
+        </button>
+        <Link href="/saved-analysis" className="lm-btn lm-btn-ghost rounded-full px-4 py-1.5 text-xs">
+          View past analyses
+        </Link>
+      </div>
     </div>
   )
 }

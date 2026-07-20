@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Bell, TrendingUp, Brain, Wallet, Check, CheckCheck, Trash2, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Bell, TrendingUp, Brain, Wallet, Check, CheckCheck, Trash2, Loader2, Plus } from "lucide-react"
 import { markNotificationRead, markAllNotificationsRead, deleteNotification } from "@/app/actions/notifications"
 import { useRouter } from "next/navigation"
 
@@ -79,11 +80,20 @@ export function NotificationsClient({ notifications: initial }: { notifications:
       </AnimatePresence>
 
       {items.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-16 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-14 text-center">
           <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><Bell className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">You're all caught up</p>
           <p className="body mt-2 mx-auto max-w-sm">New price alerts and AI insights will appear here as they happen.</p>
+          <div className="relative mt-8 rounded-2xl border border-[var(--gold-line)] bg-[var(--gold-glow)] p-4 text-left">
+            <p className="meta mb-1.5 text-[var(--gold)]">Get notified about</p>
+            <ul className="space-y-1.5 text-sm text-[var(--text-secondary)]">
+              <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />Price moves on your watchlisted stocks</li>
+              <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />New AI analysis & trade-plan insights</li>
+              <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />Portfolio valuation & allocation updates</li>
+            </ul>
+            <Link href="/watchlist" className="btn btn--gold sweep mt-4"><Plus className="h-3.5 w-3.5" />Add a stock to watch</Link>
+          </div>
         </motion.div>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">

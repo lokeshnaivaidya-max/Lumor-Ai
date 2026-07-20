@@ -541,7 +541,7 @@ export function TradePlannerClient() {
                 disabled={!formValid || loading}
                 whileHover={formValid && !loading ? { scale: 1.02 } : {}}
                 whileTap={formValid && !loading ? { scale: 0.98 } : {}}
-                className={`lm-btn lm-btn--gold w-full mt-2 ${
+                className={`lm-btn lm-btn--gold w-full mt-2 sweep ${
                   !formValid || loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -832,7 +832,7 @@ export function TradePlannerClient() {
                   onClick={handleAnalyze}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="lm-btn w-full"
+                  className="lm-btn w-full sweep"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Re-analyze Trade Plan

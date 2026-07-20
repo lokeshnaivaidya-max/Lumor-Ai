@@ -44,49 +44,49 @@
 :root {
   color-scheme: light;
 
-  --bg: #f6f4ef;
-  --bg-alt: #efede6;
-  --bg-elevated: #fbfaf6;
-  --surface: #ffffff;
-  --surface-alt: #f4f1ea;
-  --panel: #ffffff;
-  --panel-2: #f4f1ea;
+  --bg: #f4f1ea;
+  --bg-alt: #ece7dd;
+  --bg-elevated: #fbf9f3;
+  --surface: #fffdf8;
+  --surface-alt: #f1ece2;
+  --panel: #fffdf8;
+  --panel-2: #f1ece2;
 
-  --line: rgba(28, 30, 36, 0.10);
-  --line-strong: rgba(28, 30, 36, 0.16);
-  --line-faint: rgba(28, 30, 36, 0.05);
+  --line: rgba(33, 31, 26, 0.11);
+  --line-strong: rgba(33, 31, 26, 0.18);
+  --line-faint: rgba(33, 31, 26, 0.06);
 
-  --gold: #a9842f;
-  --gold-light: #c9ad5e;
-  --gold-dark: #7f6220;
-  --gold-glow: rgba(169, 132, 47, 0.08);
-  --gold-glow-strong: rgba(169, 132, 47, 0.14);
-  --gold-line: rgba(169, 132, 47, 0.32);
+  --gold: #9a7322;
+  --gold-light: #c8a44e;
+  --gold-dark: #6f5012;
+  --gold-glow: rgba(154, 115, 34, 0.10);
+  --gold-glow-strong: rgba(154, 115, 34, 0.17);
+  --gold-line: rgba(154, 115, 34, 0.36);
 
-  --pos: #2f9e74;
-  --neg: #d2546a;
-  --pos-glow: rgba(47, 158, 116, 0.10);
-  --neg-glow: rgba(210, 84, 106, 0.10);
-  --info: #3f6fd1;
+  --pos: #1f8f63;
+  --neg: #c33f57;
+  --pos-glow: rgba(31, 143, 99, 0.12);
+  --neg-glow: rgba(195, 63, 87, 0.12);
+  --info: #2f63c4;
 
-  --text-primary: #1b1d22;
-  --text-secondary: #54585f;
-  --text-tertiary: #8a8d94;
-  --text-inverse: #f6f4ef;
-  --text-muted: #8a8d94;
+  --text-primary: #16140f;
+  --text-secondary: #4d4a42;
+  --text-tertiary: #807c72;
+  --text-inverse: #f7f4ec;
+  --text-muted: #807c72;
 
-  --emerald: #2f9e74;
-  --neg: #d2546a;
-  --pos: #2f9e74;
-  --rose: #d2546a;
-  --amber: #a9842f;
-  --violet: #7a5cc9;
-  --cyan: #2f9e9e;
-  --blue: #3f6fd1;
+  --emerald: #1f8f63;
+  --neg: #c33f57;
+  --pos: #1f8f63;
+  --rose: #c33f57;
+  --amber: #9a7322;
+  --violet: #6f4fc0;
+  --cyan: #1f8f93;
+  --blue: #2f63c4;
 
-  --beam-1: rgba(169, 132, 47, 0.09);
-  --beam-2: rgba(63, 111, 209, 0.05);
-  --beam-3: rgba(47, 158, 116, 0.04);
+  --beam-1: rgba(154, 115, 34, 0.11);
+  --beam-2: rgba(47, 99, 196, 0.06);
+  --beam-3: rgba(31, 143, 99, 0.05);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
@@ -104,49 +104,49 @@
 .dark, .dark-root {
   color-scheme: dark;
 
-  --bg: #0e1116;
-  --bg-alt: #13171e;
-  --bg-elevated: #181d26;
-  --surface: #161b23;
-  --surface-alt: #1b212b;
-  --panel: #161b23;
-  --panel-2: #1b212b;
+  --bg: #0b0d12;
+  --bg-alt: #11141b;
+  --bg-elevated: #151922;
+  --surface: #161b24;
+  --surface-alt: #1c2230;
+  --panel: #161b24;
+  --panel-2: #1c2230;
 
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --line-faint: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --line-faint: rgba(255, 255, 255, 0.045);
 
-  --gold: #c9a24b;
-  --gold-light: #e6cf93;
-  --gold-dark: #9c7d33;
-  --gold-glow: rgba(201, 162, 75, 0.07);
-  --gold-glow-strong: rgba(201, 162, 75, 0.12);
-  --gold-line: rgba(201, 162, 75, 0.30);
+  --gold: #d4ab55;
+  --gold-light: #ecd79b;
+  --gold-dark: #a07f2e;
+  --gold-glow: rgba(212, 171, 85, 0.09);
+  --gold-glow-strong: rgba(212, 171, 85, 0.15);
+  --gold-line: rgba(212, 171, 85, 0.34);
 
-  --pos: #46b58a;
-  --neg: #e57488;
-  --pos-glow: rgba(70, 181, 138, 0.10);
-  --neg-glow: rgba(229, 116, 136, 0.10);
-  --info: #6aa8ff;
+  --pos: #4cc195;
+  --neg: #ef7d92;
+  --pos-glow: rgba(76, 193, 149, 0.12);
+  --neg-glow: rgba(239, 125, 146, 0.12);
+  --info: #76b0ff;
 
-  --text-primary: #eef0f3;
-  --text-secondary: #a7acb5;
-  --text-tertiary: #6f757f;
-  --text-inverse: #0e1116;
-  --text-muted: #6f757f;
+  --text-primary: #f1f3f7;
+  --text-secondary: #aab0bb;
+  --text-tertiary: #747b87;
+  --text-inverse: #0b0d12;
+  --text-muted: #747b87;
 
-  --emerald: #46b58a;
-  --neg: #e57488;
-  --pos: #46b58a;
-  --rose: #e57488;
-  --amber: #e6cf93;
-  --violet: #a48ef0;
-  --cyan: #56c6d6;
-  --blue: #6aa8ff;
+  --emerald: #4cc195;
+  --neg: #ef7d92;
+  --pos: #4cc195;
+  --rose: #ef7d92;
+  --amber: #d4ab55;
+  --violet: #a98ff2;
+  --cyan: #5cccd8;
+  --blue: #76b0ff;
 
-  --beam-1: rgba(201, 162, 75, 0.07);
-  --beam-2: rgba(106, 168, 255, 0.04);
-  --beam-3: rgba(70, 181, 138, 0.03);
+  --beam-1: rgba(212, 171, 85, 0.08);
+  --beam-2: rgba(118, 176, 255, 0.05);
+  --beam-3: rgba(76, 193, 149, 0.04);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 12px 34px -16px rgba(0, 0, 0, 0.55);
@@ -218,6 +218,9 @@ body {
   opacity: 0.6; pointer-events: none; mix-blend-mode: overlay;
 }
 .dark .glass::before { opacity: 0.22; }
+.dark .ambient-aurora { opacity: 0.6; }
+.dark .ambient-sheen { opacity: 0.32; }
+.dark .ambient-fog { opacity: 0.85; }
 .glass::after {
   content: "";
   position: absolute; inset: 0;
@@ -449,6 +452,35 @@ body {
   position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+/* Mesh gradient beams — parallax follows pointer via --mx/--my */
+.ambient { --mx: 0; --my: 0; }
+.ambient-mesh {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.7;
+  will-change: transform; transform: translate3d(calc(var(--mx) * 18px), calc(var(--my) * 18px), 0);
+}
+.ambient-aurora {
+  position: absolute; inset: -20%; pointer-events: none; opacity: 0.5;
+  background:
+    conic-gradient(from 120deg at 30% 20%, transparent 0deg, color-mix(in srgb, var(--gold) 10%, transparent) 60deg, transparent 140deg, color-mix(in srgb, var(--info) 8%, transparent) 240deg, transparent 320deg);
+  filter: blur(90px);
+  will-change: transform, opacity;
+  animation: auroraShift 34s var(--ease-inout) infinite;
+  transform: translate3d(calc(var(--mx) * -10px), calc(var(--my) * -10px), 0);
+}
+.ambient-fog {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--bg) 60%, transparent), transparent 60%),
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--bg) 40%, transparent));
+  z-index: 0;
+}
+.ambient-sheen {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0.5;
+  background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, #ffffff 12%, transparent) 48%, transparent 66%);
+  background-size: 220% 220%;
+  will-change: background-position;
+  animation: sheenPan 16s ease-in-out infinite;
+}
 /* frosted nav container */
 .glass-nav {
   background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
@@ -516,6 +548,32 @@ body {
   0% { background-position: 0 0; }
   100% { background-position: 64px 64px; }
 }
+@keyframes meshDriftA {
+  0% { transform: translate3d(0,0,0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(6%, -5%, 0) scale(1.14); opacity: 0.8; }
+  100% { transform: translate3d(0,0,0) scale(1); opacity: 0.55; }
+}
+@keyframes meshDriftB {
+  0% { transform: translate3d(0,0,0) scale(1.08); opacity: 0.4; }
+  50% { transform: translate3d(-6%, 5%, 0) scale(0.94); opacity: 0.62; }
+  100% { transform: translate3d(0,0,0) scale(1.08); opacity: 0.4; }
+}
+@keyframes meshDriftC {
+  0% { transform: translate3d(0,0,0) scale(1); opacity: 0.45; }
+  50% { transform: translate3d(5%, 6%, 0) scale(1.18); opacity: 0.66; }
+  100% { transform: translate3d(0,0,0) scale(1); opacity: 0.45; }
+}
+@keyframes sheenPan {
+  0% { background-position: 120% 0%; }
+  50% { background-position: 0% 100%; }
+  100% { background-position: 120% 0%; }
+}
+@keyframes beamStreakSlow {
+  0% { transform: translateX(-30%) rotate(12deg); opacity: 0; }
+  25% { opacity: 0.4; }
+  75% { opacity: 0.4; }
+  100% { transform: translateX(140%) rotate(12deg); opacity: 0; }
+}
 @keyframes tiltIn { from { opacity: 0; transform: perspective(800px) rotateX(8deg) translateY(20px); } to { opacity: 1; transform: none; } }
 @keyframes textReveal { from { clip-path: inset(0 100% 0 0); opacity: 0; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
 @keyframes countPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
@@ -527,9 +585,38 @@ body {
 .animate-float { animation: floatY 6s ease-in-out infinite; }
 .animate-aurora { animation: auroraShift 22s var(--ease-inout) infinite; will-change: transform; }
 .animate-streak { animation: beamStreak 9s linear infinite; will-change: transform, opacity; }
+.animate-streak-slow { animation: beamStreakSlow 14s linear infinite; will-change: transform, opacity; }
+.animate-mesh-a { animation: meshDriftA 26s var(--ease-inout) infinite; will-change: transform; }
+.animate-mesh-b { animation: meshDriftB 32s var(--ease-inout) infinite; will-change: transform; }
+.animate-mesh-c { animation: meshDriftC 38s var(--ease-inout) infinite; will-change: transform; }
+.animate-sheen { animation: sheenPan 16s ease-in-out infinite; will-change: background-position; }
 .animate-marquee { animation: marquee 36s linear infinite; will-change: transform; }
 .magnetic { transition: transform 0.25s var(--ease-out); will-change: transform; }
 .tilt { transition: transform 0.4s var(--ease-out); transform-style: preserve-3d; }
+
+/* Glass highlight sweep — a soft light passes across on hover */
+.sweep { position: relative; overflow: hidden; }
+.sweep::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, #ffffff 28%, transparent) 50%, transparent 65%);
+  transform: translateX(-120%); transition: transform 0.85s var(--ease-out);
+}
+.sweep:hover::after { transform: translateX(120%); }
+.dark .sweep::after { background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, #ffffff 16%, transparent) 50%, transparent 65%); }
+
+/* Animated gradient border (conic sweep) */
+.border-animated {
+  position: relative; border-radius: inherit; isolation: isolate;
+}
+.border-animated::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: conic-gradient(from var(--angle, 0deg), transparent 0deg, var(--gold-line) 80deg, transparent 160deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: borderSpin 6s linear infinite; pointer-events: none;
+}
+@property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes borderSpin { to { --angle: 360deg; } }
 .reveal-up { opacity: 0; transform: translateY(28px); }
 .reveal-up.in { opacity: 1; transform: none; transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); }
 .line-mask { overflow: hidden; display: block; }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion } from "motion/react"
 import { TrendingUp, TrendingDown, Search, Newspaper, BarChart3, X, ArrowRight } from "lucide-react"
+import { Counter } from "@/components/reveal"
 import Link from "next/link"
 
 type Candle = { t: number; o: number; h: number; l: number; c: number; v: number }
@@ -29,6 +30,12 @@ function StockChart({ candles, color }: { candles: Candle[]; color: string }) {
   const area = `M0,180 L${path.replace(/^M/, "")} L600,180 Z`
   const id = "cg-" + Math.random().toString(36).slice(2, 8)
 
+  const lastPt = useMemo(() => {
+    if (!path) return null
+    const parts = path.trim().split(" ").pop()!.replace(/^L/, "").split(",")
+    return { x: Number(parts[0]), y: Number(parts[1]) }
+  }, [path])
+
   return (
     <svg viewBox="0 0 600 180" className="h-[180px] w-full" preserveAspectRatio="none">
       <defs>
@@ -37,8 +44,38 @@ function StockChart({ candles, color }: { candles: Candle[]; color: string }) {
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={area} fill={`url(#${id})`} />
-      <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <motion.path
+        d={area}
+        fill={`url(#${id})`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+      />
+      <motion.path
+        d={path}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      />
+      {lastPt && (
+        <motion.circle
+          cx={lastPt.x}
+          cy={lastPt.y}
+          r="3.5"
+          fill={color}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+        >
+          <animate attributeName="r" values="3.5;6;3.5" dur="1.6s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="1;0.4;1" dur="1.6s" repeatCount="indefinite" />
+        </motion.circle>
+      )}
     </svg>
   )
 }
@@ -128,7 +165,7 @@ export function MarketFocus({ initialSymbol = "AAPL" }: { initialSymbol?: string
             </div>
             <div className="flex flex-wrap gap-1.5">
               {DEFAULT_SYMBOLS.map((s) => (
-                <button key={s} onClick={() => setSymbol(s)} className={`rounded-full px-2.5 py-1 text-[11px] font-mono transition-colors ${symbol === s ? "bg-[var(--gold-glow)] text-[var(--gold)]" : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)]"}`}>
+                <button key={s} onClick={() => setSymbol(s)} className={`rounded-full px-2.5 py-1 text-[11px] font-mono transition-all duration-300 hover:scale-105 ${symbol === s ? "bg-[var(--gold-glow)] text-[var(--gold)]" : "text-[var(--text-tertiary)] hover:bg-[var(--panel-2)]"}`}>
                   {s}
                 </button>
               ))}
@@ -141,6 +178,12 @@ export function MarketFocus({ initialSymbol = "AAPL" }: { initialSymbol?: string
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-semibold text-[var(--gold)]">{symbol}</span>
                 {quote?.name && <span className="text-sm text-[var(--text-secondary)]">{quote.name}</span>}
+                {quote && !loading && (
+                  <span className="relative flex h-2 w-2" title="Live">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full" style={{ background: color, opacity: 0.6 }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
+                  </span>
+                )}
               </div>
               <p className="stat-number mt-1" style={{ color: pos ? "var(--pos)" : "var(--neg)" }}>
                 {quote ? `${quote.price.toLocaleString("en-US", { minimumFractionDigits: 2 })} ${quote.currency}` : "—"}
@@ -150,7 +193,7 @@ export function MarketFocus({ initialSymbol = "AAPL" }: { initialSymbol?: string
                 {quote ? `${pos ? "+" : ""}${quote.changePercent.toFixed(2)}%` : ""}
               </p>
             </div>
-            <Link href={`/chat?symbol=${encodeURIComponent(symbol)}`} className="btn btn--gold"><BarChart3 className="h-3.5 w-3.5" /> Analyze</Link>
+            <Link href={`/chat?symbol=${encodeURIComponent(symbol)}`} className="btn btn--gold sweep"><BarChart3 className="h-3.5 w-3.5" /> Analyze</Link>
           </div>
 
           {/* Chart directly below summary */}
@@ -206,7 +249,8 @@ export function MarketFocus({ initialSymbol = "AAPL" }: { initialSymbol?: string
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  className="rounded-xl p-3 transition-colors hover:bg-[var(--panel-2)]"
+                  whileHover={{ y: -2 }}
+                  className="sweep rounded-xl p-3 transition-colors hover:bg-[var(--panel-2)]"
                   style={{ border: "1px solid var(--line)" }}
                 >
                   <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2">{n.title}</p>

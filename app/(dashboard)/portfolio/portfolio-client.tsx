@@ -8,6 +8,7 @@ import {
   Plus, Wallet, TrendingUp, ShieldCheck, BarChart3,
   ChevronRight, ArrowUpRight, ArrowDownRight, X, Loader2, Trash2,
 } from "lucide-react"
+import { Counter, FadeScale } from "@/components/reveal"
 import { addHolding, removeHolding } from "@/app/actions/portfolio"
 
 type Holding = {
@@ -109,17 +110,17 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           <div className="mb-8 grid gap-6 sm:grid-cols-3">
             <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
               <p className="subheading">Total Value</p>
-              <p className="stat-number mt-3 text-[var(--text-primary)]">{fmt(totalValue)}</p>
+              <p className="stat-number mt-3 text-[var(--text-primary)]"><Counter value={totalValue} prefix="$" decimals={2} className="stat-number" /></p>
               <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">Live valuation</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
               <p className="subheading">Total P&amp;L</p>
-              <p className={`stat-number mt-3 ${totalPnL >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{`${totalPnL >= 0 ? "+" : ""}${fmt(totalPnL)}`}</p>
+              <p className={`stat-number mt-3 ${totalPnL >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}><Counter value={totalPnL} prefix={totalPnL >= 0 ? "+$" : "-$"} decimals={2} className="stat-number" /></p>
               <p className={`mt-2 flex items-center gap-1 font-mono text-xs ${pnlPercent >= 0 ? "text-[var(--pos)]" : "text-[var(--neg)]"}`}>{pnlPercent >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}{pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}%</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} className="surface-card p-6 lg:p-8">
               <p className="subheading">Health Score</p>
-              <p className="stat-number mt-3 text-[var(--gold)]">{healthScore}</p>
+              <p className="stat-number mt-3 text-[var(--gold)]"><Counter value={healthScore} className="stat-number" suffix="/100" /></p>
               <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">{healthScore >= 70 ? "Well diversified" : "Concentrated"}</p>
             </motion.div>
           </div>
@@ -258,12 +259,40 @@ export function PortfolioClient({ holdings: initial, summary: initialSummary }: 
           )}
         </>
       ) : (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-16 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-14 text-center">
           <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><Wallet className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">No portfolio yet</p>
           <p className="body mt-2 mx-auto max-w-sm">Add your first holding to see live valuation, P&amp;L, and allocation analytics.</p>
           <motion.button onClick={() => setAdding(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="lm-btn lm-btn-gold mt-6"><Plus className="h-3.5 w-3.5" />Add Holding</motion.button>
+
+          <div className="relative mt-10 border-t border-[var(--line)] pt-8">
+            <div className="mb-4 flex items-center justify-center gap-2">
+              <span className="chip chip-gold text-[10px] uppercase tracking-wide">Sample preview</span>
+            </div>
+            <p className="meta mb-5">Here's how your allocation might look once you add holdings:</p>
+            <div className="mx-auto grid max-w-lg gap-3 sm:grid-cols-3">
+              {[
+                { s: "AAPL", pct: 38, c: "var(--gold)" },
+                { s: "MSFT", pct: 33, c: "var(--gold)" },
+                { s: "NVDA", pct: 29, c: "var(--gold)" },
+              ].map((h, i) => (
+                <FadeScale key={h.s} delay={0.1 + i * 0.08}>
+                  <div className="glass-card p-4 text-left">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: h.c }} />{h.s}
+                      </span>
+                      <span className="font-mono text-xs tabular-nums text-[var(--text-tertiary)]">{h.pct}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--panel-2)]">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${h.pct}%` }} transition={{ duration: 1, delay: 0.2 + i * 0.08, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full" style={{ background: h.c }} />
+                    </div>
+                  </div>
+                </FadeScale>
+              ))}
+            </div>
+          </div>
         </motion.div>
       )}
 

@@ -2,31 +2,57 @@
 
 import { motion } from "motion/react"
 import { FadeUp, CardReveal } from "@/components/reveal"
+import { Clock, Sparkles } from "lucide-react"
 
-const TESTIMONIALS = [
-  { quote: "Lumora replaced three terminal subscriptions. The AI explanations actually teach me why a signal fired.", name: "Aarav M.", role: "Independent trader" },
-  { quote: "Finally a tool that respects my time. Clean, fast, and the confidence scores are honest.", name: "Sofia R.", role: "Portfolio manager" },
-  { quote: "The trade planner's risk/reward view is the clearest I've seen outside a Bloomberg terminal.", name: "Kenji T.", role: "Quant analyst" },
+const COMING_SOON = [
+  {
+    title: "Early access stories",
+    desc: "We're gathering feedback from our first operators. Honest reviews from real traders will live here soon.",
+    icon: Clock,
+  },
+  {
+    title: "Verified desk notes",
+    desc: "Curated notes from professional desks — published only with consent and attribution.",
+    icon: Sparkles,
+  },
+  {
+    title: "Community spotlight",
+    desc: "A space for the Lumora community to share how they use AI explanations in their workflow.",
+    icon: Clock,
+  },
 ]
 
 export function Testimonials() {
   return (
     <FadeUp>
-      <p className="subheading text-center">Trusted by operators</p>
-      <h2 className="title mt-3 text-center">Quietly loved by serious desks</h2>
+      <p className="subheading text-center">In their words</p>
+      <h2 className="title mt-3 text-center">Stories coming soon</h2>
+      <p className="body mx-auto mt-4 max-w-xl text-center">
+        Lumora is in beta. We&apos;ll publish real, attributed stories from early operators once we launch publicly.
+      </p>
       <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {TESTIMONIALS.map((t, i) => (
-          <CardReveal key={t.name} delay={i * 0.08} index={i}>
-            <div className="flex h-full flex-col gap-4 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-7">
-              <span className="font-serif text-3xl leading-none" style={{ color: "var(--gold)" }}>&ldquo;</span>
-              <p className="body flex-1">{t.quote}</p>
-              <div className="mt-2">
-                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{t.name}</p>
-                <p className="meta mt-0.5">{t.role}</p>
+        {COMING_SOON.map((t, i) => {
+          const Icon = t.icon
+          return (
+            <CardReveal key={t.title} delay={i * 0.08} index={i}>
+              <div className="relative flex h-full flex-col gap-4 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-7">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full blur-3xl"
+                  style={{ background: "var(--gold-glow)" }}
+                />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--gold-line)] bg-[var(--gold-glow)] text-[var(--gold)]">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="heading-sm">{t.title}</p>
+                  <p className="body mt-2">{t.desc}</p>
+                </div>
+                <span className="chip chip-gold mt-auto w-fit">Coming soon</span>
               </div>
-            </div>
-          </CardReveal>
-        ))}
+            </CardReveal>
+          )
+        })}
       </div>
     </FadeUp>
   )

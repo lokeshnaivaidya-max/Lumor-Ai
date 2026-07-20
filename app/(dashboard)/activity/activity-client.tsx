@@ -43,12 +43,24 @@ export function ActivityClient({ items }: { items: ActivityItem[] }) {
         </div>
       </motion.div>
 
-      {items.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-16 text-center">
+       {items.length === 0 ? (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="bento-card relative overflow-hidden px-8 py-14 text-center">
           <div className="pointer-events-none absolute -inset-20 opacity-40" style={{ background: 'radial-gradient(circle at 50% 0%, var(--gold-glow-strong), transparent 60%)' }} />
           <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--gold-glow)]"><Activity className="h-7 w-7 text-[var(--gold)]" /></div>
           <p className="heading-sm">No activity yet</p>
           <p className="body mt-2 mx-auto max-w-sm">Explore the markets, save an analysis, or update your profile to get started.</p>
+          <div className="relative mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
+            {[
+              { t: "Search a stock", d: "Browse markets & quotes", href: "/markets" },
+              { t: "Run an analysis", d: "Ask Lumora AI", href: "/chat" },
+              { t: "Plan a trade", d: "Use Trade Planner", href: "/trade-planner" },
+            ].map((s) => (
+              <Link key={s.t} href={s.href} className="glass-card sweep flex flex-col items-center gap-1 rounded-2xl p-4 text-center transition-transform hover:-translate-y-1">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{s.t}</p>
+                <p className="meta">{s.d}</p>
+              </Link>
+            ))}
+          </div>
         </motion.div>
        ) : (
         <div className="relative pl-6">
