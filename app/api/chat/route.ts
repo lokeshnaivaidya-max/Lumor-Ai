@@ -157,13 +157,7 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
 
       try {
-        send({ type: "thinking", step: 1, label: "Reading Live Market Data" })
         const { block: marketContext, sources } = await buildChatContext(message, body.symbol, body.timeframe)
-
-        send({ type: "thinking", step: 2, label: "Technical Indicators Processed" })
-        send({ type: "thinking", step: 3, label: "News Sentiment Analyzed" })
-        send({ type: "thinking", step: 4, label: "Risk Assessment Complete" })
-        send({ type: "thinking", step: 5, label: "Generating Institutional Recommendation..." })
 
         const systemExtra = marketContext
           ? `${CHAT_SYSTEM}\n\n${marketContext}${STRUCTURE_RULES}`

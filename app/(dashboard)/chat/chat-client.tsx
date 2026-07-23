@@ -46,98 +46,24 @@ const SUGGESTIONS = [
   "Key Support & Resistance",
 ]
 
-const THINKING_STEPS = [
-  "Reading Live Market Data",
-  "Technical Indicators Processed",
-  "News Sentiment Analyzed",
-  "Risk Assessment Complete",
-  "Generating Institutional Recommendation...",
-]
-
-function ThinkingSequence({
-  currentStep,
-  isFinished,
-}: {
-  currentStep: number // 1 to 5
-  isFinished: boolean
-}) {
-  const [expanded, setExpanded] = useState(!isFinished)
-
-  useEffect(() => {
-    if (isFinished) {
-      const t = setTimeout(() => setExpanded(false), 800)
-      return () => clearTimeout(t)
-    } else {
-      setExpanded(true)
-    }
-  }, [isFinished])
-
+function ThreeDots() {
   return (
-    <div className="my-2 rounded-2xl border border-gold/20 bg-foreground/[0.02] p-3 text-xs shadow-inner">
-      <div
-        onClick={() => setExpanded(!expanded)}
-        className="flex cursor-pointer items-center justify-between font-mono font-medium text-gold select-none"
-      >
-        <div className="flex items-center gap-2">
-          {isFinished ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-          ) : (
-            <motion.span
-              className="h-2.5 w-2.5 rounded-full bg-gold"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 0.8, repeat: Infinity }}
-            />
-          )}
-          <span className="tracking-wide">
-            {isFinished ? "Institutional Analysis Complete" : "AI Thinking Sequence"}
-          </span>
-        </div>
-        <button type="button" className="text-muted-foreground hover:text-foreground">
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="mt-2.5 space-y-1.5 overflow-hidden border-t border-foreground/10 pt-2 font-mono text-[11px]"
-          >
-            {THINKING_STEPS.map((stepLabel, idx) => {
-              const stepNum = idx + 1
-              const isDone = isFinished || currentStep > stepNum
-              const isCurrent = !isFinished && currentStep === stepNum
-              const isPending = !isFinished && currentStep < stepNum
-
-              return (
-                <div key={stepLabel} className="flex items-center gap-2">
-                  {isDone ? (
-                    <span className="font-bold text-emerald-400">✓</span>
-                  ) : isCurrent ? (
-                    <span className="animate-pulse text-gold">●</span>
-                  ) : (
-                    <span className="text-muted-foreground/40">○</span>
-                  )}
-                  <span
-                    className={
-                      isDone
-                        ? "text-foreground/90 font-medium"
-                        : isCurrent
-                        ? "text-gold font-bold animate-pulse"
-                        : "text-muted-foreground/50"
-                    }
-                  >
-                    {stepLabel}
-                  </span>
-                </div>
-              )
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="flex items-center gap-1.5 py-1 px-0.5">
+      <motion.span
+        className="h-2 w-2 rounded-full bg-gold"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0 }}
+      />
+      <motion.span
+        className="h-2 w-2 rounded-full bg-gold"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+      />
+      <motion.span
+        className="h-2 w-2 rounded-full bg-gold"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+      />
     </div>
   )
 }
@@ -190,8 +116,6 @@ export function ChatClient() {
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState("")
   const [streaming, setStreaming] = useState(false)
-  const [thinkingStep, setThinkingStep] = useState<number>(0) // 0 means not thinking
-  const [thinkingFinished, setThinkingFinished] = useState(false)
   const [activeAssistantId, setActiveAssistantId] = useState<string | null>(null)
 
   const [loadingMsgs, setLoadingMsgs] = useState(false)
@@ -362,8 +286,6 @@ export function ChatClient() {
       animationFrameRef.current = null
     }
     setStreaming(false)
-    setThinkingStep(0)
-    setThinkingFinished(true)
 
     if (activeAssistantId) {
       setMessages((prev) =>
@@ -453,8 +375,6 @@ export function ChatClient() {
     setMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: "user", content, isComplete: true }])
     setInput("")
     setStreaming(true)
-    setThinkingStep(1)
-    setThinkingFinished(false)
 
     const assistantId = `a-${Date.now()}`
     setActiveAssistantId(assistantId)
@@ -466,15 +386,6 @@ export function ChatClient() {
     // Create fresh AbortController
     const controller = new AbortController()
     abortControllerRef.current = controller
-
-    // Timer fallback for thinking sequence steps
-    let currentStepTimer = 1
-    const stepInterval = setInterval(() => {
-      if (currentStepTimer < 5) {
-        currentStepTimer += 1
-        setThinkingStep(currentStepTimer)
-      }
-    }, 700)
 
     try {
       const res = await fetch("/api/chat", {
@@ -518,24 +429,16 @@ export function ChatClient() {
           if (data === "[DONE]") continue
 
           try {
-            const evt = JSON.parse(data) as { type: string; token?: string; step?: number }
-            if (evt.type === "thinking" && typeof evt.step === "number") {
-              setThinkingStep(evt.step)
-            } else if (evt.type === "token" && evt.token) {
-              clearInterval(stepInterval)
-              setThinkingStep(5)
-              setThinkingFinished(true)
+            const evt = JSON.parse(data) as { type: string; token?: string }
+            if (evt.type === "token" && evt.token) {
               fullTextBufferRef.current += evt.token
             }
           } catch { /* ignore */ }
         }
       }
 
-      clearInterval(stepInterval)
-      setThinkingFinished(true)
       await loadConversations()
     } catch (e: any) {
-      clearInterval(stepInterval)
       if (e?.name === "AbortError" || isInterruptedRef.current) {
         // Handled cleanly by stop generating
         return
@@ -543,7 +446,6 @@ export function ChatClient() {
       setError(e?.message || "Something went wrong")
       setMessages((prev) => prev.filter((m) => m.id !== assistantId))
     } finally {
-      clearInterval(stepInterval)
       setStreaming(false)
       abortControllerRef.current = null
     }
@@ -740,10 +642,7 @@ export function ChatClient() {
               </div>
             </div>
           ) : (
-            messages.map((m, idx) => {
-              const isLatestAssistant = m.role === "assistant" && idx === messages.length - 1
-              const showThinking = isLatestAssistant && streaming && !m.content
-
+            messages.map((m) => {
               return (
                 <div
                   key={m.id}
@@ -756,29 +655,12 @@ export function ChatClient() {
                     className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${m.role === "user" ? "" : "border"}`}
                     style={m.role === "user" ? { background: "var(--gold-glow)", color: "var(--text-primary)" } : { background: "var(--surface)", borderColor: "var(--line)", color: "var(--text-primary)" }}
                   >
-                    {m.role === "assistant" && (
-                      <ThinkingSequence
-                        currentStep={thinkingStep}
-                        isFinished={m.isComplete || (m.content.length > 0 && !streaming)}
-                      />
-                    )}
-
                     {m.content ? (
                       <div>
                         <Markdown content={m.content} />
-                        {m.role === "assistant" && m.isComplete && (
-                          <div className="mt-3 flex items-center justify-between border-t border-foreground/10 pt-2 text-[10px] font-mono text-muted-foreground/80">
-                            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                              <ShieldCheck className="h-3 w-3" /> Grounded Analysis Complete
-                            </span>
-                            <span>Educational only</span>
-                          </div>
-                        )}
                       </div>
-                    ) : showThinking ? (
-                      <div className="py-1 text-xs text-muted-foreground font-mono italic">
-                        Processing market model context...
-                      </div>
+                    ) : m.role === "assistant" ? (
+                      <ThreeDots />
                     ) : null}
                   </div>
                 </div>
@@ -827,7 +709,7 @@ export function ChatClient() {
               }}
               rows={1}
               disabled={streaming}
-              placeholder={streaming ? "Lumora AI is analyzing..." : symbol ? `Ask about ${symbol}…` : "Message Lumora…"}
+              placeholder={symbol ? `Ask about ${symbol}…` : "Message Lumora…"}
               className="max-h-32 flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground/50 select-text disabled:opacity-60"
               style={{ color: "var(--text-primary)" }}
             />
