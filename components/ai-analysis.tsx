@@ -524,22 +524,71 @@ function RecentActivity({ symbol, onAnalyze }: { symbol: string; onAnalyze: () =
 }
 
 function extractPriceDetails(val: string | undefined | null, fallbackCurrency = "₹"): { price: string; num: number | null } {
-  if (!val) return { price: `${fallbackCurrency}0.00`, num: null }
+  if (!val) return { price: "Unavailable", num: null }
   const str = String(val).trim()
-  const match = str.match(/(?:[₹$€£¥]\s*)?\d+(?:,\d+)*(?:\.\d+)?/)
-  if (match) {
-    let clean = match[0].trim()
-    if (!/^[₹$€£¥]/.test(clean)) {
-      clean = `${fallbackCurrency}${clean}`
-    }
-    const numVal = parseFloat(clean.replace(/[^0-9.]/g, ""))
-    return { price: clean, num: isNaN(numVal) ? null : numVal }
+  if (!str || /^(n\/a|none|null|undefined|not available|unavailable|pending|waiting|—|-)$/i.test(str)) {
+    return { price: "Unavailable", num: null }
   }
-  return { price: str, num: null }
+
+  // 1. Explicit currency match: e.g. ₹ 738.35, $738.35
+  const currencyMatch = str.match(/[₹$€£¥]\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
+  let numVal: number | null = null
+  if (currencyMatch && currencyMatch[1]) {
+    const parsed = parseFloat(currencyMatch[1].replace(/,/g, ""))
+    if (!isNaN(parsed)) numVal = parsed
+  }
+
+  // 2. Clean out ordinal/text labels like "Target 1", "Target 2", "1.", etc.
+  if (numVal === null) {
+    const cleaned = str
+      .replace(/\btarget\s*\d+\b/gi, "")
+      .replace(/\bresistance\s*\d+\b/gi, "")
+      .replace(/\bsupport\s*\d+\b/gi, "")
+      .replace(/\bstop\s*loss\b/gi, "")
+      .replace(/\bentry\b/gi, "")
+      .replace(/\bstep\s*\d+\b/gi, "")
+      .replace(/^\s*\d+[\.\:\-]\s*/, "")
+      .trim()
+
+    const numMatch = cleaned.match(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
+    if (numMatch && numMatch[1]) {
+      const parsed = parseFloat(numMatch[1].replace(/,/g, ""))
+      if (!isNaN(parsed)) numVal = parsed
+    }
+  }
+
+  // 3. Fallback: search original string for candidate numbers >= 10 or with decimals
+  if (numVal === null) {
+    const matches = Array.from(str.matchAll(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/g))
+    for (const m of matches) {
+      const candidate = parseFloat(m[1].replace(/,/g, ""))
+      if (!isNaN(candidate) && (candidate >= 10 || m[1].includes("."))) {
+        numVal = candidate
+        break
+      }
+    }
+  }
+
+  if (numVal === null || isNaN(numVal) || numVal <= 0) {
+    return { price: "Unavailable", num: null }
+  }
+
+  let curr = fallbackCurrency
+  if (str.includes("$")) curr = "$"
+  else if (str.includes("₹")) curr = "₹"
+  else if (str.includes("€")) curr = "€"
+  else if (str.includes("£")) curr = "£"
+
+  const formattedPrice = `${curr}${numVal.toLocaleString("en-IN", {
+    minimumFractionDigits: numVal % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`
+
+  return { price: formattedPrice, num: numVal }
 }
 
 function computePctChange(entryNum: number | null, targetNum: number | null): string | null {
-  if (entryNum == null || targetNum == null || entryNum <= 0) return null
+  if (entryNum == null || targetNum == null || entryNum <= 0 || targetNum <= 0) return null
   const pct = ((targetNum - entryNum) / entryNum) * 100
   if (pct > 0) return `+${pct.toFixed(1)}%`
   if (pct < 0) return `${pct.toFixed(1)}%`
@@ -615,19 +664,19 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
 
   const target1Info = {
     price: target1Extract.price,
-    subtext: computePctChange(entryExtract.num, target1Extract.num) || (data.expectedUpside ? `+${data.expectedUpside.replace(/[^0-9.]/g, "")}%` : "+11.2%"),
+    subtext: computePctChange(entryExtract.num, target1Extract.num) || (data.expectedUpside && data.expectedUpside.match(/\d+/) ? `+${data.expectedUpside.replace(/[^0-9.]/g, "")}%` : "—"),
     reason: cleanReason(data.resistanceNote, "Previous Resistance"),
   }
 
   const target2Info = {
     price: target2Extract.price,
-    subtext: computePctChange(entryExtract.num, target2Extract.num) || "+16.0%",
+    subtext: computePctChange(entryExtract.num, target2Extract.num) || "—",
     reason: cleanReason(data.scenarioBest, "Breakout Extension"),
   }
 
   const stopLossInfo = {
     price: stopLossExtract.price,
-    subtext: computePctChange(entryExtract.num, stopLossExtract.num) || "-3.5%",
+    subtext: computePctChange(entryExtract.num, stopLossExtract.num) || "—",
     reason: cleanReason(data.riskNote, "Below Swing Low"),
   }
 
@@ -924,7 +973,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
             <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-pos">
               <TrendingUp className="h-4 w-4" /> Bull Case Scenario
             </h4>
-            <span className="font-mono text-xs font-bold text-pos">{data.target}</span>
+            <span className="font-mono text-xs font-bold text-pos">{target1Extract.price}</span>
           </div>
           <p className="text-sm leading-relaxed text-foreground/90 mb-3">{data.scenarioBest || data.bullishScenario || "Breakout above key resistance triggers strong continuation move."}</p>
           <div className="space-y-1.5">
@@ -944,7 +993,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
             <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-neg">
               <TrendingDown className="h-4 w-4" /> Bear Case Scenario
             </h4>
-            <span className="font-mono text-xs font-bold text-neg">{data.stopLoss}</span>
+            <span className="font-mono text-xs font-bold text-neg">{stopLossExtract.price}</span>
           </div>
           <p className="text-sm leading-relaxed text-foreground/90 mb-3">{data.scenarioWorst || data.bearishScenario || "Breakdown below support leads to deeper retracement and invalidation."}</p>
           <div className="space-y-1.5">
@@ -970,7 +1019,7 @@ function Report({ data, indicators }: { data: Analysis; indicators?: Indicators 
           <Ban className="h-4 w-4" /> Analysis Invalidation Conditions
         </div>
         <p className="text-sm leading-relaxed text-foreground/85">
-          This trade thesis is strictly <strong>INVALIDATED</strong> if price closes below <span className="font-mono font-bold text-neg">{data.stopLoss}</span> on a daily candle, or if high-volume selling breaks key support at <span className="font-mono font-bold text-foreground">{data.support}</span>. Immediately exit or hedge positions upon invalidation.
+          This trade thesis is strictly <strong>INVALIDATED</strong> if price closes below <span className="font-mono font-bold text-neg">{stopLossExtract.price}</span> on a daily candle, or if high-volume selling breaks key support at <span className="font-mono font-bold text-foreground">{entryExtract.price}</span>. Immediately exit or hedge positions upon invalidation.
         </p>
       </motion.div>
 

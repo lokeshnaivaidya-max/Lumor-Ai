@@ -902,6 +902,8 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
       { role: "user", content: userPrompt },
     ], { temperature: 0.35, responseFormat: { type: "json_object" }, timeout: 25000 })
 
+    console.log("[Provider] Raw AI generateAnalysis response:", text)
+
     const parsed = parseJsonResponse<Omit<Analysis, "disclaimer">>(text, "instrument analysis")
     const overrides: Partial<Analysis> = {}
     if (riskScores) {
@@ -916,7 +918,63 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
     const merged = { ...parsed, ...overrides, disclaimer: DISCLAIMER } as Analysis
 
     // Post-process to guarantee NO placeholders exist in any numerical trading fields
-    const cleanAnalysis = sanitizeAnalysis(merged)
+    let cleanAnalysis = sanitizeAnalysis(merged)
+
+    // Validate trading numbers against direction rules
+    let validation = validateTradingTargets(
+      cleanAnalysis.recommendation,
+      cleanAnalysis.entry,
+      cleanAnalysis.target,
+      cleanAnalysis.target2,
+      cleanAnalysis.stopLoss
+    )
+
+    if (!validation.isValid) {
+      console.warn(`[Provider] Target validation failed: ${validation.reason}. Triggering regeneration...`)
+      try {
+        const retryPrompt = `${userPrompt}\n\nCRITICAL FIX REQUIRED: Your previous response contained invalid target prices (${validation.reason}).
+You MUST output mathematically valid trading levels for ${validation.direction}:
+${validation.direction === "BUY" ? "- Entry < Target 1 < Target 2\n- Stop Loss < Entry" : "- Entry > Target 1 > Target 2\n- Stop Loss > Entry"}
+Calculate exact, non-trivial price numbers from the technical levels provided.`
+
+        const retryText = await aiChat(MODEL, [
+          { role: "system", content: system },
+          { role: "user", content: retryPrompt },
+        ], { temperature: 0.2, responseFormat: { type: "json_object" }, timeout: 25000 })
+
+        console.log("[Provider] Raw AI regenerateAnalysis response:", retryText)
+        const retryParsed = parseJsonResponse<Omit<Analysis, "disclaimer">>(retryText, "instrument analysis retry")
+        const retryMerged = { ...retryParsed, ...overrides, disclaimer: DISCLAIMER } as Analysis
+        cleanAnalysis = sanitizeAnalysis(retryMerged)
+
+        validation = validateTradingTargets(
+          cleanAnalysis.recommendation,
+          cleanAnalysis.entry,
+          cleanAnalysis.target,
+          cleanAnalysis.target2,
+          cleanAnalysis.stopLoss
+        )
+      } catch (retryErr) {
+        console.error("[Provider] Regeneration attempt failed:", retryErr)
+      }
+    }
+
+    // Final safety guard: If targets remain mathematically impossible or unparseable, set invalid target to "Unavailable"
+    if (!validation.isValid) {
+      console.warn(`[Provider] Target validation still failed after retry (${validation.reason}). Setting target to 'Unavailable'.`)
+      const entryNum = parseNumericPrice(cleanAnalysis.entry)
+      const target1Num = parseNumericPrice(cleanAnalysis.target)
+
+      if (
+        target1Num === null ||
+        target1Num <= 1 ||
+        (validation.direction === "BUY" && entryNum !== null && target1Num <= entryNum) ||
+        (validation.direction === "SELL" && entryNum !== null && target1Num >= entryNum)
+      ) {
+        cleanAnalysis.target = "Unavailable"
+      }
+    }
+
     return cleanAnalysis
   } catch (err) {
     console.error("[Provider] generateAnalysis error:", (err as Error).name, (err as Error).message)
@@ -924,11 +982,106 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
   }
 }
 
+export function parseNumericPrice(val: string | number | undefined | null): number | null {
+  if (val == null) return null
+  if (typeof val === "number") return isNaN(val) ? null : val
+  const str = String(val).trim()
+  if (!str) return null
+
+  // 1. Explicit currency match: e.g. ₹ 738.35, $738.35, €738
+  const currencyMatch = str.match(/[₹$€£¥]\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
+  if (currencyMatch && currencyMatch[1]) {
+    const num = parseFloat(currencyMatch[1].replace(/,/g, ""))
+    if (!isNaN(num)) return num
+  }
+
+  // 2. Clean out common labels containing ordinal numbers ("Target 1", "Target 2", "Resistance 1", etc.)
+  const cleaned = str
+    .replace(/\btarget\s*\d+\b/gi, "")
+    .replace(/\bresistance\s*\d+\b/gi, "")
+    .replace(/\bsupport\s*\d+\b/gi, "")
+    .replace(/\bstop\s*loss\b/gi, "")
+    .replace(/\bentry\b/gi, "")
+    .replace(/\bstep\s*\d+\b/gi, "")
+    .replace(/^\s*\d+[\.\:\-]\s*/, "")
+    .trim()
+
+  const numMatch = cleaned.match(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
+  if (numMatch && numMatch[1]) {
+    const num = parseFloat(numMatch[1].replace(/,/g, ""))
+    if (!isNaN(num)) return num
+  }
+
+  // 3. Fallback: search original string for any number >= 10 or with a decimal point
+  const matches = Array.from(str.matchAll(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/g))
+  for (const m of matches) {
+    const candidate = parseFloat(m[1].replace(/,/g, ""))
+    if (!isNaN(candidate) && (candidate >= 10 || m[1].includes("."))) {
+      return candidate
+    }
+  }
+
+  return null
+}
+
+export function validateTradingTargets(
+  rec: string,
+  entryVal: string | number | undefined | null,
+  target1Val: string | number | undefined | null,
+  target2Val: string | number | undefined | null,
+  stopLossVal: string | number | undefined | null
+): { isValid: boolean; reason?: string; direction: "BUY" | "SELL" | "NEUTRAL" } {
+  const recStr = String(rec || "").toLowerCase()
+  const isSell = recStr.includes("sell") || recStr.includes("pe")
+  const isBuy = recStr.includes("buy") || recStr.includes("ce") || recStr.includes("accumulate")
+  const direction: "BUY" | "SELL" | "NEUTRAL" = isSell ? "SELL" : isBuy ? "BUY" : "NEUTRAL"
+
+  const entry = parseNumericPrice(entryVal)
+  const target1 = parseNumericPrice(target1Val)
+  const target2 = parseNumericPrice(target2Val)
+  const stopLoss = parseNumericPrice(stopLossVal)
+
+  if (entry == null || entry <= 0 || target1 == null || target1 <= 0) {
+    return { isValid: false, reason: `Missing/invalid entry (${entry}) or target1 (${target1})`, direction }
+  }
+
+  if (target1 <= 1 && entry > 5) {
+    return { isValid: false, reason: `Target 1 (${target1}) is trivial for entry (${entry})`, direction }
+  }
+
+  if (direction === "BUY") {
+    if (target1 <= entry) {
+      return { isValid: false, reason: `BUY Target 1 (${target1}) must be > Entry (${entry})`, direction }
+    }
+    if (target2 !== null && target2 > 0 && target2 <= target1) {
+      return { isValid: false, reason: `BUY Target 2 (${target2}) must be > Target 1 (${target1})`, direction }
+    }
+    if (stopLoss !== null && stopLoss > 0 && stopLoss >= entry) {
+      return { isValid: false, reason: `BUY Stop Loss (${stopLoss}) must be < Entry (${entry})`, direction }
+    }
+  } else if (direction === "SELL") {
+    if (target1 >= entry) {
+      return { isValid: false, reason: `SELL Target 1 (${target1}) must be < Entry (${entry})`, direction }
+    }
+    if (target2 !== null && target2 > 0 && target2 >= target1) {
+      return { isValid: false, reason: `SELL Target 2 (${target2}) must be < Target 1 (${target1})`, direction }
+    }
+    if (stopLoss !== null && stopLoss > 0 && stopLoss <= entry) {
+      return { isValid: false, reason: `SELL Stop Loss (${stopLoss}) must be > Entry (${entry})`, direction }
+    }
+  }
+
+  return { isValid: true, direction }
+}
+
 function sanitizeAnalysis(parsed: Analysis): Analysis {
-  const isInvalid = (val: string | undefined | null) =>
-    !val ||
-    val.trim() === "" ||
-    /^(n\/a|none|null|undefined|not available|unavailable|pending|waiting|pending signal)$/i.test(val.trim())
+  const isInvalid = (val: string | undefined | null) => {
+    if (!val || val.trim() === "") return true
+    if (/^(n\/a|none|null|undefined|not available|unavailable|pending|waiting|pending signal|—|-)$/i.test(val.trim())) return true
+    const num = parseNumericPrice(val)
+    if (num !== null && (num <= 0 || isNaN(num))) return true
+    return false
+  }
 
   let entry = parsed.entry
   let target = parsed.target
