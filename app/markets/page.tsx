@@ -16,9 +16,8 @@ export default async function MarketsPage({ searchParams }: { searchParams?: Pro
   return (
     <>
       <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6">
-        <Link href="/" className="flex items-center gap-2.5 text-[var(--text-primary)]">
-          <LumoraMark className="h-7 w-7" />
-          <span className="font-serif text-lg">Lumora</span>
+        <Link href="/" className="flex items-center gap-2 text-[var(--text-primary)]">
+          <LumoraMark className="h-8 w-8" showText />
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />

@@ -84,11 +84,8 @@ export function Navbar() {
           scrolled ? "shadow-2xl" : "shadow-lg"
         }`}
       >
-        <Link href="/" className="group flex items-center gap-2.5 pl-3">
-          <LumoraMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[-8deg]" />
-          <span className="font-serif text-base tracking-tight transition-colors duration-300 group-hover:text-[var(--gold)]" style={{ color: "var(--text-primary)" }}>
-            Lumora
-          </span>
+        <Link href="/" className="group flex items-center gap-2 pl-3">
+          <LumoraMark className="h-8 w-8 transition-transform duration-300 group-hover:scale-105" showText />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">

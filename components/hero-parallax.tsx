@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "motion/react"
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react"
 import { Globe, Database, Shield, TrendingUp, ArrowRight } from "lucide-react"
 
 const FEATURES = [
@@ -45,8 +45,38 @@ function HeroChart() {
 }
 
 export function HeroParallax() {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  const smoothX = useSpring(mouseX, { stiffness: 50, damping: 20 })
+  const smoothY = useSpring(mouseY, { stiffness: 50, damping: 20 })
+
+  const bgX = useTransform(smoothX, [-0.5, 0.5], [-20, 20])
+  const bgY = useTransform(smoothY, [-0.5, 0.5], [-20, 20])
+  const cardRotateX = useTransform(smoothY, [-0.5, 0.5], [6, -6])
+  const cardRotateY = useTransform(smoothX, [-0.5, 0.5], [-6, 6])
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { clientX, clientY } = e
+    const { innerWidth, innerHeight } = window
+    mouseX.set((clientX / innerWidth) - 0.5)
+    mouseY.set((clientY / innerHeight) - 0.5)
+  }
+
   return (
-    <section className="scene relative z-10 min-h-screen w-full overflow-hidden">
+    <section
+      onMouseMove={handleMouseMove}
+      className="scene relative z-10 min-h-screen w-full overflow-hidden"
+    >
+      {/* Parallax Background Mesh */}
+      <motion.div
+        style={{ x: bgX, y: bgY }}
+        className="pointer-events-none absolute -inset-20 z-0 opacity-40 blur-3xl"
+      >
+        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-gradient-to-tr from-[#38bdf8]/30 via-[#34d399]/20 to-transparent" />
+        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-gradient-to-br from-[#fb7185]/20 via-[#38bdf8]/20 to-transparent" />
+      </motion.div>
+
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1320px] flex-col justify-center px-6 py-28 lg:px-10">
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12">
           {/* Left — editorial wordmark */}
@@ -91,15 +121,16 @@ export function HeroParallax() {
             </motion.div>
           </div>
 
-          {/* Right — interactive visual */}
+          {/* Right — interactive visual with subtle 3D tilt */}
           <div className="lg:col-span-6">
             <motion.div
+              style={{ rotateX: cardRotateX, rotateY: cardRotateY, transformStyle: "preserve-3d" }}
               initial={{ opacity: 0, y: 30, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
               className="relative"
             >
-              <div className="glass float-card rounded-[28px] p-6">
+              <div className="glass float-card rounded-[28px] p-6 shadow-2xl backdrop-blur-xl border border-white/20 dark:border-white/10">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono text-xs font-semibold" style={{ color: "var(--text-primary)" }}>AAPL</p>

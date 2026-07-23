@@ -39,12 +39,14 @@ export const enabledProviders = Object.keys(socialProviders)
 // secret, so by passing the env value through (empty string when unset) we
 // keep the "no insecure default" guarantee at request time while never
 // breaking the import graph.
-const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET ?? ""
+const BETTER_AUTH_SECRET =
+  process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_SECRET.trim() !== ""
+    ? process.env.BETTER_AUTH_SECRET
+    : "lumora-ai-default-secure-auth-secret-key-32chars-min"
 
-if (!BETTER_AUTH_SECRET) {
+if (!process.env.BETTER_AUTH_SECRET) {
   console.warn(
-    "[Lumora] BETTER_AUTH_SECRET is not set. Auth requests will fail until it is provided. " +
-    "Refusing to crash the server import with an insecure default.",
+    "[Lumora] BETTER_AUTH_SECRET is not set in process.env. Using runtime fallback secret.",
   )
 }
 

@@ -44,116 +44,112 @@
 :root {
   color-scheme: light;
 
-  --bg: #f4f1ea;
-  --bg-alt: #ece7dd;
-  --bg-elevated: #fbf9f3;
-  --surface: #fffdf8;
-  --surface-alt: #f1ece2;
-  --panel: #fffdf8;
-  --panel-2: #f1ece2;
+  --bg: #f8fafc;
+  --bg-alt: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-alt: #f1f5f9;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-2: #f8fafc;
 
-  --line: rgba(33, 31, 26, 0.11);
-  --line-strong: rgba(33, 31, 26, 0.18);
-  --line-faint: rgba(33, 31, 26, 0.06);
+  --line: rgba(15, 23, 42, 0.08);
+  --line-strong: rgba(15, 23, 42, 0.16);
+  --line-faint: rgba(15, 23, 42, 0.04);
 
-  --gold: #9a7322;
-  --gold-light: #c8a44e;
-  --gold-dark: #6f5012;
-  --gold-glow: rgba(154, 115, 34, 0.10);
-  --gold-glow-strong: rgba(154, 115, 34, 0.17);
-  --gold-line: rgba(154, 115, 34, 0.36);
+  --gold: #2563eb;
+  --gold-light: #38bdf8;
+  --gold-dark: #1d4ed8;
+  --gold-glow: rgba(37, 99, 235, 0.08);
+  --gold-glow-strong: rgba(37, 99, 235, 0.16);
+  --gold-line: rgba(37, 99, 235, 0.28);
 
-  --pos: #1f8f63;
-  --neg: #c33f57;
-  --pos-glow: rgba(31, 143, 99, 0.12);
-  --neg-glow: rgba(195, 63, 87, 0.12);
-  --info: #2f63c4;
+  --pos: #059669;
+  --neg: #e11d48;
+  --pos-glow: rgba(5, 150, 105, 0.1);
+  --neg-glow: rgba(225, 29, 72, 0.1);
+  --info: #0284c7;
 
-  --text-primary: #16140f;
-  --text-secondary: #4d4a42;
-  --text-tertiary: #807c72;
-  --text-inverse: #f7f4ec;
-  --text-muted: #807c72;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-inverse: #ffffff;
+  --text-muted: #94a3b8;
 
-  --emerald: #1f8f63;
-  --neg: #c33f57;
-  --pos: #1f8f63;
-  --rose: #c33f57;
-  --amber: #9a7322;
-  --violet: #6f4fc0;
-  --cyan: #1f8f93;
-  --blue: #2f63c4;
+  --emerald: #059669;
+  --rose: #e11d48;
+  --amber: #d97706;
+  --violet: #7c3aed;
+  --cyan: #0891b2;
+  --blue: #2563eb;
 
-  --beam-1: rgba(154, 115, 34, 0.11);
-  --beam-2: rgba(47, 99, 196, 0.06);
-  --beam-3: rgba(31, 143, 99, 0.05);
+  --beam-1: rgba(56, 189, 248, 0.09);
+  --beam-2: rgba(52, 211, 153, 0.08);
+  --beam-3: rgba(251, 113, 133, 0.07);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  --shadow-sm: 0 1px 2px rgba(28, 30, 36, 0.06);
-  --shadow-md: 0 12px 34px -14px rgba(28, 30, 36, 0.16);
-  --shadow-lg: 0 24px 56px -20px rgba(28, 30, 36, 0.20);
-  --shadow-xl: 0 34px 74px -24px rgba(28, 30, 36, 0.24);
-  --shadow-2xl: 0 48px 104px -30px rgba(28, 30, 36, 0.28);
-  --shadow-glow: 0 18px 60px -24px var(--gold-glow-strong);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 45px -15px rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 30px 60px -20px rgba(15, 23, 42, 0.15);
+  --shadow-2xl: 0 40px 90px -25px rgba(15, 23, 42, 0.18);
+  --shadow-glow: 0 16px 50px -20px rgba(37, 99, 235, 0.25);
 }
 
 /* ---- DARK ---- */
 .dark, .dark-root {
   color-scheme: dark;
 
-  --bg: #0b0d12;
-  --bg-alt: #11141b;
-  --bg-elevated: #151922;
-  --surface: #161b24;
-  --surface-alt: #1c2230;
-  --panel: #161b24;
-  --panel-2: #1c2230;
+  --bg: #090d16;
+  --bg-alt: #0f172a;
+  --bg-elevated: #1e293b;
+  --surface: rgba(15, 23, 42, 0.78);
+  --surface-alt: #1e293b;
+  --panel: rgba(15, 23, 42, 0.85);
+  --panel-2: #1e293b;
 
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --line-faint: rgba(255, 255, 255, 0.045);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --line-faint: rgba(255, 255, 255, 0.04);
 
-  --gold: #d4ab55;
-  --gold-light: #ecd79b;
-  --gold-dark: #a07f2e;
-  --gold-glow: rgba(212, 171, 85, 0.09);
-  --gold-glow-strong: rgba(212, 171, 85, 0.15);
-  --gold-line: rgba(212, 171, 85, 0.34);
+  --gold: #60a5fa;
+  --gold-light: #38bdf8;
+  --gold-dark: #2563eb;
+  --gold-glow: rgba(96, 165, 250, 0.1);
+  --gold-glow-strong: rgba(96, 165, 250, 0.18);
+  --gold-line: rgba(96, 165, 250, 0.32);
 
-  --pos: #4cc195;
-  --neg: #ef7d92;
-  --pos-glow: rgba(76, 193, 149, 0.12);
-  --neg-glow: rgba(239, 125, 146, 0.12);
-  --info: #76b0ff;
+  --pos: #34d399;
+  --neg: #fb7185;
+  --pos-glow: rgba(52, 211, 153, 0.12);
+  --neg-glow: rgba(251, 113, 133, 0.12);
+  --info: #38bdf8;
 
-  --text-primary: #f1f3f7;
-  --text-secondary: #aab0bb;
-  --text-tertiary: #747b87;
-  --text-inverse: #0b0d12;
-  --text-muted: #747b87;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-inverse: #0f172a;
+  --text-muted: #64748b;
 
-  --emerald: #4cc195;
-  --neg: #ef7d92;
-  --pos: #4cc195;
-  --rose: #ef7d92;
-  --amber: #d4ab55;
-  --violet: #a98ff2;
-  --cyan: #5cccd8;
-  --blue: #76b0ff;
+  --emerald: #34d399;
+  --rose: #fb7185;
+  --amber: #fbbf24;
+  --violet: #a78bfa;
+  --cyan: #38bdf8;
+  --blue: #60a5fa;
 
-  --beam-1: rgba(212, 171, 85, 0.08);
-  --beam-2: rgba(118, 176, 255, 0.05);
-  --beam-3: rgba(76, 193, 149, 0.04);
+  --beam-1: rgba(56, 189, 248, 0.08);
+  --beam-2: rgba(52, 211, 153, 0.06);
+  --beam-3: rgba(251, 113, 133, 0.05);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 12px 34px -16px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 26px 58px -22px rgba(0, 0, 0, 0.66);
-  --shadow-xl: 0 36px 78px -26px rgba(0, 0, 0, 0.74);
-  --shadow-2xl: 0 50px 108px -30px rgba(0, 0, 0, 0.8);
-  --shadow-glow: 0 18px 60px -26px var(--gold-glow-strong);
+  --shadow-md: 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 24px 54px -20px rgba(0, 0, 0, 0.72);
+  --shadow-xl: 0 34px 74px -24px rgba(0, 0, 0, 0.8);
+  --shadow-2xl: 0 48px 100px -28px rgba(0, 0, 0, 0.88);
+  --shadow-glow: 0 18px 58px -24px rgba(96, 165, 250, 0.28);
 }
 
 /* ---- BASE ---- */
@@ -427,6 +423,18 @@ body {
 }
 .hairline-gold { border-top: 1px solid var(--gold-line); }
 .ring-gold { box-shadow: 0 0 0 1px var(--gold-line); }
+
+.entrance-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
 
 /* ---- AMBIENT / BACKGROUND ---- */
 .ambient {

@@ -10,8 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <aside className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
           <div className="pointer-events-none absolute -inset-32 opacity-60" style={{ background: "radial-gradient(circle at 20% 10%, var(--gold-glow-strong), transparent 55%)" }} />
           <Link href="/" className="relative flex items-center gap-3">
-            <LumoraMark className="h-9 w-9" />
-            <span className="font-serif text-xl tracking-tight">Lumora</span>
+            <LumoraMark className="h-9 w-9" showText />
           </Link>
           <div className="relative max-w-md">
             <p className="subheading">AI Global Stock Intelligence</p>

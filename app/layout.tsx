@@ -38,21 +38,28 @@ const instrument = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "Lumora — AI Global Stock Intelligence",
+  title: "Lumora AI — AI-Powered Stock Insights & Institutional Intelligence",
   description:
-    "Lumora is an AI-powered global stock intelligence platform. Real-time markets, deep AI analysis, and cinematic clarity across every major exchange.",
+    "Lumora AI is an advanced global stock insights platform featuring real-time market feeds, institutional AI analysis, and interactive trade planning.",
   keywords: [
+    "Lumora AI",
     "AI stock analysis",
     "global markets",
-    "investment intelligence",
-    "technical analysis",
-    "Lumora",
+    "stock insights",
+    "institutional research",
+    "trade planner",
   ],
+  icons: {
+    icon: "/lumora-logo.png",
+    shortcut: "/lumora-logo.png",
+    apple: "/lumora-logo.png",
+  },
   openGraph: {
-    title: "Lumora — AI Global Stock Intelligence",
+    title: "Lumora AI — AI-Powered Stock Insights",
     description:
-      "Real-time markets, deep AI analysis, and cinematic clarity across every major exchange.",
+      "Real-time global markets, deep AI analysis, and institutional trade planning.",
     type: "website",
+    images: ["/lumora-logo.png"],
   },
 }
 

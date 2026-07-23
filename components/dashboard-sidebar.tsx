@@ -62,14 +62,7 @@ export function DashboardSidebar() {
       <div className="flex h-full w-full flex-col py-5">
         <div className={`flex items-center gap-3 px-4 ${open ? "" : "justify-center"}`}>
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Lumora home">
-            <LumoraMark className="h-8 w-8" />
-            <AnimatePresence>
-              {open && (
-                <motion.span initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} className="font-serif text-lg tracking-tight">
-                  Lumora
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <LumoraMark className="h-8 w-8" showText={open} />
           </Link>
           {open && (
             <button onClick={() => setOpen(false)} className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--panel-2)] hover:text-[var(--text-primary)]" aria-label="Collapse">

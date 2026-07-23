@@ -1,4 +1,4 @@
-﻿// Lumora AI service — provider-agnostic interface backed by Groq.
+// Lumora AI service — provider-agnostic interface backed by Groq.
 //
 // The rest of the application imports ONLY the functions below and never learns
 // which model provider is in use. Swapping providers means editing this file
@@ -9,6 +9,8 @@
 //     technical indicators, real news headlines).
 //   - Never hallucinate prices, financial figures, or news.
 
+import { GoogleGenAI } from "@google/genai"
+
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
 const SECRET_PATTERN = /(api[_-]?key|secret|token|password|authorization|bearer)/i
@@ -16,6 +18,72 @@ const SECRET_PATTERN = /(api[_-]?key|secret|token|password|authorization|bearer)
 const BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
 const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
 const MODEL_FAST = process.env.GROQ_MODEL_FAST || "llama-3.3-70b-versatile"
+
+let geminiClient: GoogleGenAI | null = null
+
+function getGemini(): GoogleGenAI | null {
+  const key = process.env.GEMINI_API_KEY?.trim()
+  if (!key || key === "MY_GEMINI_API_KEY") return null
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({ apiKey: key })
+  }
+  return geminiClient
+}
+
+async function geminiChat(
+  messages: { role: "system" | "user" | "assistant"; content: string }[],
+  opts?: { temperature?: number; responseFormat?: { type: "json_object" }; timeout?: number },
+): Promise<string> {
+  const ai = getGemini()
+  if (!ai) throw new AiConfigError("GEMINI_API_KEY is not configured.")
+
+  const systemMsg = messages.find((m) => m.role === "system")?.content
+  const contents = messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }))
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents,
+    config: {
+      systemInstruction: systemMsg ? { parts: [{ text: systemMsg }] } : undefined,
+      temperature: opts?.temperature ?? 0.4,
+      responseMimeType: opts?.responseFormat?.type === "json_object" ? "application/json" : undefined,
+    },
+  })
+
+  if (!response.text) throw new Error("Gemini returned an empty response.")
+  return response.text
+}
+
+async function aiChat(
+  model: string,
+  messages: { role: "system" | "user" | "assistant"; content: string }[],
+  opts?: { temperature?: number; responseFormat?: { type: "json_object" }; timeout?: number },
+): Promise<string> {
+  const geminiKey = process.env.GEMINI_API_KEY?.trim()
+  if (geminiKey && geminiKey !== "MY_GEMINI_API_KEY") {
+    try {
+      console.log("[AI Provider] Requesting Gemini (gemini-2.5-flash)")
+      return await geminiChat(messages, opts)
+    } catch (err) {
+      console.warn("[AI Provider] Gemini failed, checking Groq fallback:", (err as Error).message)
+      if (process.env.GROQ_API_KEY?.trim()) {
+        return await groqChat(model, messages, opts)
+      }
+      throw err
+    }
+  }
+
+  if (process.env.GROQ_API_KEY?.trim()) {
+    return await groqChat(model, messages, opts)
+  }
+
+  throw new AiConfigError("No valid AI key (GEMINI_API_KEY or GROQ_API_KEY) found in environment.")
+}
 
 type ErrorWithDetails = Error & {
   status?: unknown
@@ -158,6 +226,38 @@ export async function* streamChat(
   messages: ChatMessageInput[],
   opts?: { model?: string; system?: string },
 ): AsyncGenerator<ChatStreamEvent> {
+  const gemini = getGemini()
+  if (gemini) {
+    try {
+      const contents = messages.map((m) => ({
+        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }))
+      const responseStream = await gemini.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          systemInstruction: (opts?.system || CHAT_SYSTEM) ? { parts: [{ text: opts?.system || CHAT_SYSTEM }] } : undefined,
+          temperature: 0.4,
+        },
+      })
+
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          yield { type: "delta", text: chunk.text }
+        }
+      }
+      yield { type: "done", usage: { promptTokens: 0, completionTokens: 0 } }
+      return
+    } catch (err) {
+      console.warn("[AI Provider] Gemini stream failed, trying Groq fallback:", (err as Error).message)
+      if (!process.env.GROQ_API_KEY?.trim()) {
+        yield { type: "error", message: err instanceof Error ? err.message : "AI streaming failed." }
+        return
+      }
+    }
+  }
+
   const key = getApiKey()
   const model = opts?.model || MODEL
   const groqMessages: { role: "system" | "user" | "assistant"; content: string }[] = []
@@ -784,7 +884,7 @@ ${dataForAI}
 Output the analysis as JSON using exactly this schema (no extra fields, no missing fields):
 {"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","target":"string","stopLoss":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string","string"],"whatCouldGoWrong":["string","string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string"}`
 
-    const text = await groqChat(MODEL, [
+    const text = await aiChat(MODEL, [
       { role: "system", content: system },
       { role: "user", content: userPrompt },
     ], { temperature: 0.35, responseFormat: { type: "json_object" }, timeout: 25000 })
@@ -811,7 +911,7 @@ export async function generateNewsSentiment(input: { name: string; headlines: st
   const list = input.headlines.map((h, i) => `${i}. "${h}"`).join("\n")
   const system = `You are a financial news sentiment -- not invent headlines or facts.`
   try {
-    const text = await groqChat(MODEL_FAST, [
+    const text = await aiChat(MODEL_FAST, [
       { role: "system", content: system },
       { role: "user", content: `Headlines:\n${list}\n\nReturn JSON with "overall" ("positive"/"negative"/"neutral"), "summary" (string), and "items" (array of {index, sentiment, reason}).` },
     ], { temperature: 0.2, responseFormat: { type: "json_object" } })
@@ -826,12 +926,12 @@ export async function generateMarketSummary(input: { region: string; movers: str
   const system = `You are Lumora's markets desk. Write a single tight paragraph (max 3 sentences) summarizing the current market tone for the ${input.region} region. ${GROUNDING} Do not use markdown headers or bullet points.`
   return cached(`summary:${input.region}:${input.movers}`, 60_000, async () => {
     try {
-      const text = await groqChat(MODEL_FAST, [
+      const text = await aiChat(MODEL_FAST, [
         { role: "system", content: system },
         { role: "user", content: `Current snapshot of key instruments (symbol: price, % change):\n${input.movers}\n\nSummarize the market tone in plain prose.` },
       ], { temperature: 0.4 })
       const summary = text.trim()
-      if (!summary) throw new Error("Groq returned an empty response for market summary.")
+      if (!summary) throw new Error("AI returned an empty response for market summary.")
       return summary
     } catch (err) {
       throw classify(err)
@@ -847,7 +947,7 @@ export async function generateText(input: {
   temperature?: number
 }): Promise<{ text: string }> {
   try {
-    const text = await groqChat(input.model || MODEL_FAST, [
+    const text = await aiChat(input.model || MODEL_FAST, [
       { role: "system", content: input.system },
       { role: "user", content: input.prompt },
     ], { temperature: input.temperature ?? 0.4 })
@@ -865,7 +965,7 @@ export async function generateInvestmentResearch(input: {
 }): Promise<InvestmentResearch> {
   const system = `You are Lumora, a senior equity/asset research analyst writing a concise institutional research note. Always explain WHY. ${GROUNDING}`
   try {
-    const text = await groqChat(MODEL, [
+    const text = await aiChat(MODEL, [
       { role: "system", content: system },
       { role: "user", content: `Produce an investment research note for the following instrument. Ground every statement in these figures and headlines.\n\n${input.context}\n\nRespond with valid JSON.` },
     ], { temperature: 0.4, responseFormat: { type: "json_object" } })

@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { SWRConfig } from "swr"
 
 type Theme = "dark" | "light" | "system"
 
@@ -9,6 +10,15 @@ interface ThemeContext {
   resolved: "dark" | "light"
   setTheme: (t: Theme) => void
   cycleTheme: () => void
+}
+
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || `HTTP ${res.status}`)
+  }
+  return res.json()
 }
 
 const Ctx = createContext<ThemeContext>({
@@ -70,7 +80,17 @@ export function ThemeProvider({ children, initial }: { children: ReactNode; init
 
   return (
     <Ctx.Provider value={{ theme, resolved, setTheme, cycleTheme }}>
-      {children}
+      <SWRConfig
+        value={{
+          fetcher,
+          dedupingInterval: 12000,
+          revalidateOnFocus: false,
+          keepPreviousData: true,
+        }}
+      >
+        {children}
+      </SWRConfig>
     </Ctx.Provider>
   )
 }
+

@@ -24,9 +24,8 @@ export function LandingNav() {
       className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
     >
       <nav className="glass-nav flex items-center gap-3 rounded-full px-2.5 py-2">
-        <Link href="/" className="flex items-center gap-2 px-3 py-1" aria-label="Lumora home">
-          <LumoraMark className="h-6 w-6" />
-          <span className="font-serif text-base" style={{ color: "var(--text-primary)" }}>Lumora</span>
+        <Link href="/" className="flex items-center gap-2 px-2 py-1" aria-label="Lumora home">
+          <LumoraMark className="h-7 w-7" showText />
         </Link>
         <div className="hidden items-center gap-0.5 md:flex">
           {LINKS.map((link) => (

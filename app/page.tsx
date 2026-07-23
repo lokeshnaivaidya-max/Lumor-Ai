@@ -10,6 +10,7 @@ import { Testimonials } from "@/components/landing/testimonials"
 import { Pricing } from "@/components/landing/pricing"
 import { FadeUp, FadeScale, CardReveal } from "@/components/reveal"
 import { getQuotes } from "@/lib/market"
+import { LumoraMark } from "@/components/lumora-mark"
 
 const EXCHANGES = [
   ["NYSE", "USA"], ["NASDAQ", "USA"], ["NSE", "India"], ["BSE", "India"],
@@ -138,16 +139,16 @@ export default async function HomePage() {
       {/* FOOTER */}
       <footer className="relative z-10" style={{ borderTop: "1px solid var(--line)", background: "var(--bg)" }}>
         <div className="mx-auto flex max-w-4xl flex-col items-center px-6 py-14 text-center">
-          <span className="font-serif text-2xl" style={{ color: "var(--text-primary)" }}>Lumora</span>
-          <p className="meta mt-2">AI-powered global market intelligence</p>
+          <LumoraMark className="h-10 w-10" showText />
+          <p className="meta mt-3">AI-powered global market intelligence</p>
           <div className="mt-6 flex gap-6">
-            <Link href="/privacy" className="nav-link">Privacy</Link>
-            <Link href="/terms" className="nav-link">Terms</Link>
-            <Link href="/markets" className="nav-link">Markets</Link>
+            <Link href="/privacy" className="nav-link text-xs">Privacy Policy</Link>
+            <Link href="/terms" className="nav-link text-xs">Terms of Service</Link>
+            <Link href="/markets" className="nav-link text-xs">Markets Workspace</Link>
           </div>
           <div className="mt-8 w-full max-w-xs pt-6" style={{ borderTop: "1px solid var(--line)" }}>
             <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              Designed &amp; developed by Lokesh &middot;{" "}
+              Lumora AI &middot;{" "}
               <a href="mailto:lumora.verify@gmail.com" style={{ color: "var(--gold)" }}>lumora.verify@gmail.com</a>
             </p>
           </div>
