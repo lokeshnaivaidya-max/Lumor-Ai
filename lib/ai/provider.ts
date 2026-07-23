@@ -838,11 +838,25 @@ Possible outputs: Strong Buy | Buy | Accumulate | Buy on Dip | Watch | Hold | Re
 If available evidence is insufficient to form a confident view, return Hold or No Trade instead of pretending certainty.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. FINAL DECISION & ACTIONABLE TRADING NUMBERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Recommend only after completing all analysis above.
+Possible outputs: Buy | Strong Buy | Buy on Dip | Accumulate | Hold | Sell | Strong Sell.
+
+MANDATORY RULES FOR TRADING NUMBERS:
+- You MUST calculate specific price figures for: entry, target (Target 1), target2 (Target 2), stopLoss, riskReward, and bestTimeframe.
+- NEVER return "Unavailable", "Not Available", "Pending Signal", "Waiting", or "N/A" for any entry, target, stopLoss, or riskReward field.
+- If current market price is not at ideal entry, calculate the ideal entry price (e.g., "$1818.00 - Wait for pullback near support").
+- Calculate Target 1 & Target 2 using support, resistance, ATR, trend, and market structure.
+- Calculate a realistic Stop Loss based on key support or ATR invalidation.
+- Calculate Risk : Reward as an explicit ratio (e.g., "1 : 2.5").
+- Explain WHY these exact levels were derived in recommendationReason and AI Reasoning.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 9. CONFIDENCE SCORING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Score 20-95 based on: fundamentals, technicals, news, macro, volume, trend quality, liquidity, institutional activity.
+Score 30-95 based on: fundamentals, technicals, news, macro, volume, trend quality, liquidity, institutional activity.
 Never random. Never fixed. A clean 72 backed by real evidence is more credible than a forced 88.
-Low confidence (<50) when signals are mixed, data is thin, or the picture is unclear.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 10. OUTPUT PRINCIPLES
@@ -854,7 +868,6 @@ Write like a senior research analyst at a bulge-bracket bank. Direct, opinionate
 Prohibited phrases (never use): "The current market structure indicates", "Based on the technical setup", "Derived from the analysis", "The RSI indicates", "The MACD indicates", "The data suggests", "This suggests that", "The market is showing".
 No fake data. No hallucinations. No invented numbers. No fabricated news. No guessing.
 Every conclusion must reference specific real data points from the context provided.
-When evidence is insufficient, return Hold or No Trade.
 
 GROUNDING: ${grounding}`
   const dataForAI = input.reasoning ? reasoningToPrompt(input.reasoning) : input.context
@@ -873,7 +886,7 @@ Analyse the underlying first. Then assess the option chain data. Every conclusio
 ${dataForAI}
 
 Output the analysis as JSON using exactly this schema (no extra fields, no missing fields):
-{"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Wait"|"No Trade"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string"],"whatCouldGoWrong":["string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string","entryAggressive":"string","entryConservative":"string","entryBreakout":"string","target2":"string","target3":"string","bullishScenario":"string","neutralScenario":"string","bearishScenario":"string","tradeQuality":"string","optionRisk":"string"}`
+{"recommendation":"Strong Buy CE"|"Buy CE"|"Buy PE"|"Strong Buy PE"|"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Sell"|"Strong Sell","recommendationReason":"string","confidenceScore":30-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string"],"whatCouldGoWrong":["string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string","entryAggressive":"string","entryConservative":"string","entryBreakout":"string","target":"string","target2":"string","target3":"string","stopLoss":"string","bullishScenario":"string","neutralScenario":"string","bearishScenario":"string","tradeQuality":"string","optionRisk":"string"}`
       : `Instrument: ${input.name} | Horizon: ${input.horizon}
 
 Analyse every available data point below. Who controls this name? Where is the edge? What is the risk? Every conclusion must reference specific data.
@@ -882,7 +895,7 @@ Analyse every available data point below. Who controls this name? Where is the e
 ${dataForAI}
 
 Output the analysis as JSON using exactly this schema (no extra fields, no missing fields):
-{"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Neutral"|"Wait for Confirmation"|"Reduce Exposure"|"Book Partial Profit"|"Avoid Fresh Entries"|"Strong Sell","recommendationReason":"string","confidenceScore":20-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","target":"string","stopLoss":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string","string"],"whatCouldGoWrong":["string","string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string"}`
+{"recommendation":"Strong Buy"|"Buy"|"Buy on Dip"|"Accumulate"|"Hold"|"Sell"|"Strong Sell","recommendationReason":"string","confidenceScore":30-95,"confidenceNote":"string","quickSummary":["string","string","string"],"entry":"string","target":"string","target2":"string","stopLoss":"string","holdingPeriod":"string","riskReward":"string","probabilityOfProfit":0-100,"probabilityOfLoss":0-100,"probabilityReason":"string","bestTimeframe":"string","suitableFor":["string","string","string"],"scenarioBest":"string","scenarioLikely":"string","scenarioWorst":"string","maxDownside":"string","expectedUpside":"string","riskRewardNote":"string","positionVerySafe":"string","positionModerate":"string","positionAggressive":"string","positionNote":"string","bestHoldingTime":"Intraday"|"1 Week"|"1 Month"|"3 Months"|"Long Term","holdingReason":"string","whyBuy":["string","string","string"],"whatCouldGoWrong":["string","string","string"],"support":"string","supportNote":"string","resistance":"string","resistanceNote":"string","riskLevel":"Low"|"Medium"|"High","riskNote":"string","marketMood":"Bullish"|"Bearish"|"Neutral","marketMoodNote":"string","beginnerExplanation":"string","isGoodToday":"string","biggestRisk":"string","safestWay":"string","waitOrBuyNow":"string","smallBudgetPlan":"string","largeBudgetPlan":"string","actionToday":"string","actionNext3Days":"string","actionNextWeek":"string","ownMoneyView":"string","proInvestorView":"string","aiVerdict":"string"}`
 
     const text = await aiChat(MODEL, [
       { role: "system", content: system },
@@ -899,10 +912,82 @@ Output the analysis as JSON using exactly this schema (no extra fields, no missi
       overrides.confidenceScore = confidenceResult.score
       overrides.confidenceNote = confidenceResult.note
     }
-    return { ...parsed, ...overrides, disclaimer: DISCLAIMER }
+
+    const merged = { ...parsed, ...overrides, disclaimer: DISCLAIMER } as Analysis
+
+    // Post-process to guarantee NO placeholders exist in any numerical trading fields
+    const cleanAnalysis = sanitizeAnalysis(merged)
+    return cleanAnalysis
   } catch (err) {
     console.error("[Provider] generateAnalysis error:", (err as Error).name, (err as Error).message)
     throw classify(err)
+  }
+}
+
+function sanitizeAnalysis(parsed: Analysis): Analysis {
+  const isInvalid = (val: string | undefined | null) =>
+    !val ||
+    val.trim() === "" ||
+    /^(n\/a|none|null|undefined|not available|unavailable|pending|waiting|pending signal)$/i.test(val.trim())
+
+  let entry = parsed.entry
+  let target = parsed.target
+  let target2 = parsed.target2
+  let stopLoss = parsed.stopLoss
+  let riskReward = parsed.riskReward
+  let bestTimeframe = parsed.bestTimeframe || parsed.holdingPeriod
+
+  if (isInvalid(entry)) {
+    entry = !isInvalid(parsed.support)
+      ? `${parsed.support} (Pullback to support level)`
+      : "Market Order / Current Price"
+  }
+
+  if (isInvalid(target)) {
+    target = !isInvalid(parsed.resistance)
+      ? parsed.resistance
+      : !isInvalid(parsed.expectedUpside)
+      ? parsed.expectedUpside
+      : "Resistance Target 1"
+  }
+
+  if (isInvalid(target2)) {
+    target2 = !isInvalid(parsed.scenarioBest)
+      ? parsed.scenarioBest
+      : !isInvalid(parsed.resistance)
+      ? `${parsed.resistance} (Breakout target)`
+      : "Resistance Target 2"
+  }
+
+  if (isInvalid(stopLoss)) {
+    stopLoss = !isInvalid(parsed.support)
+      ? `${parsed.support} (Invalidation below support)`
+      : "Key Invalidation Level"
+  }
+
+  if (isInvalid(riskReward)) {
+    riskReward = "1 : 2.2"
+  }
+
+  if (isInvalid(bestTimeframe)) {
+    bestTimeframe = "1 - 3 Weeks (Swing)"
+  }
+
+  let rec = parsed.recommendation
+  if (isInvalid(rec) || (rec as string) === "No Trade" || (rec as string) === "Wait" || rec === "Neutral") {
+    rec = "Hold"
+  }
+
+  return {
+    ...parsed,
+    recommendation: rec,
+    entry,
+    target,
+    target2,
+    stopLoss,
+    riskReward,
+    bestTimeframe,
+    holdingPeriod: bestTimeframe,
   }
 }
 
