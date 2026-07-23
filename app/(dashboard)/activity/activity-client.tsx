@@ -41,17 +41,43 @@ function timeAgo(iso: string, now: number | null): string {
   return absoluteDate(iso)
 }
 
+function groupItems(items: ActivityItem[], nowMs: number | null) {
+  if (!nowMs) return [{ label: "Timeline", items }]
+  const todayStart = new Date(nowMs).setHours(0, 0, 0, 0)
+  const yesterdayStart = todayStart - 86400000
+  const weekStart = todayStart - 6 * 86400000
+
+  const today: ActivityItem[] = []
+  const yesterday: ActivityItem[] = []
+  const lastWeek: ActivityItem[] = []
+  const earlier: ActivityItem[] = []
+
+  for (const item of items) {
+    const t = new Date(item.timestamp).getTime()
+    if (t >= todayStart) today.push(item)
+    else if (t >= yesterdayStart) yesterday.push(item)
+    else if (t >= weekStart) lastWeek.push(item)
+    else earlier.push(item)
+  }
+
+  const result = []
+  if (today.length) result.push({ label: "Today", items: today })
+  if (yesterday.length) result.push({ label: "Yesterday", items: yesterday })
+  if (lastWeek.length) result.push({ label: "Last 7 Days", items: lastWeek })
+  if (earlier.length) result.push({ label: "Earlier", items: earlier })
+  return result.length ? result : [{ label: "Timeline", items }]
+}
+
 export function ActivityClient({ items }: { items: ActivityItem[] }) {
-  // Relative timestamps depend on the current time, which differs between the
-  // server render and the client hydration (and would cause a hydration
-  // mismatch). We only compute the relative "ago" string after mount; the
-  // server and first client render both use the stable absolute UTC date.
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
     setNow(Date.now())
     const id = setInterval(() => setNow(Date.now()), 60000)
     return () => clearInterval(id)
   }, [])
+
+  const groups = groupItems(items, now)
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <hr className="divider divider--gold" />
@@ -60,7 +86,7 @@ export function ActivityClient({ items }: { items: ActivityItem[] }) {
         <div className="glow-page relative">
           <p className="subheading"><span className="dot-gold" /> Activity</p>
           <h1 className="heading mt-2 text-[var(--text-primary)]">Your Recent Actions</h1>
-          <p className="body mt-3 max-w-md">A live feed of everything you do across Lumora, newest first.</p>
+          <p className="body mt-3 max-w-md">A live timeline of your investment research, stock analyses, portfolio updates, and chat conversations.</p>
         </div>
       </motion.div>
 
@@ -84,33 +110,42 @@ export function ActivityClient({ items }: { items: ActivityItem[] }) {
           </div>
         </motion.div>
        ) : (
-        <div className="relative pl-6">
-          <span className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-[var(--gold)] via-[var(--gold)]/40 to-transparent" />
-          <ul className="space-y-4">
-            {items.map((item, i) => {
-              const Icon = ICONS[item.type] ?? Activity
-              const body = (
-                <div className="glass-card group flex items-center gap-4 px-5 py-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--gold-glow)] text-[var(--gold)]"><Icon className="h-4 w-4" /></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--text-primary)]">{item.title}</p>
-                    <p className="meta mt-0.5">
-                      {item.ticker ? <span className="text-[var(--gold)]">{item.ticker} · </span> : null}
-                       {timeAgo(item.timestamp, now)}
-
-                    </p>
-                  </div>
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--line-strong)]" />
-                </div>
-              )
-              return (
-                <motion.li key={item.id} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i * 0.06, 0.5), duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="relative">
-                  <span className="absolute -left-[22px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[var(--gold)] shadow-[0_0_0_4px_var(--gold-glow)]" />
-                  {item.href ? <Link href={item.href} className="block">{body}</Link> : body}
-                </motion.li>
-              )
-            })}
-          </ul>
+        <div className="space-y-8">
+          {groups.map((group) => (
+            <div key={group.label} className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+                {group.label}
+              </h3>
+              <div className="relative pl-6">
+                <span className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-[var(--gold)] via-[var(--gold)]/40 to-transparent" />
+                <ul className="space-y-3">
+                  {group.items.map((item, i) => {
+                    const Icon = ICONS[item.type] ?? Activity
+                    const body = (
+                      <div className="glass-card group flex items-center gap-4 px-5 py-3.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--gold-glow)] text-[var(--gold)]"><Icon className="h-4 w-4" /></span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-[var(--text-primary)]">{item.title}</p>
+                          <p className="meta mt-0.5 flex items-center gap-1.5">
+                            {item.ticker ? <span className="font-semibold text-[var(--gold)]">{item.ticker} · </span> : null}
+                            <span>{timeAgo(item.timestamp, now)}</span>
+                          </p>
+                        </div>
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--line-strong)]" />
+                      </div>
+                    )
+                    return (
+                      <motion.li key={item.id} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.4 }} className="relative">
+                        <span className="absolute -left-[22px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[var(--gold)] shadow-[0_0_0_4px_var(--gold-glow)]" />
+                        {item.href ? <Link href={item.href} className="block">{body}</Link> : body}
+                      </motion.li>
+                    )
+                  })}
+                </ul>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

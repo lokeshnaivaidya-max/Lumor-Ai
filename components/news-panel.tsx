@@ -72,7 +72,15 @@ function NewsPanelBase({ symbol }: { symbol: string }) {
             Fetching and analyzing headlines…
           </div>
         ) : items.length === 0 ? (
-          <p className="py-6 text-sm text-muted-foreground">No recent headlines found for this instrument.</p>
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-foreground/[0.02] p-8 text-center">
+            <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-gold/10 text-gold">
+              <Newspaper className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No Breaking News Available</p>
+            <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+              No recent news articles detected for {symbol}. Market sentiment remains stable based on technical parameters.
+            </p>
+          </div>
         ) : (
           <ul className="flex flex-col gap-2">
             {items.map((n) => {

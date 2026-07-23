@@ -19,6 +19,32 @@ export function NotificationsClient({ notifications: initial }: { notifications:
   const [busy, setBusy] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [pushStatus, setPushStatus] = useState<"granted" | "denied" | "default" | "unsupported">("unsupported")
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setPushStatus(Notification.permission as "granted" | "denied" | "default")
+    }
+  }, [])
+
+  async function requestPushPermission() {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setPushStatus("unsupported")
+      return
+    }
+    try {
+      const res = await Notification.requestPermission()
+      setPushStatus(res)
+      if (res === "granted") {
+        new Notification("Lumora AI Notifications Enabled", {
+          body: "You will now receive instant market alerts and AI analysis updates.",
+          icon: "/favicon.ico",
+        })
+      }
+    } catch {
+      setPushStatus("denied")
+    }
+  }
 
   useEffect(() => { setItems(initial) }, [initial])
 
@@ -59,18 +85,38 @@ export function NotificationsClient({ notifications: initial }: { notifications:
             {items.length > 0 ? (unread > 0 ? `${unread} unread ${unread === 1 ? "notification" : "notifications"}` : "You're all caught up") : "No notifications yet"}
           </p>
         </div>
-        <AnimatePresence>
-          {unread > 0 && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              onClick={markAll} disabled={busy === -1}
-              className="btn flex items-center gap-2 px-4 py-2.5 text-xs disabled:opacity-50"
+        <div className="flex flex-wrap items-center gap-2">
+          {pushStatus === "default" && (
+            <button
+              onClick={requestPushPermission}
+              className="lm-btn lm-btn-gold rounded-full px-4 py-2 text-xs font-semibold"
             >
-              {busy === -1 ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="h-3.5 w-3.5" />} Mark all read
-            </motion.button>
+              <Bell className="h-3.5 w-3.5" /> Enable Browser Push
+            </button>
           )}
-        </AnimatePresence>
+          {pushStatus === "granted" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-pos/30 bg-pos/10 px-3 py-1 text-xs font-medium text-pos">
+              <Check className="h-3.5 w-3.5" /> Browser Push Active
+            </span>
+          )}
+          {pushStatus === "denied" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neg/30 bg-neg/10 px-3 py-1 text-xs font-medium text-neg">
+              Browser Push Blocked
+            </span>
+          )}
+          <AnimatePresence>
+            {unread > 0 && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                onClick={markAll} disabled={busy === -1}
+                className="btn flex items-center gap-2 px-4 py-2.5 text-xs disabled:opacity-50"
+              >
+                {busy === -1 ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="h-3.5 w-3.5" />} Mark all read
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.div>
 
       <AnimatePresence>

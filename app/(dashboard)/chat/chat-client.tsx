@@ -14,40 +14,40 @@ type SearchHit = { symbol: string; name: string; exchange?: string; type?: strin
 
 const SUGGESTIONS = [
   "Analyze HDFCBANK.NS",
-  "Best swing trade",
-  "Explain RSI",
-  "Support & Resistance",
-  "Latest News",
-  "Long term outlook",
+  "Best swing trade setup",
+  "Explain RSI & MACD",
+  "Key Support & Resistance",
 ]
 
 const TYPING_STAGES = [
-  "Analyzing live market…",
-  "Checking indicators…",
-  "Reading news…",
-  "Building response…",
+  "Reading live market data…",
+  "Fetching technical indicators…",
+  "Analyzing recent news…",
+  "Generating investment insights…",
 ]
 
 function TypingIndicator() {
   const [stage, setStage] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setStage((s) => Math.min(s + 1, TYPING_STAGES.length - 1)), 700)
+    const t = setInterval(() => setStage((s) => Math.min(s + 1, TYPING_STAGES.length - 1)), 800)
     return () => clearInterval(t)
   }, [])
   return (
-    <div className="flex items-center gap-2 py-1">
-      <span className="inline-flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: "var(--gold)" }}
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
-      </span>
-      <span className="meta" style={{ color: "var(--text-tertiary)" }}>{TYPING_STAGES[stage]}</span>
+    <div className="flex flex-col gap-2 py-1">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="h-2 w-2 rounded-full bg-gold"
+              animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </span>
+        <span className="text-xs font-semibold text-gold">AI Processing</span>
+      </div>
+      <p className="text-xs text-muted-foreground transition-all duration-300">{TYPING_STAGES[stage]}</p>
     </div>
   )
 }
@@ -474,31 +474,29 @@ export function ChatClient() {
 
         {error && <p className="meta px-5 pb-1" style={{ color: "var(--neg)" }}>{error}</p>}
 
-        {/* Suggested prompts */}
-        <div className="flex flex-wrap gap-2 px-4 pt-3 lg:px-5">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setInput(s)}
-              disabled={streaming}
-              className="chip rounded-full px-3 py-1.5 text-[11px] transition-all duration-200 hover:bg-gold/10 hover:text-gold disabled:opacity-50"
-              style={{ border: "1px solid var(--line)" }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {/* Suggested prompts - only shown before starting conversation */}
+        {messages.length === 0 && (
+          <div className="flex flex-wrap gap-2 px-4 pt-2 lg:px-5">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setInput(s)}
+                disabled={streaming}
+                className="chip rounded-full px-3 py-1.5 text-[11px] transition-all duration-200 hover:bg-gold/10 hover:text-gold disabled:opacity-50"
+                style={{ border: "1px solid var(--line)" }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Composer */}
         <div className="border-t p-3" style={{ borderColor: "var(--line)" }}>
-          <p className="meta mb-2 flex items-center gap-1.5 rounded-lg border border-gold/20 bg-gold/[0.04] px-2.5 py-1.5" style={{ color: "var(--text-tertiary)" }}>
-            <span aria-hidden>Lumora AI can make mistakes.</span>
-            Responses are for educational purposes only and should not be considered financial advice.
-          </p>
           <div className="glass flex items-end gap-2 rounded-2xl px-3 py-2" style={{ border: "1px solid var(--line)" }}>
             <button
               type="button"
-              aria-label="Attach (coming soon)"
+              aria-label="Attach"
               className="mb-0.5 shrink-0 rounded-lg p-1.5 transition-colors hover:bg-foreground/[0.06]"
               style={{ color: "var(--text-tertiary)" }}
               onClick={() => setError("Attachments are not supported yet.")}
@@ -537,10 +535,10 @@ export function ChatClient() {
               Send
             </button>
           </div>
-          <p className="meta mt-1.5 flex items-center gap-1.5 px-1" style={{ color: "var(--text-tertiary)" }}>
-            <span className="rounded bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] font-mono">Enter</span> to send
-            <span className="rounded bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] font-mono">Shift + Enter</span> for newline
-          </p>
+          <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] text-muted-foreground/60">
+            <span>For informational purposes only. Not financial advice.</span>
+            <span className="hidden sm:inline">Press Enter to send</span>
+          </div>
         </div>
       </div>
     </div>

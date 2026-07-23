@@ -864,9 +864,13 @@ function CockpitMetric({ icon, label, value, accent }: { icon: React.ReactNode; 
   const display = formatValue(value)
   const isAvailable = display !== "Not Available"
   return (
-    <motion.div whileHover={{ y: -3 }} className="glass-card flex flex-col items-center justify-center gap-1 rounded-[28px] p-3 text-center transition-all duration-300 hover:border-[var(--gold-line)]">
+    <motion.div whileHover={{ y: -2 }} className="glass-card flex flex-col items-center justify-center gap-1 rounded-2xl p-3 text-center transition-all duration-300 hover:border-[var(--gold-line)] overflow-hidden">
       <span className="text-muted-foreground/70">{icon}</span>
-      <span className={`font-mono text-sm font-semibold tabular-nums ${isAvailable ? "text-foreground" : "text-muted-foreground/50"}`}>{display}</span>
+      {isAvailable ? (
+        <span className="font-mono text-sm font-semibold tabular-nums text-foreground truncate max-w-full">{display}</span>
+      ) : (
+        <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/10 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Unavailable</span>
+      )}
       <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
         <span className={`inline-block h-1 w-1 rounded-full ${dotMap[accent]}`} />
         {label}
