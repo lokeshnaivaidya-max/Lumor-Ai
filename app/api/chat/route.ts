@@ -143,10 +143,6 @@ export async function POST(req: Request) {
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }))
 
-  // Ground the response in live market data: selected symbol context + any
-  // tickers mentioned in the message.
-  const { block: marketContext, sources } = await buildChatContext(message, body.symbol, body.timeframe)
-
   const fullHistory: ChatMessageInput[] = [
     ...history,
     { role: "user", content: message },
@@ -161,9 +157,18 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
 
       try {
+        send({ type: "thinking", step: 1, label: "Reading Live Market Data" })
+        const { block: marketContext, sources } = await buildChatContext(message, body.symbol, body.timeframe)
+
+        send({ type: "thinking", step: 2, label: "Technical Indicators Processed" })
+        send({ type: "thinking", step: 3, label: "News Sentiment Analyzed" })
+        send({ type: "thinking", step: 4, label: "Risk Assessment Complete" })
+        send({ type: "thinking", step: 5, label: "Generating Institutional Recommendation..." })
+
         const systemExtra = marketContext
           ? `${CHAT_SYSTEM}\n\n${marketContext}${STRUCTURE_RULES}`
           : `${CHAT_SYSTEM}${STRUCTURE_RULES}`
+
         for await (const event of streamChat(fullHistory, marketContext || sources.length ? { system: systemExtra } : undefined)) {
           if (event.type === "delta") {
             assistantText += event.text
