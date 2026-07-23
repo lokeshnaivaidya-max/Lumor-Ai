@@ -10,6 +10,7 @@
 //   - Never hallucinate prices, financial figures, or news.
 
 import { GoogleGenAI } from "@google/genai"
+import { formatCurrency } from "@/lib/utils"
 
 export const DISCLAIMER = "For research and educational purposes only. Not financial advice."
 
@@ -1026,11 +1027,7 @@ export function computeDeterministicTargets(
   }
 
   const fmt = (num: number) => {
-    const formatted = num.toLocaleString("en-IN", {
-      minimumFractionDigits: num % 1 === 0 ? 0 : 2,
-      maximumFractionDigits: 2,
-    })
-    return `${currencySymbol}${formatted}`
+    return formatCurrency(num, currencySymbol)
   }
 
   const risk = Math.abs(basePrice - stopLossNum)
@@ -1059,18 +1056,25 @@ export function computeDeterministicTargets(
 
 export function parseNumericPrice(val: string | number | undefined | null): number | null {
   if (val == null) return null
-  if (typeof val === "number") return isNaN(val) ? null : val
+  if (typeof val === "number") return isNaN(val) || !isFinite(val) ? null : val
   const str = String(val).trim()
   if (!str) return null
+
+  // Direct Number parse if clean string is a valid floating point number
+  const cleanStr = str.replace(/[₹$€£¥,]/g, "").trim()
+  const directNum = Number(cleanStr)
+  if (!isNaN(directNum) && isFinite(directNum)) {
+    return directNum
+  }
 
   // 1. Explicit currency match: e.g. ₹ 738.35, $738.35, €738
   const currencyMatch = str.match(/[₹$€£¥]\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
   if (currencyMatch && currencyMatch[1]) {
     const num = parseFloat(currencyMatch[1].replace(/,/g, ""))
-    if (!isNaN(num)) return num
+    if (!isNaN(num) && isFinite(num)) return num
   }
 
-  // 2. Clean out common labels containing ordinal numbers ("Target 1", "Target 2", "Resistance 1", etc.)
+  // 2. Clean out common labels containing ordinal numbers ("Target 1", "Target 2", etc.)
   const cleaned = str
     .replace(/\btarget\s*\d+\b/gi, "")
     .replace(/\bresistance\s*\d+\b/gi, "")
@@ -1078,22 +1082,19 @@ export function parseNumericPrice(val: string | number | undefined | null): numb
     .replace(/\bstop\s*loss\b/gi, "")
     .replace(/\bentry\b/gi, "")
     .replace(/\bstep\s*\d+\b/gi, "")
-    .replace(/^\s*\d+[\.\:\-]\s*/, "")
     .trim()
 
   const numMatch = cleaned.match(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
   if (numMatch && numMatch[1]) {
     const num = parseFloat(numMatch[1].replace(/,/g, ""))
-    if (!isNaN(num)) return num
+    if (!isNaN(num) && isFinite(num)) return num
   }
 
-  // 3. Fallback: search original string for any number >= 10 or with a decimal point
-  const matches = Array.from(str.matchAll(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/g))
-  for (const m of matches) {
-    const candidate = parseFloat(m[1].replace(/,/g, ""))
-    if (!isNaN(candidate) && (candidate >= 10 || m[1].includes("."))) {
-      return candidate
-    }
+  // 3. Fallback: search string for any floating point or integer number
+  const match = str.match(/-?\d+(?:\.\d+)?/)
+  if (match) {
+    const num = parseFloat(match[0])
+    if (!isNaN(num) && isFinite(num)) return num
   }
 
   return null

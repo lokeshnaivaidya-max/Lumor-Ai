@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { motion } from "motion/react"
+import { formatCurrency } from "@/lib/utils"
 import type { Indicators } from "@/lib/indicators"
 
 export type Candle = { t: number; c: number; h: number; l: number; o: number }
@@ -398,7 +399,7 @@ export function PriceChart({
           <div className="flex items-center gap-2.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tone }} />
             <span className="font-mono text-sm font-semibold text-foreground tabular-nums">
-              {hc.c.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(hc.c, "")}
             </span>
           </div>
           <div className="mt-1 text-muted-foreground/80">

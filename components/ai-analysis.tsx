@@ -5,6 +5,8 @@ import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient, useSession } from "@/lib/auth-client";
 import { logActivity } from "@/app/actions/activity";
+import { formatCurrency } from "@/lib/utils";
+import { parseNumericPrice } from "@/lib/ai/provider";
 import type { Indicators } from "@/lib/indicators"
 import {
   Loader2,
@@ -523,63 +525,22 @@ function RecentActivity({ symbol, onAnalyze }: { symbol: string; onAnalyze: () =
   )
 }
 
-function extractPriceDetails(val: string | undefined | null, fallbackCurrency = "₹"): { price: string; num: number | null } {
-  const str = String(val || "").trim()
-
-  // 1. Explicit currency match: e.g. ₹ 738.35, $738.35
-  const currencyMatch = str.match(/[₹$€£¥]\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
-  let numVal: number | null = null
-  if (currencyMatch && currencyMatch[1]) {
-    const parsed = parseFloat(currencyMatch[1].replace(/,/g, ""))
-    if (!isNaN(parsed) && parsed > 0) numVal = parsed
-  }
-
-  // 2. Clean out ordinal/text labels like "Target 1", "Target 2", "1.", etc.
-  if (numVal === null) {
-    const cleaned = str
-      .replace(/\btarget\s*\d+\b/gi, "")
-      .replace(/\bresistance\s*\d+\b/gi, "")
-      .replace(/\bsupport\s*\d+\b/gi, "")
-      .replace(/\bstop\s*loss\b/gi, "")
-      .replace(/\bentry\b/gi, "")
-      .replace(/\bstep\s*\d+\b/gi, "")
-      .replace(/^\s*\d+[\.\:\-]\s*/, "")
-      .trim()
-
-    const numMatch = cleaned.match(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/)
-    if (numMatch && numMatch[1]) {
-      const parsed = parseFloat(numMatch[1].replace(/,/g, ""))
-      if (!isNaN(parsed) && parsed > 0) numVal = parsed
-    }
-  }
-
-  // 3. Fallback: search original string for candidate numbers >= 10 or with decimals
-  if (numVal === null) {
-    const matches = Array.from(str.matchAll(/([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)/g))
-    for (const m of matches) {
-      const candidate = parseFloat(m[1].replace(/,/g, ""))
-      if (!isNaN(candidate) && candidate > 0 && (candidate >= 10 || m[1].includes("."))) {
-        numVal = candidate
-        break
-      }
-    }
-  }
-
+function extractPriceDetails(val: string | number | undefined | null, fallbackCurrency = "₹"): { price: string; num: number | null } {
+  const numVal = parseNumericPrice(val)
   let curr = fallbackCurrency
-  if (str.includes("$")) curr = "$"
-  else if (str.includes("₹")) curr = "₹"
-  else if (str.includes("€")) curr = "€"
-  else if (str.includes("£")) curr = "£"
+  if (val != null) {
+    const str = String(val)
+    if (str.includes("$")) curr = "$"
+    else if (str.includes("₹")) curr = "₹"
+    else if (str.includes("€")) curr = "€"
+    else if (str.includes("£")) curr = "£"
+  }
 
-  // If numVal is still missing or invalid, fallback to a clean base number
   const finalNum = numVal && numVal > 0 ? numVal : 100
-
-  const formattedPrice = `${curr}${finalNum.toLocaleString("en-IN", {
-    minimumFractionDigits: finalNum % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })}`
-
-  return { price: formattedPrice, num: finalNum }
+  return {
+    price: formatCurrency(finalNum, curr),
+    num: finalNum,
+  }
 }
 
 function computePctChange(entryNum: number | null, targetNum: number | null): string | null {

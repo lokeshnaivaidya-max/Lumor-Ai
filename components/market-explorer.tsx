@@ -7,7 +7,7 @@ import { motion } from "motion/react"
 import { SymbolSearch, type SearchResult } from "@/components/symbol-search"
 import { computeIndicators } from "@/lib/indicators"
 import { REGION_CONFIG, displaySymbol, type Quote, type Region, type Candle } from "@/lib/market"
-import { currencySymbol, logoUrl } from "@/lib/utils"
+import { currencySymbol, logoUrl, formatCurrency } from "@/lib/utils"
 import { TrendingUp, TrendingDown, Clock, Globe, Activity, BarChart3, TrendingUpDown, AlertCircle, Building2, Hash, DollarSign, Percent, Layers, LineChart, Target, ShieldAlert, Scale } from "lucide-react"
 import Link from "next/link"
 
@@ -38,11 +38,10 @@ function useAnimatedNumber(value: number, duration = 400): number {
   return display
 }
 
-function AnimatedMoney({ value, ccySym, decimals = 2 }: { value: number | undefined; ccySym: string; decimals?: number }) {
+function AnimatedMoney({ value, ccySym }: { value: number | undefined; ccySym: string; decimals?: number }) {
   const animated = useAnimatedNumber(value ?? 0)
   if (value == null) return null
-  const formatted = animated.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
-  return <>{ccySym}{formatted}</>
+  return <>{formatCurrency(animated, ccySym)}</>
 }
 
 function AnimatedPercent({ value, pos }: { value: number | undefined; pos?: boolean }) {

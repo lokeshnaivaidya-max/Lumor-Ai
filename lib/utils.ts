@@ -39,6 +39,71 @@ export function currencySymbol(currency: string | undefined): string {
   return sym ?? currency
 }
 
+/**
+ * Single shared currency formatting utility for Lumora AI.
+ * Converts input value to a valid number, rounds to 2 decimal places,
+ * and formats using Intl.NumberFormat with exactly 2 decimal places.
+ */
+export function formatCurrency(
+  value: number | string | null | undefined,
+  currencySymbol = "₹",
+  locale?: string
+): string {
+  if (value == null || value === "") {
+    return `${currencySymbol}0.00`
+  }
+
+  let num: number
+  if (typeof value === "number") {
+    num = value
+  } else {
+    const str = String(value).trim()
+    let activeSymbol = currencySymbol
+    if (str.includes("$")) activeSymbol = "$"
+    else if (str.includes("₹")) activeSymbol = "₹"
+    else if (str.includes("€")) activeSymbol = "€"
+    else if (str.includes("£")) activeSymbol = "£"
+    currencySymbol = activeSymbol
+
+    const cleanStr = str.replace(/[₹$€£¥,]/g, "").trim()
+    const directNum = Number(cleanStr)
+    if (!isNaN(directNum) && isFinite(directNum)) {
+      num = directNum
+    } else {
+      const cleanedLabel = cleanStr
+        .replace(/\btarget\s*\d+\b/gi, "")
+        .replace(/\bresistance\s*\d+\b/gi, "")
+        .replace(/\bsupport\s*\d+\b/gi, "")
+        .replace(/\bstop\s*loss\b/gi, "")
+        .replace(/\bentry\b/gi, "")
+        .replace(/\bstep\s*\d+\b/gi, "")
+        .trim()
+
+      const match = cleanedLabel.match(/([0-9]+(?:\.[0-9]+)?)/) || str.match(/([0-9]+\.[0-9]+)/) || str.match(/([0-9]+)/)
+      if (match) {
+        num = Number(match[1])
+      } else {
+        return `${currencySymbol}0.00`
+      }
+    }
+  }
+
+  if (isNaN(num) || !isFinite(num)) {
+    return `${currencySymbol}0.00`
+  }
+
+  // Round to two decimals first
+  const rounded = Math.round((num + Number.EPSILON) * 100) / 100
+
+  const activeLocale = locale || (currencySymbol === "₹" ? "en-IN" : "en-US")
+  const formatter = new Intl.NumberFormat(activeLocale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  return `${currencySymbol}${formatter.format(rounded)}`
+}
+
 const LOGO_CACHE = new Map<string, string>()
 
 export function logoUrl(symbol: string, name?: string, website?: string, exchange?: string): string {
