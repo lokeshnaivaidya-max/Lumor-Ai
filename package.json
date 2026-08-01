@@ -1,0 +1,43 @@
+{
+  "name": "lumora",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "drizzle-kit migrate",
+    "vercel-build": "next build",
+    "test": "node --experimental-strip-types tests/*.test.ts",
+    "test:watch": "echo \"Install vitest for watch mode\""
+  },
+  "dependencies": {
+    "@ai-sdk/react": "^4.0.19",
+    "@google/genai": "^2.13.0",
+    "ai": "^7.0.18",
+    "better-auth": "^1.6.23",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.23.0",
+    "motion": "^12.42.2",
+    "next": "latest",
+    "nodemailer": "^9.0.3",
+    "pg": "^8.22.0",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-markdown": "^10.1.0",
+    "swr": "^2.4.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.20.0",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "drizzle-kit": "^0.31.10",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "5.7.3"
+  }
+}

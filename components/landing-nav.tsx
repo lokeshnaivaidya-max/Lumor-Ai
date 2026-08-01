@@ -1,0 +1,50 @@
+"use client"
+
+import Link from "next/link"
+import { motion } from "motion/react"
+import { ThemeToggle } from "./theme-toggle"
+import { AccountMenu } from "./auth/account-menu"
+import { useSession } from "@/lib/auth-client"
+import { LumoraMark } from "./lumora-mark"
+
+const LINKS = [
+  { label: "Markets", href: "/markets" },
+  { label: "Intelligence", href: "#offerings" },
+  { label: "Coverage", href: "#reach" },
+]
+
+export function LandingNav() {
+  const { data: session, isPending } = useSession()
+
+  return (
+    <motion.header
+      initial={{ y: -16, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
+    >
+      <nav className="glass-nav flex items-center gap-3 rounded-full px-2.5 py-2">
+        <Link href="/" className="flex items-center gap-2 px-2 py-1" aria-label="Lumora home">
+          <LumoraMark className="h-7 w-7" showText />
+        </Link>
+        <div className="hidden items-center gap-0.5 md:flex">
+          {LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="nav-link">{link.label}</Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {isPending ? (
+            <div className="h-9 w-9 animate-pulse rounded-full bg-white/5" />
+          ) : session?.user ? (
+            <AccountMenu />
+          ) : (
+            <>
+              <Link href="/sign-in" className="btn btn--ghost btn--sm">Sign In</Link>
+              <Link href="/sign-up" className="btn btn--gold btn--sm">Sign Up</Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </motion.header>
+  )
+}

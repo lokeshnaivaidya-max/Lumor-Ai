@@ -1,0 +1,6 @@
+{
+  "name": "Lumora AI",
+  "description": "A premium AI-powered financial intelligence platform with real-time markets, research, AI analysis, trade planner, chat, and portfolio management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

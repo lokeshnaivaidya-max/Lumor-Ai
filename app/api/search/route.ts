@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server"
+import { searchSymbols } from "@/lib/market"
+import { parseInstrument, suggestOptionContracts } from "@/lib/instrument"
+import { rateLimit, clientIp } from "@/lib/ratelimit"
+import { logActivity } from "@/app/actions/activity"
+
+export const runtime = "nodejs"
+
+export async function GET(req: Request) {
+  const rl = rateLimit(`search:${clientIp(req)}`, 20, 60_000)
+  if (!rl.ok) return NextResponse.json({ error: "Too many requests." }, { status: 429 })
+
+  const { searchParams } = new URL(req.url)
+  const q = searchParams.get("q") ?? ""
+  if (!q.trim()) return NextResponse.json({ results: [] })
+
+  if (q.trim().length >= 2) {
+    logActivity({
+      type: "search",
+      title: `Searched for "${q.trim()}"`,
+      ticker: q.trim().toUpperCase(),
+      href: `/markets?symbol=${q.trim().toUpperCase()}`,
+    }).catch(() => {})
+  }
+
+  // Parse the query first — if it's an exact option/future/instrument match, include it
+  const parsed = parseInstrument(q)
+
+  // Get fuzzy search results from Yahoo
+  const searchResults = await searchSymbols(q)
+
+  // For known indices/stocks, suggest option contracts
+  let optionSuggestions: Record<string, unknown>[] = []
+  if (q.length >= 2) {
+    const options = suggestOptionContracts(q, 3)
+    optionSuggestions = options.map((o) => ({
+      symbol: o.symbol,
+      name: o.name,
+      exchange: o.exchange,
+      type: o.type,
+      strike: o.strike,
+      optionType: o.optionType,
+      expiry: o.expiry,
+      underlying: o.underlying,
+    }))
+  }
+
+  // If the parsed instrument is not "unknown", prepend it as the primary result
+  const parsedResult = parsed.type !== "unknown" && parsed.raw.length >= 2
+    ? [{
+        symbol: parsed.symbol,
+        name: parsed.name,
+        exchange: parsed.exchange ?? "",
+        type: parsed.type.toUpperCase(),
+        ...(parsed.strike ? { strike: parsed.strike } : {}),
+        ...(parsed.optionType ? { optionType: parsed.optionType } : {}),
+        ...(parsed.expiry ? { expiry: parsed.expiry } : {}),
+        ...(parsed.underlying ? { underlying: parsed.underlying } : {}),
+      }]
+    : []
+
+  const combined = [...parsedResult, ...searchResults, ...optionSuggestions]
+  return NextResponse.json({ results: combined })
+}
